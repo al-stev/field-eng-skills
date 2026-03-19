@@ -1,0 +1,1433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Customer Issue Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ── DESIGN TOKENS (dark mode default) ── */
+:root {
+  --bg-primary: #0c0f14;
+  --bg-elevated: #141820;
+  --bg-surface: #1a1f2b;
+  --bg-hover: #222838;
+  --border: #2a3040;
+  --border-subtle: #1e2430;
+  --text-primary: #e8eaed;
+  --text-secondary: #8b92a0;
+  --text-tertiary: #5c6370;
+  --accent: #d4a853;
+  --accent-dim: rgba(212, 168, 83, 0.12);
+  --accent-border: rgba(212, 168, 83, 0.25);
+  --green: #4ade80;
+  --green-dim: rgba(74, 222, 128, 0.10);
+  --green-border: rgba(74, 222, 128, 0.22);
+  --blue: #60a5fa;
+  --blue-dim: rgba(96, 165, 250, 0.10);
+  --blue-border: rgba(96, 165, 250, 0.22);
+  --amber: #fbbf24;
+  --amber-dim: rgba(251, 191, 36, 0.10);
+  --amber-border: rgba(251, 191, 36, 0.22);
+  --red: #f87171;
+  --red-dim: rgba(248, 113, 113, 0.10);
+  --red-border: rgba(248, 113, 113, 0.22);
+  --orange: #fb923c;
+  --orange-dim: rgba(251, 146, 60, 0.10);
+  --orange-border: rgba(251, 146, 60, 0.22);
+  --gray: #6b7280;
+  --gray-dim: rgba(107, 114, 128, 0.10);
+  --gray-border: rgba(107, 114, 128, 0.22);
+  --font-display: 'Instrument Serif', Georgia, serif;
+  --font-body: 'Outfit', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --radius: 6px;
+  --noise-opacity: 0.025;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg-primary: #f6f4f0;
+    --bg-elevated: #ffffff;
+    --bg-surface: #eeece8;
+    --bg-hover: #e6e4e0;
+    --border: #d4d2ce;
+    --border-subtle: #e0ded9;
+    --text-primary: #1a1a1a;
+    --text-secondary: #5c5c5c;
+    --text-tertiary: #8c8c8c;
+    --accent: #b8922e;
+    --accent-dim: rgba(184, 146, 46, 0.10);
+    --accent-border: rgba(184, 146, 46, 0.25);
+    --green: #1a7a4c;
+    --green-dim: rgba(26, 122, 76, 0.08);
+    --green-border: rgba(26, 122, 76, 0.20);
+    --blue: #1565a0;
+    --blue-dim: rgba(96, 165, 250, 0.08);
+    --blue-border: rgba(21, 101, 160, 0.20);
+    --amber: #9a6e08;
+    --amber-dim: rgba(154, 110, 8, 0.08);
+    --amber-border: rgba(154, 110, 8, 0.20);
+    --red: #dc2626;
+    --red-dim: rgba(220, 38, 38, 0.08);
+    --red-border: rgba(220, 38, 38, 0.20);
+    --orange: #c2410c;
+    --orange-dim: rgba(194, 65, 12, 0.08);
+    --orange-border: rgba(194, 65, 12, 0.20);
+    --gray: #6b6a6a;
+    --gray-dim: rgba(107, 106, 106, 0.08);
+    --gray-border: rgba(107, 106, 106, 0.20);
+    --noise-opacity: 0;
+  }
+}
+
+/* ── RESET ── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* ── BASE ── */
+body {
+  font-family: var(--font-body);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── NOISE TEXTURE (dark mode only via opacity token) ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  opacity: var(--noise-opacity);
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 256px;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-primary); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-tertiary); }
+
+/* ── LAYOUT ── */
+.container {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 0 clamp(16px, 3vw, 32px);
+}
+
+/* ── HEADER ── */
+.header {
+  padding: clamp(32px, 5vw, 56px) 0 clamp(20px, 3vw, 32px);
+}
+
+.header-subtitle {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+.header h1 {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 4vw, 42px);
+  font-weight: 400;
+  letter-spacing: -0.5px;
+  margin-bottom: 6px;
+}
+
+.header-rule {
+  width: 64px;
+  height: 2px;
+  background: var(--accent);
+  margin: 12px 0 20px;
+}
+
+.header-meta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-bottom: 16px;
+}
+
+/* ── HEALTH BUCKETS ── */
+.health-buckets {
+  display: flex;
+  gap: clamp(24px, 4vw, 48px);
+  flex-wrap: wrap;
+}
+
+.health-bucket {
+  cursor: pointer;
+  transition: opacity 0.15s ease-out;
+}
+
+.health-bucket:hover { opacity: 0.8; }
+
+.health-bucket .bucket-value {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: clamp(24px, 3vw, 32px);
+  line-height: 1.1;
+}
+
+.health-bucket .bucket-label {
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+
+.health-bucket .bucket-bar {
+  height: 3px;
+  border-radius: 2px;
+  margin-top: 6px;
+  transition: width 0.4s ease-out;
+}
+
+/* ── ANALYSIS SECTION ── */
+.analysis {
+  padding: clamp(24px, 3vw, 40px) 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.analysis-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-tertiary);
+  margin-bottom: 16px;
+}
+
+/* ── ATTENTION CALLOUTS ── */
+.attention-callouts {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin-bottom: clamp(24px, 3vw, 36px);
+}
+
+.callout {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--bg-elevated);
+  cursor: pointer;
+  transition: background 0.15s ease-out;
+  border-left: 3px solid transparent;
+}
+
+.callout:first-child { border-radius: var(--radius) var(--radius) 0 0; }
+.callout:last-child { border-radius: 0 0 var(--radius) var(--radius); }
+.callout:only-child { border-radius: var(--radius); }
+
+.callout:hover {
+  background: var(--bg-hover);
+}
+
+.callout.severity-high { border-left-color: var(--red); }
+.callout.severity-medium { border-left-color: var(--orange); }
+.callout.severity-low { border-left-color: var(--amber); }
+.callout.severity-info { border-left-color: var(--blue); }
+
+.callout-count {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 600;
+  flex-shrink: 0;
+  min-width: 28px;
+}
+
+.callout.severity-high .callout-count { color: var(--red); }
+.callout.severity-medium .callout-count { color: var(--orange); }
+.callout.severity-low .callout-count { color: var(--amber); }
+.callout.severity-info .callout-count { color: var(--blue); }
+
+.callout-text {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.callout-action {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-tertiary);
+  opacity: 0;
+  transition: opacity 0.15s ease-out;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.callout:hover .callout-action { opacity: 1; color: var(--accent); }
+
+/* ── ANALYSIS GRID (velocity + cadence side by side) ── */
+.analysis-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(24px, 3vw, 40px);
+}
+
+@media (max-width: 720px) {
+  .analysis-grid { grid-template-columns: 1fr; }
+}
+
+.analysis-box .chart-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-tertiary);
+  margin-bottom: 12px;
+}
+
+/* ── VELOCITY CHART (grouped bars per month) ── */
+.velocity-chart { display: flex; flex-direction: column; gap: 6px; }
+
+.velocity-row {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  align-items: center;
+  gap: 10px;
+  min-height: 28px;
+}
+
+.velocity-month {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.velocity-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.velocity-bar {
+  height: 10px;
+  border-radius: 2px;
+  transition: width 0.4s ease-out;
+  min-width: 0;
+}
+
+.velocity-bar.opened { background: var(--red); opacity: 0.75; }
+.velocity-bar.resolved { background: var(--green); opacity: 0.75; }
+
+.velocity-legend {
+  display: flex;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+/* ── CADENCE METRICS ── */
+.cadence-metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.cadence-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cadence-value {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 28px;
+  line-height: 1.1;
+}
+
+.cadence-label {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.cadence-context {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-tertiary);
+}
+
+/* ── SHARED LEGEND ── */
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-secondary);
+}
+
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+/* ── ISSUE LIST SECTION ── */
+.issue-list-section {
+  padding-top: clamp(16px, 3vw, 28px);
+}
+
+/* ── THEME BAR CHART ── */
+.charts-section {
+  padding: clamp(16px, 3vw, 24px) 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.bar-chart { display: flex; flex-direction: column; gap: 6px; }
+
+.bar-row {
+  display: grid;
+  grid-template-columns: 140px 1fr 40px;
+  align-items: center;
+  gap: 10px;
+  min-height: 24px;
+}
+
+.bar-row-label {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bar-track {
+  height: 18px;
+  background: var(--bg-surface);
+  border-radius: 3px;
+  overflow: hidden;
+  display: flex;
+  position: relative;
+}
+
+.bar-segment {
+  height: 100%;
+  transition: width 0.4s ease-out;
+  min-width: 0;
+}
+
+.bar-row-count {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-tertiary);
+  text-align: right;
+}
+
+.stacked-bar-legend {
+  display: flex;
+  gap: 16px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+/* Bar grow animation */
+@keyframes barGrow {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+.bar-segment.animate {
+  animation: barGrow 0.5s ease-out both;
+  transform-origin: left;
+}
+
+/* ── FILTER BAR ── */
+.filters {
+  padding: clamp(12px, 2vw, 18px) 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.filter-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.filter-group-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-tertiary);
+  margin-right: 2px;
+}
+
+.filter-sep {
+  width: 1px;
+  height: 22px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+.pill {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 5px 12px;
+  border-radius: 100px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease-out;
+  white-space: nowrap;
+}
+
+.pill:hover {
+  border-color: var(--text-tertiary);
+  color: var(--text-primary);
+}
+
+.pill.active {
+  background: var(--accent-dim);
+  border-color: var(--accent-border);
+  color: var(--accent);
+}
+
+.filter-select {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 5px 10px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%238b92a0' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 28px;
+}
+
+.filter-search {
+  font-family: var(--font-body);
+  font-size: 13px;
+  padding: 5px 12px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  min-width: 180px;
+  outline: none;
+  transition: border-color 0.15s ease-out;
+}
+
+.filter-search::placeholder { color: var(--text-tertiary); }
+.filter-search:focus { border-color: var(--accent-border); }
+
+/* Active filter indicator */
+.filter-active-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--accent);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: var(--radius);
+  background: var(--accent-dim);
+  border: 1px solid var(--accent-border);
+  transition: opacity 0.15s ease-out;
+}
+
+.filter-active-label:hover { opacity: 0.8; }
+
+/* ── THEME SECTIONS ── */
+.themes { padding-top: 8px; }
+
+.theme-section {
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.theme-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: clamp(12px, 2vw, 16px) 0;
+  cursor: pointer;
+  transition: background 0.15s ease-out;
+  margin: 0 calc(-1 * clamp(16px, 3vw, 32px));
+  padding-left: clamp(16px, 3vw, 32px);
+  padding-right: clamp(16px, 3vw, 32px);
+}
+
+.theme-header:hover {
+  background: var(--bg-hover);
+}
+
+.theme-arrow {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  transition: transform 0.2s ease-out, color 0.15s ease-out;
+  flex-shrink: 0;
+}
+
+.theme-header:hover .theme-arrow {
+  color: var(--accent);
+}
+
+.theme-section.collapsed .theme-arrow {
+  transform: rotate(-90deg);
+}
+
+.theme-name {
+  font-family: var(--font-display);
+  font-size: clamp(16px, 2vw, 20px);
+  font-weight: 400;
+  flex: 1;
+  user-select: none;
+}
+
+.theme-count {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+.theme-badges {
+  display: flex;
+  gap: 4px;
+}
+
+.mini-badge {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 3px;
+  letter-spacing: 0.5px;
+}
+
+.mini-badge.p0 { background: var(--red-dim); color: var(--red); }
+.mini-badge.p1 { background: var(--orange-dim); color: var(--orange); }
+.mini-badge.p2 { background: var(--amber-dim); color: var(--amber); }
+.mini-badge.p3 { background: var(--gray-dim); color: var(--gray); }
+
+.theme-body {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 0.25s ease-out;
+}
+
+.theme-section.collapsed .theme-body {
+  grid-template-rows: 0fr;
+}
+
+.theme-body-inner {
+  overflow: hidden;
+}
+
+/* ── ISSUE TABLE ── */
+.issue-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 8px;
+}
+
+.issue-table th {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-tertiary);
+  text-align: left;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.issue-table td {
+  font-size: 13px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  vertical-align: middle;
+}
+
+.issue-table tr:last-child td { border-bottom: none; }
+.issue-table tr:hover td { background: var(--bg-hover); }
+
+.issue-key {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.issue-key:hover { text-decoration: underline; }
+
+.issue-summary {
+  color: var(--text-primary);
+  max-width: 360px;
+}
+
+.type-badge, .status-badge, .priority-badge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 3px;
+  white-space: nowrap;
+  display: inline-block;
+}
+
+.type-badge.bug { background: var(--red-dim); color: var(--red); }
+.type-badge.feature { background: var(--blue-dim); color: var(--blue); }
+
+.priority-badge.p0 { background: var(--red-dim); color: var(--red); }
+.priority-badge.p1 { background: var(--orange-dim); color: var(--orange); }
+.priority-badge.p2 { background: var(--amber-dim); color: var(--amber); }
+.priority-badge.p3 { background: var(--gray-dim); color: var(--gray); }
+
+.assignee { font-size: 12px; color: var(--text-secondary); }
+.assignee.unassigned { color: var(--text-tertiary); font-style: italic; }
+
+/* Last activity column */
+.activity-cell {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.activity-cell.stale { color: var(--red); }
+.activity-cell.aging { color: var(--orange); }
+.activity-cell.recent { color: var(--green); }
+.activity-cell.never { color: var(--text-tertiary); font-style: italic; }
+
+.fe-badge {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 500;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: var(--accent-dim);
+  color: var(--accent);
+  margin-left: 6px;
+  white-space: nowrap;
+}
+
+/* ── EMPTY STATE ── */
+.empty-state {
+  text-align: center;
+  padding: 48px 16px;
+  color: var(--text-tertiary);
+  font-size: 14px;
+}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-in { animation: fadeUp 0.4s ease-out both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-in { animation: none; }
+  .theme-body { transition: none; }
+  .theme-arrow { transition: none; }
+  .bar-segment { transition: none; }
+  .bar-segment.animate { animation: none; }
+  .velocity-bar { transition: none; }
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 640px) {
+  .issue-table th:nth-child(6),
+  .issue-table td:nth-child(6) { display: none; }
+  .issue-table th:nth-child(7),
+  .issue-table td:nth-child(7) { display: none; }
+  .issue-summary { max-width: 200px; }
+  .bar-row { grid-template-columns: 100px 1fr 32px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- HEADER -->
+  <header class="header animate-in">
+    <div class="header-subtitle">W&B Jira &middot; Customer Tracker</div>
+    <h1 id="title"></h1>
+    <div class="header-rule"></div>
+    <div class="header-meta" id="headerMeta"></div>
+    <div class="health-buckets" id="healthBuckets"></div>
+  </header>
+
+  <!-- ANALYSIS -->
+  <section class="analysis animate-in" style="animation-delay: 60ms">
+    <div class="analysis-label">Attention needed</div>
+    <div class="attention-callouts" id="attentionCallouts"></div>
+    <div class="analysis-grid">
+      <div class="analysis-box">
+        <div class="chart-label">Velocity &mdash; last 6 months</div>
+        <div id="velocityChart" class="velocity-chart"></div>
+      </div>
+      <div class="analysis-box">
+        <div class="chart-label">Response cadence</div>
+        <div id="cadenceMetrics" class="cadence-metrics"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ISSUE LIST -->
+  <section class="issue-list-section">
+    <!-- Theme chart -->
+    <div class="charts-section animate-in" style="animation-delay: 120ms">
+      <div class="chart-label">Issues by theme</div>
+      <div id="themeChart" class="bar-chart"></div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters animate-in" style="animation-delay: 150ms">
+      <div class="filter-row">
+        <div class="filter-group">
+          <span class="filter-group-label">Type</span>
+          <div id="typeFilters" style="display:flex;gap:5px"></div>
+        </div>
+        <div class="filter-sep"></div>
+        <div class="filter-group">
+          <span class="filter-group-label">Status</span>
+          <div id="statusFilters" style="display:flex;gap:5px;flex-wrap:wrap"></div>
+        </div>
+        <div class="filter-sep"></div>
+        <div class="filter-group">
+          <span class="filter-group-label">Priority</span>
+          <div id="priorityFilters" style="display:flex;gap:5px"></div>
+        </div>
+        <div class="filter-sep"></div>
+        <div class="filter-group">
+          <span class="filter-group-label">Theme</span>
+          <select class="filter-select" id="themeFilter"></select>
+        </div>
+        <div class="filter-sep"></div>
+        <input type="text" class="filter-search" id="searchInput" placeholder="Search issues...">
+        <span class="filter-active-label" id="clearCalloutFilter" style="display:none">&#x2715; Clear insight filter</span>
+      </div>
+    </div>
+
+    <!-- Theme Sections -->
+    <div class="themes-toolbar" style="display:flex;justify-content:flex-end;padding:10px 0 0">
+      <button class="pill" id="expandCollapseAll" style="font-size:10px;padding:3px 10px">Expand All</button>
+    </div>
+    <div class="themes" id="themeSections"></div>
+  </section>
+
+</div>
+
+<script>
+// =====================================================================
+//  TRACKER_DATA -- Replace this object with real customer data
+// =====================================================================
+const TRACKER_DATA = {
+  customer: "Sample Customer",
+  generated: "2026-03-11",
+  issues: [
+    { key: "WB-1001", summary: "SDK crash on large artifact upload (>10GB)", type: "Bug", priority: "P0", status: "In Progress", assignee: "Alex Chen", theme: "SDK & Client Libraries", created: "2026-01-10T10:00:00.000-0800", updated: "2026-03-08T14:00:00.000-0800", url: "https://wandb.atlassian.net/browse/WB-1001", comments: { comment_count: 5, last_comment_date: "2026-03-08T14:00:00.000-0800", last_comment_author: "Alex Chen", last_eng_comment_date: "2026-03-08T14:00:00.000-0800", last_eng_comment_author: "Alex Chen", first_comment_date: "2026-01-11T09:00:00.000-0800", fe_update_count: 1 } },
+    { key: "WB-1002", summary: "Support custom metric aggregation in sweep runs", type: "Feature Request", priority: "P2", status: "Backlog", assignee: null, theme: "Sweeps", created: "2026-01-22T10:00:00.000-0800", updated: "2026-02-15T10:00:00.000-0800", url: "https://wandb.atlassian.net/browse/WB-1002", comments: { comment_count: 0, last_comment_date: null, last_comment_author: null, last_eng_comment_date: null, last_eng_comment_author: null, first_comment_date: null, fe_update_count: 0 } },
+    { key: "WB-1003", summary: "Run comparison table truncates long metric names", type: "Bug", priority: "P2", status: "Done", assignee: "Maria Santos", theme: "UI & Dashboard", created: "2026-02-01T10:00:00.000-0800", updated: "2026-03-05T10:00:00.000-0800", url: "https://wandb.atlassian.net/browse/WB-1003", comments: { comment_count: 3, last_comment_date: "2026-03-05T10:00:00.000-0800", last_comment_author: "Maria Santos", last_eng_comment_date: "2026-03-05T10:00:00.000-0800", last_eng_comment_author: "Maria Santos", first_comment_date: "2026-02-03T10:00:00.000-0800", fe_update_count: 0 } },
+    { key: "WB-1004", summary: "Add OIDC SSO support for enterprise login", type: "Feature Request", priority: "P1", status: "Triage", assignee: null, theme: "Auth & Permissions", created: "2025-11-15T10:00:00.000-0800", updated: "2026-03-01T10:00:00.000-0800", url: "https://wandb.atlassian.net/browse/WB-1004", comments: { comment_count: 2, last_comment_date: "2025-12-20T10:00:00.000-0800", last_comment_author: "SE Bot", last_eng_comment_date: null, last_eng_comment_author: null, first_comment_date: "2025-12-20T10:00:00.000-0800", fe_update_count: 2 } },
+    { key: "WB-1005", summary: "Artifact download fails with special characters in name", type: "Bug", priority: "P1", status: "Merged", assignee: "Alex Chen", theme: "SDK & Client Libraries", created: "2026-01-28T10:00:00.000-0800", updated: "2026-03-09T10:00:00.000-0800", url: "https://wandb.atlassian.net/browse/WB-1005", comments: { comment_count: 4, last_comment_date: "2026-03-09T10:00:00.000-0800", last_comment_author: "Alex Chen", last_eng_comment_date: "2026-03-09T10:00:00.000-0800", last_eng_comment_author: "Alex Chen", first_comment_date: "2026-01-30T10:00:00.000-0800", fe_update_count: 0 } }
+  ]
+};
+
+// ── CONFIGURATION ──
+const STALE_DAYS = 30;
+const VERY_STALE_DAYS = 60;
+const RESOLVED_STATUSES = new Set(['Done', 'Closed', 'Resolved', 'Merged', 'Archive', 'Archived', "Won't Fix"]);
+const STATUS_COLORS = {
+  'Active': 'var(--blue)', 'In Progress': 'var(--blue)', 'In Review': 'var(--blue)',
+  'In Development': 'var(--blue)', 'Selected for Development': 'var(--blue)',
+  'Backlog': 'var(--amber)', 'Open': 'var(--amber)', 'To Do': 'var(--amber)',
+  'Waiting': 'var(--amber)', 'Future': 'var(--amber)',
+  'Triage': 'var(--orange)',
+  'Done': 'var(--green)', 'Closed': 'var(--green)', 'Resolved': 'var(--green)', 'Merged': 'var(--green)',
+  'Archive': 'var(--gray)', 'Archived': 'var(--gray)', "Won't Fix": 'var(--gray)'
+};
+function statusColor(s) { return STATUS_COLORS[s] || 'var(--gray)'; }
+
+const PRIO_COLORS = { P0: 'var(--red)', P1: 'var(--orange)', P2: 'var(--amber)', P3: 'var(--gray)' };
+const PRIO_ORDER = ['P0', 'P1', 'P2', 'P3'];
+
+const NOW = new Date(TRACKER_DATA.generated + 'T00:00:00');
+
+// ── DATE HELPERS ──
+function parseDate(s) {
+  if (!s) return null;
+  return new Date(s);
+}
+
+function daysBetween(a, b) {
+  if (!a || !b) return null;
+  return Math.floor((b - a) / (1000 * 60 * 60 * 24));
+}
+
+function daysAgo(dateStr) {
+  const d = parseDate(dateStr);
+  if (!d) return Infinity;
+  return daysBetween(d, NOW);
+}
+
+function monthKey(dateStr) {
+  const d = parseDate(dateStr);
+  if (!d) return null;
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+}
+
+function monthLabel(key) {
+  const [y, m] = key.split('-');
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return months[parseInt(m) - 1] + ' ' + y.slice(2);
+}
+
+// ── HEALTH BUCKET CLASSIFICATION ──
+function classifyIssue(issue) {
+  if (RESOLVED_STATUSES.has(issue.status)) return 'resolved';
+  if (issue.status === 'Triage') return 'triage';
+  const engDays = daysAgo(issue.comments?.last_eng_comment_date);
+  if (engDays <= STALE_DAYS && engDays !== Infinity) return 'active';
+  return 'stale';
+}
+
+// ── FILTER STATE ──
+const defaultStatuses = new Set(TRACKER_DATA.issues.map(i => i.status).filter(s => !RESOLVED_STATUSES.has(s)));
+let activeFilters = { types: new Set(), statuses: new Set(defaultStatuses), priorities: new Set(), theme: 'all', search: '' };
+let calloutFilter = null; // function that filters to callout matches
+
+function getFiltered() {
+  return TRACKER_DATA.issues.filter(i => {
+    if (calloutFilter && !calloutFilter(i)) return false;
+    if (activeFilters.types.size && !activeFilters.types.has(i.type)) return false;
+    if (activeFilters.statuses.size && !activeFilters.statuses.has(i.status)) return false;
+    if (activeFilters.priorities.size && !activeFilters.priorities.has(i.priority)) return false;
+    if (activeFilters.theme !== 'all' && i.theme !== activeFilters.theme) return false;
+    if (activeFilters.search) {
+      const q = activeFilters.search.toLowerCase();
+      return i.key.toLowerCase().includes(q) || i.summary.toLowerCase().includes(q) || (i.assignee || '').toLowerCase().includes(q);
+    }
+    return true;
+  });
+}
+
+function countBy(arr, fn) {
+  const m = {};
+  arr.forEach(i => { const k = fn(i); m[k] = (m[k] || 0) + 1; });
+  return m;
+}
+
+// ── HEALTH BUCKETS ──
+function renderHealthBuckets() {
+  const all = TRACKER_DATA.issues;
+  const buckets = { triage: 0, active: 0, stale: 0, resolved: 0 };
+  all.forEach(i => { buckets[classifyIssue(i)]++; });
+
+  const total = all.length;
+  const colors = { triage: 'var(--orange)', active: 'var(--green)', stale: 'var(--red)', resolved: 'var(--gray)' };
+  const labels = { triage: 'Needs Triage', active: 'Active', stale: 'Stale', resolved: 'Resolved' };
+
+  let html = `<div><div class="bucket-value" style="color:var(--text-primary)">${total}</div><div class="bucket-label">Total</div></div>`;
+
+  for (const key of ['triage', 'active', 'stale', 'resolved']) {
+    const pct = total > 0 ? (buckets[key] / total) * 100 : 0;
+    html += `<div class="health-bucket" data-bucket="${key}" onclick="filterByBucket('${key}')">
+      <div class="bucket-value" style="color:${colors[key]}">${buckets[key]}</div>
+      <div class="bucket-label">${labels[key]}</div>
+      <div class="bucket-bar" style="width:${Math.max(pct, 4)}%;background:${colors[key]};opacity:0.5"></div>
+    </div>`;
+  }
+
+  document.getElementById('healthBuckets').innerHTML = html;
+}
+
+// ── ATTENTION CALLOUTS ──
+function renderAttentionCallouts() {
+  const all = TRACKER_DATA.issues;
+  const nonResolved = all.filter(i => !RESOLVED_STATUSES.has(i.status));
+
+  const neverCommented = nonResolved.filter(i => !i.comments || i.comments.comment_count === 0);
+  const veryStale = nonResolved.filter(i => {
+    if (!i.comments || i.comments.comment_count === 0) return true;
+    return daysAgo(i.comments.last_eng_comment_date) > VERY_STALE_DAYS;
+  });
+  const recentlyOpened = all.filter(i => daysAgo(i.created) <= 30);
+  const unassigned = nonResolved.filter(i => !i.assignee);
+
+  const callouts = [];
+
+  if (neverCommented.length > 0) {
+    callouts.push({
+      count: neverCommented.length,
+      text: `ticket${neverCommented.length !== 1 ? 's have' : ' has'} never been commented on`,
+      severity: 'high',
+      filterFn: i => !i.comments || i.comments.comment_count === 0
+    });
+  }
+
+  if (veryStale.length > 0) {
+    callouts.push({
+      count: veryStale.length,
+      text: `ticket${veryStale.length !== 1 ? 's have' : ' has'} had no eng activity in ${VERY_STALE_DAYS}+ days`,
+      severity: 'medium',
+      filterFn: i => {
+        if (RESOLVED_STATUSES.has(i.status)) return false;
+        if (!i.comments || i.comments.comment_count === 0) return true;
+        return daysAgo(i.comments.last_eng_comment_date) > VERY_STALE_DAYS;
+      }
+    });
+  }
+
+  if (unassigned.length > 0) {
+    callouts.push({
+      count: unassigned.length,
+      text: `open ticket${unassigned.length !== 1 ? 's are' : ' is'} unassigned`,
+      severity: 'low',
+      filterFn: i => !RESOLVED_STATUSES.has(i.status) && !i.assignee
+    });
+  }
+
+  if (recentlyOpened.length > 0) {
+    callouts.push({
+      count: recentlyOpened.length,
+      text: `ticket${recentlyOpened.length !== 1 ? 's' : ''} opened in the last 30 days`,
+      severity: 'info',
+      filterFn: i => daysAgo(i.created) <= 30
+    });
+  }
+
+  const container = document.getElementById('attentionCallouts');
+  if (callouts.length === 0) {
+    container.innerHTML = '<div style="color:var(--text-tertiary);font-size:13px;padding:8px 0">No issues requiring immediate attention.</div>';
+    return;
+  }
+
+  container.innerHTML = callouts.map((c, idx) =>
+    `<div class="callout severity-${c.severity}" data-callout-idx="${idx}">
+      <span class="callout-count">${c.count}</span>
+      <span class="callout-text">${c.text}</span>
+      <span class="callout-action">View tickets &#8594;</span>
+    </div>`
+  ).join('');
+
+  // Bind click handlers
+  container.querySelectorAll('.callout').forEach(el => {
+    el.addEventListener('click', () => {
+      const idx = parseInt(el.dataset.calloutIdx);
+      const c = callouts[idx];
+      // Apply callout filter WITHOUT changing status/type/priority filters
+      // The callout filter function handles its own status logic
+      calloutFilter = c.filterFn;
+      // Override status filter to "All" so callout results aren't hidden
+      activeFilters.statuses = new Set();
+      document.querySelectorAll('#statusFilters .pill').forEach(p => p.classList.remove('active'));
+      const allPill = document.querySelector('#statusFilters [data-value="__all__"]');
+      if (allPill) allPill.classList.add('active');
+
+      document.getElementById('clearCalloutFilter').style.display = '';
+      // Highlight active callout
+      container.querySelectorAll('.callout').forEach(c => c.style.opacity = '0.5');
+      el.style.opacity = '1';
+
+      render();
+      // Auto-expand all themes so results are visible
+      document.querySelectorAll('.theme-section.collapsed').forEach(s => s.classList.remove('collapsed'));
+      const btn = document.getElementById('expandCollapseAll');
+      if (btn) btn.textContent = 'Collapse All';
+
+      document.querySelector('.issue-list-section').scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+}
+
+// ── VELOCITY CHART ──
+function renderVelocityChart() {
+  const all = TRACKER_DATA.issues;
+  const monthsOpened = {};
+  const monthsResolved = {};
+
+  all.forEach(i => {
+    const mk = monthKey(i.created);
+    if (mk) monthsOpened[mk] = (monthsOpened[mk] || 0) + 1;
+    if (RESOLVED_STATUSES.has(i.status)) {
+      const rk = monthKey(i.updated);
+      if (rk) monthsResolved[rk] = (monthsResolved[rk] || 0) + 1;
+    }
+  });
+
+  // Last 6 months
+  const allMonths = new Set([...Object.keys(monthsOpened), ...Object.keys(monthsResolved)]);
+  const sorted = [...allMonths].sort().slice(-6);
+
+  if (sorted.length === 0) {
+    document.getElementById('velocityChart').innerHTML = '<div style="color:var(--text-tertiary);font-size:13px">No velocity data available.</div>';
+    return;
+  }
+
+  const maxVal = Math.max(...sorted.map(m => Math.max(monthsOpened[m] || 0, monthsResolved[m] || 0)), 1);
+
+  let html = '';
+  sorted.forEach(m => {
+    const opened = monthsOpened[m] || 0;
+    const resolved = monthsResolved[m] || 0;
+    const oPct = (opened / maxVal) * 100;
+    const rPct = (resolved / maxVal) * 100;
+    html += `<div class="velocity-row">
+      <span class="velocity-month">${monthLabel(m)}</span>
+      <div class="velocity-bars">
+        <div class="velocity-bar opened" style="width:${Math.max(oPct, 2)}%" title="Opened: ${opened}"></div>
+        <div class="velocity-bar resolved" style="width:${Math.max(rPct, 2)}%" title="Resolved: ${resolved}"></div>
+      </div>
+    </div>`;
+  });
+
+  html += `<div class="velocity-legend">
+    <span class="legend-item"><span class="legend-dot" style="background:var(--red);opacity:0.75"></span>Opened</span>
+    <span class="legend-item"><span class="legend-dot" style="background:var(--green);opacity:0.75"></span>Resolved</span>
+  </div>`;
+
+  // Net change summary
+  const totalOpened = sorted.reduce((s, m) => s + (monthsOpened[m] || 0), 0);
+  const totalResolved = sorted.reduce((s, m) => s + (monthsResolved[m] || 0), 0);
+  const net = totalOpened - totalResolved;
+  const trend = net > 0 ? `+${net} net (backlog growing)` : net < 0 ? `${net} net (backlog shrinking)` : 'balanced';
+  html += `<div style="font-family:var(--font-mono);font-size:10px;color:var(--text-tertiary);margin-top:6px">${totalOpened} opened, ${totalResolved} resolved &mdash; ${trend}</div>`;
+
+  document.getElementById('velocityChart').innerHTML = html;
+}
+
+// ── RESPONSE CADENCE ──
+function renderCadenceMetrics() {
+  const all = TRACKER_DATA.issues;
+  const responseTimes = [];
+
+  all.forEach(i => {
+    if (!i.comments || !i.comments.first_comment_date) return;
+    const created = parseDate(i.created);
+    const first = parseDate(i.comments.first_comment_date);
+    if (created && first) {
+      const days = daysBetween(created, first);
+      if (days >= 0) responseTimes.push(days);
+    }
+  });
+
+  const neverCommented = all.filter(i => !i.comments || i.comments.comment_count === 0).length;
+  const totalWithComments = all.length - neverCommented;
+
+  if (responseTimes.length === 0) {
+    document.getElementById('cadenceMetrics').innerHTML = '<div style="color:var(--text-tertiary);font-size:13px">No comment data available.</div>';
+    return;
+  }
+
+  responseTimes.sort((a, b) => a - b);
+  const median = responseTimes[Math.floor(responseTimes.length / 2)];
+  const avg = Math.round(responseTimes.reduce((s, v) => s + v, 0) / responseTimes.length);
+  const within7 = responseTimes.filter(d => d <= 7).length;
+  const within7Pct = Math.round((within7 / all.length) * 100);
+
+  let html = `
+    <div class="cadence-metric">
+      <div class="cadence-value" style="color:${median <= 7 ? 'var(--green)' : median <= 14 ? 'var(--amber)' : 'var(--red)'}">${median}d</div>
+      <div class="cadence-label">Median time to first comment</div>
+      <div class="cadence-context">Average: ${avg} days</div>
+    </div>
+    <div class="cadence-metric">
+      <div class="cadence-value" style="color:${within7Pct >= 70 ? 'var(--green)' : within7Pct >= 40 ? 'var(--amber)' : 'var(--red)'}">${within7Pct}%</div>
+      <div class="cadence-label">Tickets with response within 7 days</div>
+      <div class="cadence-context">${within7} of ${all.length} tickets</div>
+    </div>
+    <div class="cadence-metric">
+      <div class="cadence-value" style="color:${neverCommented === 0 ? 'var(--green)' : neverCommented <= 5 ? 'var(--amber)' : 'var(--red)'}">${neverCommented}</div>
+      <div class="cadence-label">Tickets with zero comments</div>
+      <div class="cadence-context">${Math.round((neverCommented / all.length) * 100)}% of all tickets</div>
+    </div>`;
+
+  document.getElementById('cadenceMetrics').innerHTML = html;
+}
+
+// ── THEME CHART ──
+let initialRender = true;
+
+function renderThemeChart(filtered) {
+  const themes = [...new Set(TRACKER_DATA.issues.map(i => i.theme))];
+  const themeBugs = {}, themeFRs = {};
+  filtered.forEach(i => {
+    if (i.type === 'Bug') themeBugs[i.theme] = (themeBugs[i.theme] || 0) + 1;
+    else themeFRs[i.theme] = (themeFRs[i.theme] || 0) + 1;
+  });
+
+  const sorted = themes
+    .map(t => ({ name: t, bugs: themeBugs[t] || 0, frs: themeFRs[t] || 0, total: (themeBugs[t] || 0) + (themeFRs[t] || 0) }))
+    .filter(t => t.total > 0)
+    .sort((a, b) => b.total - a.total);
+
+  const maxCount = Math.max(...sorted.map(t => t.total), 1);
+  const animClass = initialRender ? ' animate' : '';
+
+  let html = '';
+  sorted.forEach(t => {
+    const bugPct = (t.bugs / maxCount) * 100;
+    const frPct = (t.frs / maxCount) * 100;
+    const label = t.name.length > 20 ? t.name.slice(0, 18) + '...' : t.name;
+    html += `<div class="bar-row">
+      <span class="bar-row-label" title="${t.name}">${label}</span>
+      <div class="bar-track">
+        <div class="bar-segment${animClass}" style="width:${bugPct}%;background:var(--red)"></div>
+        <div class="bar-segment${animClass}" style="width:${frPct}%;background:var(--blue);animation-delay:0.1s"></div>
+      </div>
+      <span class="bar-row-count">${t.total}</span>
+    </div>`;
+  });
+
+  html += `<div class="stacked-bar-legend">
+    <span class="legend-item"><span class="legend-dot" style="background:var(--red)"></span>Bug</span>
+    <span class="legend-item"><span class="legend-dot" style="background:var(--blue)"></span>Feature Request</span>
+  </div>`;
+
+  document.getElementById('themeChart').innerHTML = html;
+}
+
+// ── FILTERS ──
+function buildFilterGroup(containerId, items, filterKey, opts) {
+  opts = opts || {};
+  const el = document.getElementById(containerId);
+  const defaults = activeFilters[filterKey];
+  const hasDefaults = defaults instanceof Set && defaults.size > 0;
+  let html = '<button class="pill' + (!hasDefaults ? ' active' : '') + '" data-value="__all__">All</button>';
+  items.forEach(item => {
+    const label = typeof item === 'object' ? item.label : item;
+    const value = typeof item === 'object' ? item.value : item;
+    const isActive = hasDefaults && value.split(',').every(v => defaults.has(v));
+    html += '<button class="pill' + (isActive ? ' active' : '') + '" data-value="' + value + '">' + label + '</button>';
+  });
+  if (opts.compounds) {
+    opts.compounds.forEach(c => {
+      const isActive = hasDefaults && c.value.split(',').every(v => defaults.has(v));
+      html += '<button class="pill' + (isActive ? ' active' : '') + '" data-value="' + c.value + '">' + c.label + '</button>';
+    });
+  }
+  el.innerHTML = html;
+
+  el.querySelectorAll('.pill').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const allBtn = el.querySelector('[data-value="__all__"]');
+      if (btn.dataset.value === '__all__') {
+        el.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        activeFilters[filterKey] = new Set();
+      } else {
+        allBtn.classList.remove('active');
+        btn.classList.toggle('active');
+        const set = new Set();
+        el.querySelectorAll('.pill.active:not([data-value="__all__"])').forEach(p => {
+          p.dataset.value.split(',').forEach(v => set.add(v));
+        });
+        activeFilters[filterKey] = set;
+        if (set.size === 0) allBtn.classList.add('active');
+      }
+      render();
+    });
+  });
+}
+
+function buildFilters() {
+  const types = [...new Set(TRACKER_DATA.issues.map(i => i.type))];
+  buildFilterGroup('typeFilters', types.map(t => ({ label: t === 'Feature Request' ? 'FR' : t, value: t })), 'types');
+
+  const statuses = [...new Set(TRACKER_DATA.issues.map(i => i.status))].sort((a, b) => {
+    const ca = TRACKER_DATA.issues.filter(i => i.status === a).length;
+    const cb = TRACKER_DATA.issues.filter(i => i.status === b).length;
+    return cb - ca;
+  });
+  buildFilterGroup('statusFilters', statuses, 'statuses');
+
+  const priorities = PRIO_ORDER.filter(p => TRACKER_DATA.issues.some(i => i.priority === p));
+  buildFilterGroup('priorityFilters', priorities, 'priorities', {
+    compounds: priorities.includes('P0') && priorities.includes('P1') ? [{ label: 'P0-P1', value: 'P0,P1' }] : []
+  });
+
+  const themes = [...new Set(TRACKER_DATA.issues.map(i => i.theme))].sort();
+  const sel = document.getElementById('themeFilter');
+  sel.innerHTML = '<option value="all">All Themes</option>' + themes.map(t => '<option value="' + t + '">' + t + '</option>').join('');
+  sel.addEventListener('change', () => { activeFilters.theme = sel.value; render(); });
+
+  document.getElementById('searchInput').addEventListener('input', e => {
+    activeFilters.search = e.target.value;
+    render();
+  });
+
+  // Clear callout filter
+  document.getElementById('clearCalloutFilter').addEventListener('click', () => {
+    calloutFilter = null;
+    document.getElementById('clearCalloutFilter').style.display = 'none';
+    // Reset callout opacity
+    document.querySelectorAll('.callout').forEach(c => c.style.opacity = '');
+    // Restore default status filter (non-resolved)
+    const defaults = new Set(TRACKER_DATA.issues.map(i => i.status).filter(s => !RESOLVED_STATUSES.has(s)));
+    activeFilters.statuses = defaults;
+    // Update status pills
+    document.querySelectorAll('#statusFilters .pill').forEach(p => {
+      p.classList.remove('active');
+      if (defaults.has(p.dataset.value)) p.classList.add('active');
+    });
+    render();
+  });
+}
+
+// ── THEME SECTIONS ──
+function renderThemes(filtered) {
+  const grouped = {};
+  filtered.forEach(i => { (grouped[i.theme] = grouped[i.theme] || []).push(i); });
+  const sortedThemes = Object.entries(grouped).sort((a, b) => b[1].length - a[1].length);
+
+  if (sortedThemes.length === 0) {
+    document.getElementById('themeSections').innerHTML = '<div class="empty-state">No issues match the current filters.</div>';
+    return;
+  }
+
+  document.getElementById('themeSections').innerHTML = sortedThemes.map(([theme, issues], idx) => {
+    const prioCounts = countBy(issues, i => i.priority);
+    const badges = PRIO_ORDER.filter(p => prioCounts[p]).map(p =>
+      '<span class="mini-badge ' + p.toLowerCase() + '">' + p + ':' + prioCounts[p] + '</span>').join('');
+
+    const rows = issues.map(i => {
+      const sc = statusColor(i.status);
+      const tc = i.type === 'Bug' ? 'bug' : 'feature';
+      const assignee = i.assignee
+        ? '<span class="assignee">' + i.assignee + '</span>'
+        : '<span class="assignee unassigned">&mdash;</span>';
+
+      // Last activity column
+      const feCount = i.comments?.fe_update_count || 0;
+      const feBadge = feCount > 0 ? `<span class="fe-badge">SE:${feCount}</span>` : '';
+      let activityHtml;
+      if (!i.comments || i.comments.comment_count === 0) {
+        activityHtml = '<span class="activity-cell never">No comments</span>';
+      } else if (!i.comments.last_eng_comment_date) {
+        activityHtml = `<span class="activity-cell stale">SE only</span>${feBadge}`;
+      } else {
+        const days = daysAgo(i.comments.last_eng_comment_date);
+        const cls = days > VERY_STALE_DAYS ? 'stale' : days > STALE_DAYS ? 'aging' : 'recent';
+        activityHtml = `<span class="activity-cell ${cls}">${days}d ago</span>${feBadge}`;
+      }
+
+      return '<tr>' +
+        '<td><a class="issue-key" href="' + (i.url || '#') + '" target="_blank" rel="noopener">' + i.key + '</a></td>' +
+        '<td><span class="issue-summary">' + i.summary + '</span></td>' +
+        '<td><span class="type-badge ' + tc + '">' + (i.type === 'Feature Request' ? 'FR' : i.type) + '</span></td>' +
+        '<td><span class="priority-badge ' + i.priority.toLowerCase() + '">' + i.priority + '</span></td>' +
+        '<td><span class="status-badge" style="background:color-mix(in srgb,' + sc + ' 12%,transparent);color:' + sc + '">' + i.status + '</span></td>' +
+        '<td>' + activityHtml + '</td>' +
+        '<td>' + assignee + '</td>' +
+        '</tr>';
+    }).join('');
+
+    return '<div class="theme-section collapsed animate-in" style="animation-delay:' + (180 + idx * 60) + 'ms">' +
+      '<div class="theme-header" onclick="this.parentElement.classList.toggle(\'collapsed\')">' +
+        '<span class="theme-arrow">&#9662;</span>' +
+        '<span class="theme-name">' + theme + '</span>' +
+        '<span class="theme-count">' + issues.length + '</span>' +
+        '<div class="theme-badges">' + badges + '</div>' +
+      '</div>' +
+      '<div class="theme-body"><div class="theme-body-inner">' +
+        '<table class="issue-table">' +
+          '<thead><tr><th>Key</th><th>Summary</th><th>Type</th><th>Priority</th><th>Status</th><th>Last Activity</th><th>Assignee</th></tr></thead>' +
+          '<tbody>' + rows + '</tbody>' +
+        '</table>' +
+      '</div></div>' +
+    '</div>';
+  }).join('');
+}
+
+// ── RENDER ──
+function render() {
+  const filtered = getFiltered();
+  renderThemeChart(filtered);
+  renderThemes(filtered);
+  initialRender = false;
+}
+
+// ── BUCKET FILTER ──
+function filterByBucket(bucket) {
+  // Clear existing callout filter
+  calloutFilter = null;
+  document.getElementById('clearCalloutFilter').style.display = 'none';
+
+  // Set status filter based on bucket
+  if (bucket === 'triage') {
+    activeFilters.statuses = new Set(['Triage']);
+  } else if (bucket === 'resolved') {
+    activeFilters.statuses = new Set([...RESOLVED_STATUSES]);
+  } else if (bucket === 'active' || bucket === 'stale') {
+    // These need callout filter since they depend on comment data
+    activeFilters.statuses = new Set();
+    calloutFilter = i => classifyIssue(i) === bucket;
+    document.getElementById('clearCalloutFilter').style.display = '';
+  }
+
+  // Update status pills UI
+  document.querySelectorAll('#statusFilters .pill').forEach(p => {
+    p.classList.remove('active');
+    if (activeFilters.statuses.size === 0 && p.dataset.value === '__all__') {
+      p.classList.add('active');
+    } else if (activeFilters.statuses.has(p.dataset.value)) {
+      p.classList.add('active');
+    }
+  });
+
+  render();
+  document.querySelector('.issue-list-section').scrollIntoView({ behavior: 'smooth' });
+}
+
+// ── EXPAND/COLLAPSE ALL ──
+document.getElementById('expandCollapseAll').addEventListener('click', function() {
+  const sections = document.querySelectorAll('.theme-section');
+  const allExpanded = [...sections].every(s => !s.classList.contains('collapsed'));
+  sections.forEach(s => {
+    if (allExpanded) s.classList.add('collapsed');
+    else s.classList.remove('collapsed');
+  });
+  this.textContent = allExpanded ? 'Expand All' : 'Collapse All';
+});
+
+// ── INIT ──
+document.getElementById('title').textContent = TRACKER_DATA.customer;
+document.title = TRACKER_DATA.customer + ' \u2014 Issue Tracker';
+document.getElementById('headerMeta').textContent = 'Generated ' + TRACKER_DATA.generated;
+renderHealthBuckets();
+renderAttentionCallouts();
+renderVelocityChart();
+renderCadenceMetrics();
+buildFilters();
+render();
+</script>
+</body>
+</html>

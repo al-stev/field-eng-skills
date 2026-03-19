@@ -1,0 +1,51 @@
+# Customer registry -- shared across agents (jira-updater, cadence-prep, customer-tracker)
+# Add customers as you work with them. Channel IDs from Slack, customer names from Jira.
+#
+# Schema:
+#   name:                    Display name used in conversation
+#   jira_customer:           Value in Jira "Customer" field (may differ from display name)
+#   jira_customer_variants:  Alternative spellings in Jira (for fuzzy matching)
+#   slack_channels:          List of Slack channels for this customer
+#     - id:                  Slack channel ID (e.g., C01234ABCDE)
+#       name:                Channel name (e.g., ext-gresearch)
+#       type:                external | internal | support
+#   cadence:                 Meeting cadence schedule
+#     type:                  weekly | biweekly | monthly | qbr
+#     day:                   Day of week (e.g., Tuesday)
+#     time:                  Time with timezone (e.g., 10:00 AM PT)
+#   deployment_type:          saas | dedicated-cloud | server
+#                            Filters product updates to relevant deployment context
+#   contacts:                Key contacts (built up over time)
+#     - name:                Contact name
+#       org:                 Organization (e.g., W&B, G-Research)
+#       role:                Contact role
+#
+# Cadence type drives lookback window for data gathering:
+#   weekly=7d, biweekly=14d, monthly=30d, qbr=90d
+#
+# Deployment types:
+#   saas:             Multi-tenant SaaS (app.wandb.ai)
+#   dedicated-cloud:  Customer-specific cloud instance, managed by W&B
+#   server:           Self-hosted by customer (on-prem or customer cloud)
+
+customers:
+  - name: GResearch
+    jira_customer: GResearch
+    jira_customer_variants:
+      - "G-Research"
+    slack_channels:
+      - id: PLACEHOLDER
+        name: ext-gresearch
+        type: external
+    deployment_type: dedicated-cloud
+    cadence:
+      type: weekly
+      day: Tuesday
+      time: "10:00 AM PT"
+    contacts:
+      - name: Allan Stevenson
+        org: W&B
+        role: Solutions Engineer
+      - name: PLACEHOLDER
+        org: G-Research
+        role: PLACEHOLDER

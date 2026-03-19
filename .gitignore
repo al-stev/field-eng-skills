@@ -1,0 +1,19 @@
+# Customer output (sensitive, per-SE)
+customers/
+
+# Python virtual environments
+.venv/
+__pycache__/
+*.pyc
+
+# Credentials (never commit)
+.env
+*.env
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# uv lock files are committed (reproducible deps)
+# but venvs are not
+.claude/skills/*/.venv/

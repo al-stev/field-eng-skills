@@ -1,0 +1,132 @@
+{
+  "skill_name": "customer-snapshot",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Generate a customer tracker dashboard for GResearch",
+      "expected_output": "Self-contained HTML intelligence dashboard at customers/g-research/trackers/YYYY-MM-DD-dashboard.html with ~84 issues across multiple themes, custom CSS bar charts (no Chart.js), working pill filters, collapsible theme sections with priority mini-badges, resolved toggle defaulting to hidden, sentiment panel, trending section, executive summary, audience toggle, and both light/dark mode support.",
+      "files": [],
+      "assertions": [
+        {
+          "id": "html-exists",
+          "text": "Output HTML file exists at customers/g-research/trackers/ with today's date",
+          "type": "file_exists"
+        },
+        {
+          "id": "no-chartjs",
+          "text": "HTML file does not contain any Chart.js references (no 'chart.js', 'Chart(' or 'new Chart')",
+          "type": "content_absent"
+        },
+        {
+          "id": "has-intelligence-data",
+          "text": "HTML file contains an INTELLIGENCE_DATA constant with customer set to GResearch or G-Research",
+          "type": "content_present"
+        },
+        {
+          "id": "has-custom-bars",
+          "text": "HTML file uses custom CSS bar elements (bar-track, bar-segment classes) instead of canvas charts",
+          "type": "content_present"
+        },
+        {
+          "id": "has-filters",
+          "text": "HTML file contains pill filter buttons for Type, Status, and Priority",
+          "type": "content_present"
+        },
+        {
+          "id": "has-resolved-toggle",
+          "text": "HTML file contains a resolved toggle button that defaults to hiding resolved issues",
+          "type": "content_present"
+        },
+        {
+          "id": "has-theme-sections",
+          "text": "HTML file contains collapsible theme sections with priority mini-badges",
+          "type": "content_present"
+        },
+        {
+          "id": "has-dark-light-mode",
+          "text": "HTML file contains prefers-color-scheme media query for light mode",
+          "type": "content_present"
+        },
+        {
+          "id": "has-sentiment-section",
+          "text": "HTML contains sentiment panel section (sentimentPanel element or renderSentimentPanel function)",
+          "type": "content_present"
+        },
+        {
+          "id": "has-trending-section",
+          "text": "HTML contains trending section (trendingCharts element or renderTrendingCharts function)",
+          "type": "content_present"
+        },
+        {
+          "id": "has-exec-summary",
+          "text": "HTML contains exec summary section (execSummary element or renderExecSummary function)",
+          "type": "content_present"
+        },
+        {
+          "id": "has-audience-toggle",
+          "text": "HTML contains audience toggle (audience-toggle class or data-audience attribute)",
+          "type": "content_present"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Build the tracker for a customer with no issues in Jira -- use 'NonexistentTestCorp' as the customer name",
+      "expected_output": "Self-contained HTML dashboard with empty state message, no errors, charts render gracefully with zero data, file saved to customers/nonexistent-test-corp/trackers/YYYY-MM-DD-dashboard.html.",
+      "files": [],
+      "assertions": [
+        {
+          "id": "empty-html-exists",
+          "text": "Output HTML file exists at customers/nonexistent-test-corp/trackers/",
+          "type": "file_exists"
+        },
+        {
+          "id": "empty-state-graceful",
+          "text": "HTML file renders without JS errors (no issues array is empty, charts handle zero data)",
+          "type": "content_present"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "I have a call with the Acme Corp team tomorrow, can you pull together a dashboard of their open Jira issues so I can prep?",
+      "expected_output": "Skill triggers from natural language (not /customer-snapshot command). Dashboard generated for Acme Corp at customers/acme-corp/trackers/YYYY-MM-DD-dashboard.html. Summary includes issue count, type breakdown, and top themes.",
+      "files": [],
+      "assertions": [
+        {
+          "id": "natural-trigger",
+          "text": "Skill was invoked despite not using /customer-snapshot command",
+          "type": "behavioral"
+        },
+        {
+          "id": "acme-html-exists",
+          "text": "Output HTML file exists at customers/acme-corp/trackers/",
+          "type": "file_exists"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Generate an intelligence dashboard for a customer not in customers.yaml -- use 'UnknownTestCorp'",
+      "expected_output": "Dashboard generates with Jira data only. Sentiment section shows 'Not configured' state. Trending and exec summary compute from issues only. No crashes.",
+      "files": [],
+      "assertions": [
+        {
+          "id": "unknown-html-exists",
+          "text": "Output file exists at customers/unknown-test-corp/trackers/",
+          "type": "file_exists"
+        },
+        {
+          "id": "no-sentiment-crash",
+          "text": "HTML renders without errors despite missing Slack data",
+          "type": "behavioral"
+        },
+        {
+          "id": "has-empty-sentiment",
+          "text": "Sentiment section shows unavailable/not-configured state",
+          "type": "content_present"
+        }
+      ]
+    }
+  ]
+}
