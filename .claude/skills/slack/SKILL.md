@@ -217,6 +217,15 @@ Slack uses Unix timestamps with microsecond precision as unique message IDs (e.g
 - Returned in `latest` / `oldest` fields for time ranges
 - **Not human-readable** — convert to dates for display to the user
 
+## Permalinks and Slack Connect Channels
+
+**IMPORTANT:** Many customer channels (e.g. `#wandb-gresearch`) are **Slack Connect** channels shared across multiple workspaces. When building message links for the user:
+
+- **Do NOT construct links manually** using `coreweave.slack.com/archives/...` — they will 404 on Slack Connect channels.
+- **Always use the `permalink` field** returned by the search API (`data['messages']['matches'][N]['permalink']`). The API returns the correct domain automatically (often `weightsandbiases.slack.com` for W&B shared channels, or `gresearch.enterprise.slack.com` for GR-hosted channels).
+- Search results include `permalink` — extract it alongside `ts`, `username`, and `text`.
+- If a channel's `is_ext_shared` is `true`, it is a Slack Connect channel and manual link construction will not work.
+
 ## Write Operations (Require Explicit User Confirmation)
 
 **IMPORTANT: Never execute write operations without explicit user confirmation.** Before running any write command, describe exactly what will be posted and where, and get the user's approval.
