@@ -144,17 +144,96 @@
 
 ## Traceability
 
-Updated during roadmap creation.
-
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| (populated by roadmapper) | | |
+| FOUND-01 | Phase 1 | Pending |
+| FOUND-02 | Phase 1 | Pending |
+| FOUND-03 | Phase 1 | Pending |
+| FOUND-04 | Phase 1 | Pending |
+| FOUND-05 | Phase 1 | Pending |
+| XCUT-01 | Phase 1 | Pending |
+| XCUT-02 | Phase 1 | Pending |
+| XCUT-03 | Phase 1 | Pending |
+| XCUT-04 | Phase 1 | Pending |
+| XCUT-05 | Phase 1 | Pending |
+| XCUT-06 | Phase 1 | Pending |
+| XCUT-07 | Phase 1 | Pending |
+| XCUT-08 | Phase 1 | Pending |
+| XCUT-09 | Phase 1 | Pending |
+| XCUT-10 | Phase 1 | Pending |
+| XCUT-11 | Phase 1 | Pending |
+| JOUR-01 | Phase 2 | Pending |
+| JOUR-02 | Phase 2 | Pending |
+| JOUR-03 | Phase 2 | Pending |
+| JOUR-04 | Phase 2 | Pending |
+| JOUR-05 | Phase 2 | Pending |
+| JOUR-06 | Phase 2 | Pending |
+| JOUR-07 | Phase 2 | Pending |
+| JOUR-08 | Phase 2 | Pending |
+| DCAY-01 | Phase 2 | Pending |
+| DCAY-02 | Phase 2 | Pending |
+| DCAY-03 | Phase 2 | Pending |
+| DCAY-04 | Phase 2 | Pending |
+| DCAY-05 | Phase 2 | Pending |
+| DCAY-06 | Phase 2 | Pending |
+| DCAY-07 | Phase 2 | Pending |
+| VELC-01 | Phase 2 | Pending |
+| VELC-02 | Phase 2 | Pending |
+| VELC-03 | Phase 2 | Pending |
+| VELC-04 | Phase 2 | Pending |
+| VELC-05 | Phase 2 | Pending |
+| VELC-06 | Phase 2 | Pending |
+| VELC-07 | Phase 2 | Pending |
+| SDKV-01 | Phase 2 | Pending |
+| SDKV-02 | Phase 2 | Pending |
+| SDKV-03 | Phase 2 | Pending |
+| SDKV-04 | Phase 2 | Pending |
+| SDKV-05 | Phase 2 | Pending |
+| SDKV-06 | Phase 2 | Pending |
+| SDKV-07 | Phase 2 | Pending |
+| CHRT-01 | Phase 3 | Pending |
+| CHRT-02 | Phase 3 | Pending |
+| CHRT-03 | Phase 3 | Pending |
+| CHRT-04 | Phase 3 | Pending |
+| CHRT-05 | Phase 3 | Pending |
+| CHRT-06 | Phase 3 | Pending |
+| CHRT-07 | Phase 3 | Pending |
+| TEAM-01 | Phase 3 | Pending |
+| TEAM-02 | Phase 3 | Pending |
+| TEAM-03 | Phase 3 | Pending |
+| TEAM-04 | Phase 3 | Pending |
+| TEAM-05 | Phase 3 | Pending |
+| TEAM-06 | Phase 3 | Pending |
+| TEAM-07 | Phase 3 | Pending |
+| TEAM-08 | Phase 3 | Pending |
+| RISK-01 | Phase 3 | Pending |
+| RISK-02 | Phase 3 | Pending |
+| RISK-03 | Phase 3 | Pending |
+| RISK-04 | Phase 3 | Pending |
+| RISK-05 | Phase 3 | Pending |
+| RISK-06 | Phase 3 | Pending |
+| RISK-07 | Phase 3 | Pending |
+| RISK-08 | Phase 3 | Pending |
+| CORR-01 | Phase 4 | Pending |
+| CORR-02 | Phase 4 | Pending |
+| CORR-03 | Phase 4 | Pending |
+| CORR-04 | Phase 4 | Pending |
+| CORR-05 | Phase 4 | Pending |
+| CORR-06 | Phase 4 | Pending |
+| CORR-07 | Phase 4 | Pending |
+| CORR-08 | Phase 4 | Pending |
+| PERF-01 | Phase 4 | Pending |
+| PERF-02 | Phase 4 | Pending |
+| PERF-03 | Phase 4 | Pending |
+| PERF-04 | Phase 4 | Pending |
+| PERF-05 | Phase 4 | Pending |
+| PERF-06 | Phase 4 | Pending |
 
 **Coverage:**
-- v1 requirements: 72 total
-- Mapped to phases: 0
-- Unmapped: 72 ⚠️
+- v1 requirements: 82 total
+- Mapped to phases: 82
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-24*
-*Last updated: 2026-03-24 after initial definition*
+*Last updated: 2026-03-24 after roadmap creation*
