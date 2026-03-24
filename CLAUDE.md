@@ -16,10 +16,16 @@ Claude Code skills for W&B Solutions Engineers. Integrates with W&B Jira (wandb.
     jira/                   -- W&B Jira queries, issue creation, FE-UPDATE
     slack/                  -- CoreWeave Slack channel history, search, threads
     confluence/             -- CoreWeave Confluence pages, spaces
+    asana/                  -- Asana task management (SE actions, RAID, portfolios)
+    asana-setup/            -- One-time Asana PAT setup
     cadence-prep/           -- Customer cadence call preparation
     customer-snapshot/      -- Customer intelligence dashboard
     jira-check/             -- FE-UPDATE maintenance and stale issue review
     pre-read/               -- Meeting pre-read document generation
+    raid/                   -- RAID log management (Risks, Assumptions, Issues, Dependencies)
+    ghosted/                -- Customer silence tracking on Slack threads
+    nag/                    -- Overdue and stale task scanner
+    maction/                -- Meeting notes to Asana actions + RAID pipeline
     rats/                   -- Roses & Thorns biweekly update
     atlassian-setup/        -- One-time Atlassian credential setup
     slack-setup/            -- One-time Slack credential setup
@@ -45,6 +51,7 @@ All API credentials stored in `~/.tsm-ai/.env`. Run `/credential-status` to chec
 | `CONFLUENCE_TOKEN` | CoreWeave Confluence | coreweave.atlassian.net |
 | `SLACK_TOKEN` | CoreWeave Slack | coreweave.slack.com |
 | `SLACK_COOKIE` | CoreWeave Slack | coreweave.slack.com |
+| `ASANA_TOKEN` | Asana | app.asana.com |
 
 ## Python Skills
 

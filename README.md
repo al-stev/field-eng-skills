@@ -24,14 +24,18 @@ Claude Code skills for W&B Solutions Engineers. Integrates with W&B Jira, CoreWe
    # CoreWeave Slack
    SLACK_TOKEN=xoxc-...
    SLACK_COOKIE=xoxd-...
+
+   # Asana (SE action tracking)
+   ASANA_TOKEN=your-personal-access-token
    ```
-   Run `/credential-status` to verify. Run `/atlassian-setup` or `/slack-setup` for guided configuration.
+   Run `/credential-status` to verify. Run `/atlassian-setup`, `/slack-setup`, or `/asana-setup` for guided configuration.
 
 3. **Install Python dependencies** (per-skill, using uv):
    ```bash
    cd .claude/skills/jira && uv sync
    cd .claude/skills/slack && uv sync
    cd .claude/skills/confluence && uv sync
+   cd .claude/skills/asana && uv sync
    ```
 
 4. **Install globally** (available in any project):
@@ -48,11 +52,21 @@ Claude Code skills for W&B Solutions Engineers. Integrates with W&B Jira, CoreWe
 
 | Skill | Invocation | What it does |
 |-------|-----------|--------------|
-| **cadence-prep** | `/cadence-prep GResearch` | Prepares a customer cadence call agenda. Gathers Jira issues, Slack threads, product updates, and carry-forward items. Publishes to Confluence and optionally generates styled HTML. |
-| **customer-snapshot** | `/customer-snapshot GResearch` | Generates an interactive intelligence dashboard from Jira + Slack data. Shows health buckets, sentiment analysis, trending metrics, and executive summary. |
+| **cadence-prep** | `/cadence-prep GResearch` | Prepares a customer cadence call agenda. Gathers Jira issues, Slack threads, Asana actions, product updates, and carry-forward items. Publishes to Confluence and optionally generates styled HTML. |
+| **customer-snapshot** | `/customer-snapshot GResearch` | Generates an interactive intelligence dashboard from Jira + Slack + Asana data. Shows health buckets, sentiment analysis, trending metrics, and executive summary. |
 | **jira-check** | `/jira-check GResearch` | Reviews customer Jira issues for staleness, drafts FE-UPDATE comments, and identifies issues needing attention. Runs across all customers when invoked without a name. |
 | **pre-read** | `/pre-read GResearch` | Generates a structured pre-read document for a customer meeting by synthesizing Slack threads, Jira issues, and manual context. |
 | **rats** | `/rats` | Searches your recent Slack posts and produces categorized output (Highlights, Lowlights, Learnings, Risks) for the team Roses & Thorns page. |
+
+### Asana Action Tracking
+
+| Skill | Invocation | What it does |
+|-------|-----------|--------------|
+| **asana** | `/asana tasks --project-gid GID` | Query and manage SE action items in Asana. Supports projects, tasks, sections, search, and write operations (create, update, move, complete). |
+| **raid** | `/raid GResearch` | View, scan for, or add RAID items (Risks, Assumptions, Issues, Dependencies). Manages Asana-native RAID logs with portfolio visibility across accounts. |
+| **ghosted** | `/ghosted` | Track customer silence on Slack threads. Monitors "Waiting on Customer" tasks for unresponsive threads. |
+| **nag** | `/nag` | Scan your Asana tasks for overdue and stale items across all customers. Your personal task hygiene scanner. |
+| **maction** | `/maction GResearch <notes>` | Extract action items and RAID signals from meeting notes or transcripts. Creates tracked Asana tasks from Granola summaries or pasted text. |
 
 ### Data Sources
 
@@ -68,6 +82,7 @@ Claude Code skills for W&B Solutions Engineers. Integrates with W&B Jira, CoreWe
 |-------|--------------|
 | **atlassian-setup** | Guided setup for Jira and Confluence API tokens |
 | **slack-setup** | Guided setup for Slack credentials (token + cookie) |
+| **asana-setup** | Guided setup for Asana Personal Access Token (PAT) |
 | **credential-status** | Health check for all configured credentials |
 | **credential-reference** | Reference table of all API credential keys and where they're used |
 
@@ -75,19 +90,44 @@ Claude Code skills for W&B Solutions Engineers. Integrates with W&B Jira, CoreWe
 
 Skills are designed to compose. Common patterns are documented in `.claude/rules/skill-composition.md`:
 
-- **Cadence Prep** — cadence-prep orchestrates jira + slack + confluence in sequence
+- **Cadence Prep** — cadence-prep orchestrates jira + slack + asana + confluence in sequence
 - **Customer Lookup** — jira + slack + confluence to build a customer picture
-- **Customer Snapshot** — jira + slack + customer-snapshot for an intelligence dashboard
+- **Customer Snapshot** — jira + slack + asana + customer-snapshot for an intelligence dashboard
 - **FE-UPDATE Workflow** — jira-check identifies stale issues, slack gathers context, jira posts updates
 - **Communication Prep** — slack + jira + confluence to prepare for meetings
+- **RAID Management** — raid + asana + jira + slack for risk register maintenance
+- **Action Tracking** — slack + jira + asana to capture and track SE actions
+- **Meeting Follow-Up** — maction + asana + raid to turn meeting notes into tracked work
+- **Task Hygiene** — nag + asana + ghosted to keep backlog clean
+
+## Asana Structure: RAID Two-Project Model
+
+Each customer in Asana has two projects, organized inside a customer portfolio within a master portfolio:
+
+```
+Portfolio: "W&B EMEA Customers"              <- master portfolio
+  |-- Portfolio: "GResearch"                 <- one per customer
+  |    |-- GResearch Actions (project)       <- day-to-day SE work (safe to share)
+  |    |-- GResearch RAID Log (project)      <- internal risk register (NEVER shared)
+  |-- Portfolio: "GSK"
+  |    |-- GSK Actions (project)
+  |    |-- GSK RAID Log (project)
+```
+
+- **Actions project** (6 sections: To Do, In Progress, Waiting on Customer, Waiting on Eng, Scheduled/Future, Done) -- tracks SE action items. Customers can see this.
+- **RAID project** (4 sections: Risks, Assumptions, Issues, Dependencies) -- internal strategic view with honest risk assessments. Never shared with customers.
+- **Multi-homing**: Action tasks can appear in both projects via Asana's native multi-homing. An action task blocked on engineering lives in both the Actions project ("Waiting on Eng") and the RAID project ("Dependencies").
+
+Run `/asana setup-customer --name "CustomerName" --master-portfolio-gid GID` to create the full structure for a new customer. See `.claude/rules/asana.md` for workspace constants and conventions.
 
 ## Project Structure
 
 ```
 .claude/
-  skills/           -- 12 Claude Code skills (invoked via /skill-name)
+  skills/           -- 18 Claude Code skills (invoked via /skill-name)
   rules/            -- Auto-loaded project rules
     atlassian.md    -- Jira/Confluence workspace conventions, FE-UPDATE format
+    asana.md        -- Asana workspace conventions, RAID model, staleness rules
     slack.md        -- Slack workspace conventions, channel naming
     skill-composition.md -- Multi-skill workflow patterns
 templates/
@@ -103,8 +143,11 @@ Two separate Atlassian instances require separate credentials:
 |----------|---------|-------------|
 | wandb.atlassian.net | W&B Jira (customer bugs, feature requests) | `ATLASSIAN_EMAIL` / `ATLASSIAN_TOKEN` |
 | coreweave.atlassian.net | CoreWeave Confluence (team wiki, cadence docs) | `CONFLUENCE_EMAIL` / `CONFLUENCE_TOKEN` |
+| app.asana.com | Asana (SE action tracking, RAID logs, portfolios) | `ASANA_TOKEN` |
 
 Slack uses the CoreWeave workspace: `SLACK_TOKEN` / `SLACK_COOKIE`.
+
+Asana uses a Personal Access Token (PAT) generated at [app.asana.com/0/my-apps](https://app.asana.com/0/my-apps). PATs do not expire. Run `/asana-setup` for guided configuration.
 
 All stored in `~/.tsm-ai/.env`. API tokens are generated at [id.atlassian.com](https://id.atlassian.com/manage-profile/security/api-tokens) — make sure you're logged in as the correct account for each instance.
 
@@ -116,6 +159,9 @@ All stored in `~/.tsm-ai/.env`. API tokens are generated at [id.atlassian.com](h
 - `slack_channels` — channel IDs for Slack data
 - `cadence` — meeting schedule (type/day/time drives lookback window)
 - `deployment_type` — saas / dedicated-cloud / server (filters product updates)
+- `asana_project_gid` — Asana Actions project (from `/asana setup-project`)
+- `asana_raid_project_gid` — Asana RAID Log project (from `/asana setup-raid-project`)
+- `asana_portfolio_gid` — Asana customer portfolio (from `/asana setup-customer`)
 - `contacts` — key contacts with org and role
 
 ## Python Skills

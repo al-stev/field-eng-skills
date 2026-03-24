@@ -15,6 +15,9 @@
 #     time:                  Time with timezone (e.g., 10:00 AM PT)
 #   deployment_type:          saas | dedicated-cloud | server
 #                            Filters product updates to relevant deployment context
+#   asana_project_gid:       Asana Actions project GID (from /asana setup-project)
+#   asana_raid_project_gid:  Asana RAID Log project GID (from /asana setup-raid-project)
+#   asana_portfolio_gid:     Asana customer portfolio GID (from /asana setup-customer)
 #   contacts:                Key contacts (built up over time)
 #     - name:                Contact name
 #       org:                 Organization (e.g., W&B, G-Research)
@@ -38,6 +41,9 @@ customers:
         name: ext-gresearch
         type: external
     deployment_type: dedicated-cloud
+    asana_project_gid: PLACEHOLDER
+    asana_raid_project_gid: PLACEHOLDER
+    asana_portfolio_gid: PLACEHOLDER
     cadence:
       type: weekly
       day: Tuesday

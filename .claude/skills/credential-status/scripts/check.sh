@@ -67,5 +67,19 @@ else
   missing "Slack (SLACK_TOKEN / SLACK_COOKIE)"
 fi
 
+# Asana
+if [ -n "${ASANA_TOKEN:-}" ]; then
+  HTTP_CODE_ASANA=$(curl -s -o /dev/null -w "%{http_code}" \
+    -H "Authorization: Bearer ${ASANA_TOKEN}" \
+    "https://app.asana.com/api/1.0/users/me" 2>/dev/null || echo "000")
+  if [ "$HTTP_CODE_ASANA" = "200" ]; then
+    ok "Asana (app.asana.com)"
+  else
+    expired "Asana" "HTTP $HTTP_CODE_ASANA — run /asana-setup"
+  fi
+else
+  missing "Asana (ASANA_TOKEN)"
+fi
+
 echo ""
 echo "Done."

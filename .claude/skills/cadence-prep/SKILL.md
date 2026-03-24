@@ -104,6 +104,24 @@ From the gathered data, compute:
 - **Stale issues**: open issues where the most recent comment (excluding SE's own FE-UPDATE comments) is older than 30 days
 - Issue URLs: `https://wandb.atlassian.net/browse/WB-XXX`
 
+### Step 2.5: Gather Asana Actions
+
+If the customer has `asana_project_gid` configured in `templates/customers.yaml` (not `PLACEHOLDER`), fetch SE action tasks:
+
+```bash
+uv run --project .claude/skills/asana python .claude/skills/asana/scripts/query.py tasks \
+  --project-gid <asana_project_gid> --limit 100 --pretty
+```
+
+From the gathered data, extract:
+
+- **Open actions**: incomplete tasks grouped by section (To Do, In Progress, Waiting on Customer, Waiting on Eng)
+- **Recently completed**: tasks completed within the lookback window (check `completed_at`)
+- **Overdue tasks**: tasks where `due_on` is in the past and `completed` is false
+- **Jira cross-references**: tasks with `(WB-XXXX)` suffix in name, cross-reference with Jira data from Step 2
+
+If `asana_project_gid` is `PLACEHOLDER` or not set, skip this step and note: "Asana not configured for this customer. Run `/asana setup-project` to enable action tracking."
+
 ### Step 3: Gather Slack Data
 
 Read channel history for each of the customer's Slack channels (from customers.yaml `slack_channels`):

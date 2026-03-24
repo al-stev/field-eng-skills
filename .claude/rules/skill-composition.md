@@ -42,3 +42,70 @@ The "pull view, notice stale, trigger update" pattern for keeping Jira issues cu
 1. **jira** — Pull customer issues, identify those with stale or missing FE-UPDATE comments.
 2. **slack** — Follow linked Slack thread URLs from Jira issues. Summarize new activity since last update.
 3. **jira** — Post FE-UPDATE formatted comments with source citations and updated status/dates.
+
+## Action Tracking
+
+Manage SE actions for a customer -- create tasks from Slack conversations, track progress, update status.
+
+1. **slack** — Read the Slack thread or conversation that needs action tracking.
+2. **jira** — Check if there's a related Jira issue (search by keywords or issue key mentioned in thread).
+3. **asana** — Create a task in the customer's Asana project with:
+   - Description populated from Slack thread context
+   - Linked Jira issue key in task name suffix (WB-XXXX)
+   - Slack source URL in description
+   - Priority and due date based on urgency
+4. **asana** — Update task status as work progresses (move between sections).
+
+## Programme Update
+
+Generate a 3P (Progress, Plans, Problems) update for a customer or across all customers.
+
+1. **3p-update** — Run the 3P generation skill which automatically:
+   - Fetches Asana tasks (progress/plans)
+   - Fetches Jira activity (progress/problems)
+   - Fetches Slack signals (problems)
+   - Synthesizes a concise 3P update
+2. Optional: add `--confluence` flag to publish as a Confluence page.
+
+## RAID Management
+
+Manage RAID logs (Risks, Assumptions, Issues, Dependencies) across customer accounts. RAID is the management-visibility layer that sits above day-to-day SE actions.
+
+1. **raid** — View current RAID log for a customer, scan for new items, or manually add items.
+2. **asana** — Base operations: create/update/move/complete RAID tasks, multi-home between customer and RAID projects.
+3. **jira** — Scan mode data source: open issues, stale items, FE-UPDATE status for Issue and Dependency detection.
+4. **slack** — Scan mode data source: customer channel sentiment for Risk detection.
+
+## Customer Onboarding
+
+Set up a new customer's full Asana structure with portfolio, projects, and metadata.
+
+1. **asana** — Run `setup-customer` to create customer portfolio + Actions project + RAID project + add to master portfolio + populate custom fields (SE Owner, Account Exec, Deployment Type, Customer Health).
+2. **salesforce** — Look up SFDC account for ARR, contract dates, account team (if `/customer-setup` available).
+3. **jira** — Verify the Jira customer name mapping. Search for issues using the customer name to confirm it matches.
+4. **slack** — Look up Slack channel IDs for the customer's ext-* and supp-* channels.
+5. Update `templates/customers.yaml` with the new GIDs (asana_project_gid, asana_raid_project_gid, asana_portfolio_gid) and customer metadata.
+
+## Customer Silence Check
+
+Monitor customer responsiveness on tracked threads.
+
+1. **ghosted** — Scan "Waiting on Customer" tasks for unresponsive Slack threads (`/ghosted` or `/ghosted GResearch`).
+2. **ghosted** — Track new threads: `/ghosted track <URL>` to start monitoring a thread.
+3. **asana** — Move tasks back to active sections when customer responds.
+
+## Meeting Follow-Up
+
+Turn meeting notes into tracked actions and RAID items.
+
+1. **maction** — Extract action items and RAID signals from meeting notes (`/maction GResearch <notes>`).
+2. **asana** — Review and adjust created tasks (move sections, update priority, add details).
+3. **raid** — Review RAID log after maction additions (`/raid GResearch`).
+
+## Task Hygiene
+
+Keep SE task backlog clean and current.
+
+1. **nag** — Scan for overdue and stale tasks (`/nag`).
+2. **asana** — Address flagged items: complete, reschedule, or move sections.
+3. **ghosted** — Check customer silence on waiting items (`/ghosted`).
