@@ -81,5 +81,29 @@ else
   missing "Asana (ASANA_TOKEN)"
 fi
 
+# Salesforce (supports session auth OR password auth)
+if [ -n "${SFDC_SESSION_ID:-}" ] && [ -n "${SFDC_INSTANCE:-}" ] || \
+   [ -n "${SFDC_USERNAME:-}" ] && [ -n "${SFDC_PASSWORD:-}" ] && [ -n "${SFDC_SECURITY_TOKEN:-}" ]; then
+  SFDC_CHECK=$(uv run --project .claude/skills/salesforce python -c "
+import sys
+sys.path.insert(0, '.claude/skills/salesforce/scripts')
+from sfdc_client import get_client
+try:
+    sf = get_client()
+    sf.query('SELECT Id FROM User LIMIT 1')
+    print('OK')
+except Exception as e:
+    print('FAIL', file=sys.stderr)
+    print('FAIL')
+" 2>/dev/null)
+  if [ "$SFDC_CHECK" = "OK" ]; then
+    ok "Salesforce"
+  else
+    expired "Salesforce" "auth failed -- run /salesforce-setup"
+  fi
+else
+  missing "Salesforce (SFDC_SESSION_ID + SFDC_INSTANCE or SFDC_USERNAME + SFDC_PASSWORD + SFDC_SECURITY_TOKEN)"
+fi
+
 echo ""
 echo "Done."

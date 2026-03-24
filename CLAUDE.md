@@ -18,6 +18,9 @@ Claude Code skills for W&B Solutions Engineers. Integrates with W&B Jira (wandb.
     confluence/             -- CoreWeave Confluence pages, spaces
     asana/                  -- Asana task management (SE actions, RAID, portfolios)
     asana-setup/            -- One-time Asana PAT setup
+    salesforce/             -- Read-only Salesforce account queries (W&B SFDC)
+    salesforce-setup/       -- One-time Salesforce credential setup
+    customer-setup/         -- Interactive customer registry onboarding from SFDC
     cadence-prep/           -- Customer cadence call preparation
     customer-snapshot/      -- Customer intelligence dashboard
     jira-check/             -- FE-UPDATE maintenance and stale issue review
@@ -52,6 +55,8 @@ All API credentials stored in `~/.tsm-ai/.env`. Run `/credential-status` to chec
 | `SLACK_TOKEN` | CoreWeave Slack | coreweave.slack.com |
 | `SLACK_COOKIE` | CoreWeave Slack | coreweave.slack.com |
 | `ASANA_TOKEN` | Asana | app.asana.com |
+| `SFDC_SESSION_ID` | W&B Salesforce (session auth) | wandb.my.salesforce.com |
+| `SFDC_INSTANCE` | W&B Salesforce (session auth) | wandb.my.salesforce.com |
 
 ## Python Skills
 

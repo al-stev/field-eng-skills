@@ -15,6 +15,7 @@ Investigate a customer-reported issue from initial report through resolution tra
 
 Build a picture of a customer's issue landscape and current engagement state.
 
+0. **salesforce** — Query SFDC for account-level data (ARR, tier, contract dates, account team). Use `accounts.py account-detail --account-id <ID>` for full account context before diving into issues and channels.
 1. **jira** — Search WB project issues by customer name (`"Customer" = "CustomerName"`). List open bugs and feature requests to understand current workstreams.
 2. **slack** — Search `#ext-*` and `#supp-*` channels for recent customer activity. Look for unresolved threads.
 3. **confluence** — Check for existing customer documentation or knowledge base articles.
