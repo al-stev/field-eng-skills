@@ -29,7 +29,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Every BQ query executed has `maximum_bytes_billed` set, bytes-processed is logged to stdout, and the schema validation utility confirms table existence and required columns before any query runs
   4. The shared identity resolution CTE for dim_users JOIN is available as a reusable utility and handles NULL username/email for server deployments
   5. Template includes all cross-cutting elements: AI narrative section, KPI headline row, date range header, interactive tooltips, print readiness (saveAsImage toolbox), copy-to-clipboard for narrative text, and linked navigation placeholder -- all rendering graceful empty states when no data is present
-**Plans**: TBD
+**Plans**: 4 plans
+Plans:
+- [ ] 01-01-PLAN.md -- BQ cost guardrails and identity resolution CTE
+- [ ] 01-02-PLAN.md -- Skill directory scaffolding, CLI orchestrator, schema validator
+- [ ] 01-03-PLAN.md -- Foundation HTML template with all XCUT features
+- [ ] 01-04-PLAN.md -- End-to-end wiring, integration tests, visual verification
 **UI hint**: yes
 
 ### Phase 2: High-Confidence Pages
@@ -76,7 +81,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation and Template System | 0/TBD | Not started | - |
+| 1. Foundation and Template System | 0/4 | Planning complete | - |
 | 2. High-Confidence Pages | 0/TBD | Not started | - |
 | 3. Medium-Confidence Pages | 0/TBD | Not started | - |
 | 4. Privacy-Sensitive and Exploratory Pages | 0/TBD | Not started | - |
