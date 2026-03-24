@@ -1,8 +1,14 @@
 """Shared test fixtures for deep-analytics tests."""
 
+import sys
 import pytest
 from unittest.mock import MagicMock
 from pathlib import Path
+
+# Add scripts directory to path so tests can import generate, schema_validator, etc.
+SCRIPTS_DIR = Path(__file__).resolve().parents[1] / "scripts"
+if str(SCRIPTS_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS_DIR))
 
 
 @pytest.fixture
