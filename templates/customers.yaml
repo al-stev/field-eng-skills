@@ -4,7 +4,8 @@
 # SFDC is the source of truth for business data (ARR, contracts, account team).
 # Use /customer-setup to pull from Salesforce. Use /salesforce for ad-hoc queries.
 #
-# Asana master portfolio: use `mutate.py setup-customer --master-portfolio-gid <GID>` to onboard new customers.
+# Asana master portfolio: "W&B EMEA Customers" (GID: 1213799845117811)
+# Use `mutate.py setup-customer --master-portfolio-gid 1213799845117811` to onboard new customers.
 #
 # Schema:
 #   name:                    Display name used in conversation
@@ -43,22 +44,148 @@
 #   server:           Self-hosted by customer (on-prem or customer cloud)
 
 customers:
-  - name: ExampleCustomer
-    sfdc_account_id: "PLACEHOLDER"
-    jira_customer: ExampleCustomer
-    jira_customer_variants: []
+  - name: GResearch
+    jira_customer: GResearch
+    jira_customer_variants:
+      - "G-Research"
+    sfdc_account_id: "0012E00002LLzyLQAT"
     slack_channels:
-      - id: PLACEHOLDER
-        name: wandb-example
+      - id: C06NX624Q9G
+        name: wandb-gresearch
         type: external
     action_tracker: asana
-    action_tracker_id: PLACEHOLDER
+    action_tracker_id: "1213802950527201"
     raid_tracker: asana
-    raid_tracker_id: PLACEHOLDER
-    portfolio_id: PLACEHOLDER
-    deployment_type: saas
+    raid_tracker_id: "1213810620810350"
+    portfolio_id: "1213798947751056"
+    deployment_type: server
     cadence:
       type: weekly
       day: Monday
-      time: "10:00 AM GMT"
+      time: "4:00 PM GMT"
+    contacts:
+      - name: Allan Stevenson
+        org: W&B
+        role: Solutions Engineer
+      - name: PLACEHOLDER
+        org: G-Research
+        role: PLACEHOLDER
+
+  - name: Isomorphic Labs
+    jira_customer: Isomorphic
+    jira_customer_variants:
+      - "Isomorphic Labs"
+    sfdc_account_id: "0016R000037jyuFQAQ"
+    slack_channels:
+      - id: C041SLVTLNP
+        name: wandb-isomorphiclabs
+        type: external
+      - id: C07RMV6GXRP
+        name: wandb-isomorphic-mgmt
+        type: internal
+      - id: C05HN4VPCDT
+        name: isomorphic-internal
+        type: internal
+    action_tracker: asana
+    action_tracker_id: "1213799849939373"
+    raid_tracker: asana
+    raid_tracker_id: "1213796740819803"
+    portfolio_id: "1213799850111412"
+    deployment_type: dedicated-cloud
+    cadence:
+      type: PLACEHOLDER
+      day: PLACEHOLDER
+      time: PLACEHOLDER
+    contacts: PLACEHOLDER
+
+  - name: UK MOD (Mike/James org)
+    jira_customer: "MOD-UK-(Mike-M/James-C-org)"
+    jira_customer_variants: []
+    sfdc_account_id: "0012E00002ScQWlQAN"
+    slack_channels:
+      - id: C089L6CQ2T1
+        name: wandb-uk-mod-mike-james-org
+        type: external
+      - id: C055SM7U05P
+        name: internal-uk-mod-all-orgs
+        type: internal
+    action_tracker: asana
+    action_tracker_id: "1213798951870509"
+    raid_tracker: asana
+    raid_tracker_id: "1213802967372155"
+    portfolio_id: "1213802967544125"
+    deployment_type: server
+    cadence:
+      type: PLACEHOLDER
+      day: PLACEHOLDER
+      time: PLACEHOLDER
+    contacts: PLACEHOLDER
+
+  - name: UK MOD (Tom org)
+    jira_customer: NONE
+    jira_customer_variants: []
+    sfdc_account_id: "0016R000036udd8QAA"
+    slack_channels:
+      - id: C08ABKY46G5
+        name: wandb-uk-mod-tom-org
+        type: external
+      - id: C055SM7U05P
+        name: internal-uk-mod-all-orgs
+        type: internal
+    action_tracker: asana
+    action_tracker_id: "1213796740555474"
+    raid_tracker: asana
+    raid_tracker_id: "1213798952106295"
+    portfolio_id: "1213799850018684"
+    deployment_type: server
+    cadence:
+      type: PLACEHOLDER
+      day: PLACEHOLDER
+      time: PLACEHOLDER
+    contacts: PLACEHOLDER
+
+  - name: UK MOD (Tim org)
+    jira_customer: "UK-MOD-(Tim-R-org)"
+    jira_customer_variants: []
+    sfdc_account_id: "001Uq000001E1YMIA0"
+    slack_channels:
+      - id: C08B39SQVMW
+        name: wandb-uk-mod-tim-org
+        type: external
+      - id: C055SM7U05P
+        name: internal-uk-mod-all-orgs
+        type: internal
+    action_tracker: asana
+    action_tracker_id: "1213796741455590"
+    raid_tracker: asana
+    raid_tracker_id: "1213797948149855"
+    portfolio_id: "1213799850390582"
+    deployment_type: server
+    cadence:
+      type: PLACEHOLDER
+      day: PLACEHOLDER
+      time: PLACEHOLDER
+    contacts: PLACEHOLDER
+
+  - name: Quadrature
+    jira_customer: Quadrature
+    jira_customer_variants: []
+    sfdc_account_id: "0012E00002LM15wQAD"
+    slack_channels:
+      - id: C037E6Z4CBU
+        name: wandb-quadrature
+        type: external
+      - id: C03E8QAEQGN
+        name: internal-quadrature
+        type: internal
+    action_tracker: asana
+    action_tracker_id: "1213797947397862"
+    raid_tracker: asana
+    raid_tracker_id: "1213796741503776"
+    portfolio_id: "1213798952679927"
+    deployment_type: server
+    cadence:
+      type: weekly
+      day: Wednesday
+      time: "4:00 PM GMT"
     contacts: PLACEHOLDER

@@ -28,3 +28,10 @@ For expired credentials, run the corresponding setup or refresh skill:
 - Salesforce: `./scripts/salesforce-session-refresh.sh`
 - Gong: `./scripts/gong-cookie-refresh.sh`
 - Others: run `/[service]-setup`
+
+### BigQuery (ADC)
+- Auth method: Application Default Credentials (not stored token)
+- Verify: `bash .claude/skills/bigquery-setup/scripts/verify.sh`
+- Expected: "All checks passed" output
+- If failing: Run `gcloud auth application-default login`
+- Note: No entry in ~/.tsm-ai/.env -- ADC is managed by gcloud CLI

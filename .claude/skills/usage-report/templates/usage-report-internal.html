@@ -1,0 +1,1653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Usage Report — Internal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<style>
+/* ── DESIGN TOKENS (dark mode default) ── */
+:root {
+  --bg-primary: #0c0f14;
+  --bg-elevated: #141820;
+  --bg-surface: #1a1f2b;
+  --bg-hover: #222838;
+  --border: #2a3040;
+  --border-subtle: #1e2430;
+  --text-primary: #e8eaed;
+  --text-secondary: #8b92a0;
+  --text-tertiary: #5c6370;
+  --accent: #d4a853;
+  --accent-dim: rgba(212, 168, 83, 0.12);
+  --accent-border: rgba(212, 168, 83, 0.25);
+  --green: #4ade80;
+  --green-dim: rgba(74, 222, 128, 0.10);
+  --green-border: rgba(74, 222, 128, 0.22);
+  --blue: #60a5fa;
+  --blue-dim: rgba(96, 165, 250, 0.10);
+  --blue-border: rgba(96, 165, 250, 0.22);
+  --amber: #fbbf24;
+  --amber-dim: rgba(251, 191, 36, 0.10);
+  --amber-border: rgba(251, 191, 36, 0.22);
+  --red: #f87171;
+  --red-dim: rgba(248, 113, 113, 0.10);
+  --red-border: rgba(248, 113, 113, 0.22);
+  --font-display: 'Instrument Serif', Georgia, serif;
+  --font-body: 'Outfit', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --radius: 6px;
+  --noise-opacity: 0.025;
+  --scheme: dark;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg-primary: #f6f4f0;
+    --bg-elevated: #ffffff;
+    --bg-surface: #eeece8;
+    --bg-hover: #e6e4e0;
+    --border: #d4d2ce;
+    --border-subtle: #e0ded9;
+    --text-primary: #1a1a1a;
+    --text-secondary: #5c5c5c;
+    --text-tertiary: #8c8c8c;
+    --accent: #b8922e;
+    --accent-dim: rgba(184, 146, 46, 0.10);
+    --accent-border: rgba(184, 146, 46, 0.25);
+    --green: #1a7a4c;
+    --green-dim: rgba(26, 122, 76, 0.08);
+    --green-border: rgba(26, 122, 76, 0.20);
+    --blue: #1565a0;
+    --blue-dim: rgba(96, 165, 250, 0.08);
+    --blue-border: rgba(21, 101, 160, 0.20);
+    --amber: #9a6e08;
+    --amber-dim: rgba(154, 110, 8, 0.08);
+    --amber-border: rgba(154, 110, 8, 0.20);
+    --red: #dc2626;
+    --red-dim: rgba(220, 38, 38, 0.08);
+    --red-border: rgba(220, 38, 38, 0.20);
+    --noise-opacity: 0;
+    --scheme: light;
+  }
+}
+
+/* ── RESET ── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* ── BASE ── */
+body {
+  font-family: var(--font-body);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── NOISE TEXTURE (dark mode only via opacity token) ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  opacity: var(--noise-opacity);
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 256px;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-primary); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-tertiary); }
+
+/* ── LAYOUT ── */
+.container {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 0 clamp(16px, 3vw, 32px);
+}
+
+/* ── HEADER ── */
+.header {
+  padding: clamp(32px, 5vw, 56px) 0 clamp(20px, 3vw, 32px);
+}
+
+.header-subtitle {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--accent);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.internal-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--red);
+  background: var(--red-dim);
+  border: 1px solid var(--red-border);
+}
+
+.header h1 {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 4vw, 42px);
+  font-weight: 400;
+  letter-spacing: -0.5px;
+  margin-bottom: 6px;
+}
+
+.header-rule {
+  width: 64px;
+  height: 2px;
+  background: var(--accent);
+  margin: 12px 0 20px;
+}
+
+.header-meta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+/* ── KPI ROW ── */
+.kpi-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(24px, 4vw, 48px);
+  padding: clamp(16px, 2vw, 24px) 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.kpi-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.kpi-value {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.kpi-value .zone-pct {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.kpi-trend {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.trend-up { color: var(--green); }
+.trend-down { color: var(--red); }
+.trend-stable { color: var(--text-tertiary); }
+
+/* ── SECTION LAYOUT ── */
+.usage-section {
+  padding: clamp(24px, 3vw, 40px) 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.usage-section:last-of-type {
+  border-bottom: none;
+}
+
+.section-header {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+
+.section-headline {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.section-headline .pct {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.section-headline .zone-label {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+
+.section-headline .headline-value {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.supplementary-stat {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-tertiary);
+  margin-top: 12px;
+}
+
+/* ── ECHARTS CONTAINERS ── */
+.echart-container {
+  width: 100%;
+  height: 400px;
+  min-height: 200px;
+}
+
+.echart-container.tall {
+  height: 600px;
+}
+
+.echart-container.radar-chart {
+  height: 380px;
+}
+
+/* ── ACCOUNT HEALTH GRID ── */
+.health-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(16px, 2vw, 24px);
+}
+
+@media (max-width: 600px) {
+  .health-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.health-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.health-field-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-tertiary);
+}
+
+.health-field-value {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.health-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+/* ── POWER USER TABLE ── */
+.power-user-table {
+  width: 100%;
+  border-collapse: collapse;
+  overflow-x: auto;
+  display: block;
+}
+
+.power-user-table thead,
+.power-user-table tbody {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+}
+
+.power-user-table th {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-tertiary);
+  text-align: left;
+  padding: 8px 8px 12px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.power-user-table td {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-primary);
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--border-subtle);
+  vertical-align: middle;
+}
+
+.power-user-table tr:nth-child(even) td {
+  background: var(--bg-surface);
+}
+
+.power-user-table tr:hover td {
+  background: var(--bg-hover);
+  transition: background 0.15s ease-out;
+}
+
+.power-user-rank {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  width: 36px;
+}
+
+.power-user-name {
+  font-weight: 600;
+}
+
+.power-user-email {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+  display: block;
+  margin-top: 2px;
+}
+
+.power-user-events {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.product-badge {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  background: var(--blue-dim);
+  border: 1px solid var(--blue-border);
+  color: var(--blue);
+  margin: 1px 3px 1px 0;
+  white-space: nowrap;
+}
+
+.activity-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.activity-dot.active { background: var(--green); }
+.activity-dot.recent { background: var(--amber); }
+.activity-dot.stale { background: var(--red); }
+
+@media (max-width: 768px) {
+  .power-user-table {
+    font-size: 12px;
+  }
+  .power-user-table th,
+  .power-user-table td {
+    padding: 6px 4px;
+  }
+}
+
+/* ── AI NARRATIVE ── */
+.ai-summary-text {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.65;
+  color: var(--text-primary);
+  padding: clamp(16px, 2vw, 24px);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  margin-bottom: 16px;
+}
+
+.ai-highlights {
+  list-style: none;
+  padding: 0;
+}
+
+.ai-highlights li {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-secondary);
+  padding: 6px 0;
+  padding-left: 16px;
+  position: relative;
+}
+
+.ai-highlights li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 13px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.ai-recommendations {
+  list-style: none;
+  padding: 0;
+  counter-reset: rec;
+}
+
+.ai-recommendations li {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-primary);
+  padding: 6px 0 6px 28px;
+  position: relative;
+}
+
+.ai-recommendations li::before {
+  counter-increment: rec;
+  content: counter(rec);
+  position: absolute;
+  left: 0;
+  top: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--accent-dim);
+  border: 1px solid var(--accent-border);
+}
+
+/* ── RISK SIGNALS ── */
+.risk-signals-list {
+  list-style: none;
+  padding: 0;
+  border-left: 3px solid var(--red);
+  padding-left: 16px;
+  background: var(--red-dim);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding-top: 12px;
+  padding-bottom: 12px;
+  padding-right: 16px;
+}
+
+.risk-signals-list li {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-primary);
+  padding: 4px 0;
+  padding-left: 16px;
+  position: relative;
+}
+
+.risk-signals-list li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 11px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--red);
+}
+
+/* ── SE ACTIONS ── */
+.se-actions-list {
+  list-style: none;
+  padding: 0;
+  border-left: 3px solid var(--amber);
+  padding-left: 16px;
+  background: var(--amber-dim);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding-top: 12px;
+  padding-bottom: 12px;
+  padding-right: 16px;
+  counter-reset: se-action;
+}
+
+.se-actions-list li {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-primary);
+  padding: 4px 0 4px 28px;
+  position: relative;
+}
+
+.se-actions-list li::before {
+  counter-increment: se-action;
+  content: counter(se-action);
+  position: absolute;
+  left: 0;
+  top: 4px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--amber);
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--amber-dim);
+  border: 1px solid var(--amber-border);
+}
+
+/* ── EMPTY STATE ── */
+.empty-state {
+  padding: clamp(24px, 4vw, 48px) 0;
+  text-align: center;
+}
+
+.empty-state h2 {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 4vw, 42px);
+  font-weight: 400;
+  margin-bottom: 16px;
+}
+
+.empty-state p {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-tertiary);
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+/* ── FOOTER ── */
+.footer {
+  padding: clamp(24px, 3vw, 40px) 0;
+}
+
+.footer-text {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+/* ── INTERNAL-ONLY ── */
+/* Account health, power users, risk/actions sections hidden when viewed in external context */
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-in { animation: fadeUp 0.4s ease-out both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-in { animation: none; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <header class="header animate-in" id="reportHeader">
+    <!-- Rendered by JS -->
+  </header>
+
+  <!-- KPI Overview Row -->
+  <section class="kpi-row animate-in" style="animation-delay: 50ms" id="kpiRow">
+    <!-- Rendered by JS -->
+  </section>
+
+  <!-- Seat Utilization Chart (ECharts) -->
+  <section class="usage-section animate-in" style="animation-delay: 100ms" id="seatSection">
+    <div class="section-header">SEAT UTILIZATION</div>
+    <div class="section-headline" id="seatHeadline"></div>
+    <div id="seatChart" class="echart-container tall"></div>
+  </section>
+
+  <!-- Product Adoption Radar (ECharts) -->
+  <section class="usage-section animate-in" style="animation-delay: 150ms" id="radarSection">
+    <div class="section-header">PRODUCT ADOPTION</div>
+    <div id="radarChart" class="echart-container radar-chart"></div>
+  </section>
+
+  <!-- Weave Ingestion Chart (ECharts) -->
+  <section class="usage-section animate-in" style="animation-delay: 200ms" id="weaveSection">
+    <div class="section-header">WEAVE INGESTION</div>
+    <div class="section-headline" id="weaveHeadline"></div>
+    <div id="weaveChart" class="echart-container"></div>
+    <div class="supplementary-stat" id="weaveStat"></div>
+  </section>
+
+  <!-- Tracked Hours Chart (ECharts) -->
+  <section class="usage-section animate-in" style="animation-delay: 250ms" id="hoursSection">
+    <div class="section-header">TRACKED HOURS</div>
+    <div class="section-headline" id="hoursHeadline"></div>
+    <div id="hoursChart" class="echart-container"></div>
+    <div class="supplementary-stat" id="hoursStat"></div>
+  </section>
+
+  <!-- AI Executive Summary (candid internal tone) -->
+  <section class="usage-section animate-in" style="animation-delay: 300ms" id="aiSummarySection">
+    <!-- Rendered by JS -->
+  </section>
+
+  <!-- Power User Map (internal-only) -->
+  <section class="usage-section internal-only animate-in" style="animation-delay: 350ms" id="powerUserSection">
+    <!-- Rendered by JS -->
+  </section>
+
+  <!-- Account Health Grid (internal-only) -->
+  <section class="usage-section internal-only animate-in" style="animation-delay: 400ms" id="healthSection">
+    <!-- Rendered by JS -->
+  </section>
+
+  <!-- Risk Signals & SE Actions (internal-only) -->
+  <section class="usage-section internal-only animate-in" style="animation-delay: 450ms" id="riskActionsSection">
+    <!-- Rendered by JS -->
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer animate-in" style="animation-delay: 500ms" id="reportFooter">
+    <!-- Rendered by JS -->
+  </footer>
+
+</div>
+
+<script>
+/* ── USAGE DATA (injection point -- pipeline replaces this with real data) ── */
+const USAGE_DATA = {
+  customer: "G-Research",
+  generated: "2026-03-24",
+  period: { start: "2025-03-24", end: "2026-03-24" },
+  available: true,
+  seat_utilization: {
+    contracted: 50, claimed: 42, active: 35,
+    utilization_percent: 70.0,
+    history: [
+      { week: "2025-04-07", contracted: 50, active: 28 },
+      { week: "2025-04-14", contracted: 50, active: 29 },
+      { week: "2025-04-21", contracted: 50, active: 27 },
+      { week: "2025-04-28", contracted: 50, active: 30 },
+      { week: "2025-05-05", contracted: 50, active: 31 },
+      { week: "2025-05-12", contracted: 50, active: 29 },
+      { week: "2025-05-19", contracted: 50, active: 32 },
+      { week: "2025-05-26", contracted: 50, active: 30 },
+      { week: "2025-06-02", contracted: 50, active: 28 },
+      { week: "2025-06-09", contracted: 50, active: 31 },
+      { week: "2025-06-16", contracted: 50, active: 33 },
+      { week: "2025-06-23", contracted: 50, active: 32 },
+      { week: "2025-06-30", contracted: 50, active: 34 },
+      { week: "2025-07-07", contracted: 50, active: 33 },
+      { week: "2025-07-14", contracted: 50, active: 31 },
+      { week: "2025-07-21", contracted: 50, active: 35 },
+      { week: "2025-07-28", contracted: 50, active: 34 },
+      { week: "2025-08-04", contracted: 50, active: 32 },
+      { week: "2025-08-11", contracted: 50, active: 33 },
+      { week: "2025-08-18", contracted: 50, active: 36 },
+      { week: "2025-08-25", contracted: 50, active: 35 },
+      { week: "2025-09-01", contracted: 50, active: 34 },
+      { week: "2025-09-08", contracted: 50, active: 36 },
+      { week: "2025-09-15", contracted: 50, active: 37 },
+      { week: "2025-09-22", contracted: 50, active: 35 },
+      { week: "2025-09-29", contracted: 50, active: 38 },
+      { week: "2025-10-06", contracted: 50, active: 37 },
+      { week: "2025-10-13", contracted: 50, active: 36 },
+      { week: "2025-10-20", contracted: 50, active: 38 },
+      { week: "2025-10-27", contracted: 50, active: 37 },
+      { week: "2025-11-03", contracted: 50, active: 39 },
+      { week: "2025-11-10", contracted: 50, active: 38 },
+      { week: "2025-11-17", contracted: 50, active: 36 },
+      { week: "2025-11-24", contracted: 50, active: 35 },
+      { week: "2025-12-01", contracted: 50, active: 33 },
+      { week: "2025-12-08", contracted: 50, active: 31 },
+      { week: "2025-12-15", contracted: 50, active: 30 },
+      { week: "2025-12-22", contracted: 50, active: 28 },
+      { week: "2025-12-29", contracted: 50, active: 29 },
+      { week: "2026-01-05", contracted: 50, active: 32 },
+      { week: "2026-01-12", contracted: 50, active: 33 },
+      { week: "2026-01-19", contracted: 50, active: 34 },
+      { week: "2026-01-26", contracted: 50, active: 35 },
+      { week: "2026-02-02", contracted: 50, active: 36 },
+      { week: "2026-02-09", contracted: 50, active: 34 },
+      { week: "2026-02-16", contracted: 50, active: 35 },
+      { week: "2026-02-23", contracted: 50, active: 37 },
+      { week: "2026-03-02", contracted: 50, active: 36 },
+      { week: "2026-03-09", contracted: 50, active: 34 },
+      { week: "2026-03-16", contracted: 50, active: 36 },
+      { week: "2026-03-23", contracted: 50, active: 35 }
+    ]
+  },
+  weave: {
+    ingestion_gb: 156.3, limit_gb: 500.0, utilization_percent: 31.3,
+    unique_users_last_90d: 12,
+    history: [
+      { month: "2025-04", ingestion_gb: 8.2, unique_users: 5 },
+      { month: "2025-05", ingestion_gb: 10.5, unique_users: 6 },
+      { month: "2025-06", ingestion_gb: 12.1, unique_users: 7 },
+      { month: "2025-07", ingestion_gb: 11.8, unique_users: 8 },
+      { month: "2025-08", ingestion_gb: 14.3, unique_users: 9 },
+      { month: "2025-09", ingestion_gb: 13.7, unique_users: 8 },
+      { month: "2025-10", ingestion_gb: 15.2, unique_users: 10 },
+      { month: "2025-11", ingestion_gb: 14.8, unique_users: 9 },
+      { month: "2025-12", ingestion_gb: 11.4, unique_users: 7 },
+      { month: "2026-01", ingestion_gb: 14.9, unique_users: 10 },
+      { month: "2026-02", ingestion_gb: 15.6, unique_users: 11 },
+      { month: "2026-03", ingestion_gb: 13.8, unique_users: 12 }
+    ]
+  },
+  tracked_hours: {
+    last_30d_hours: 1250.0, last_30d_run_count: 342,
+    history: [
+      { week: "2025-04-07", tracked_hours: 180.5 },
+      { week: "2025-04-14", tracked_hours: 195.2 },
+      { week: "2025-04-21", tracked_hours: 172.8 },
+      { week: "2025-04-28", tracked_hours: 210.3 },
+      { week: "2025-05-05", tracked_hours: 198.6 },
+      { week: "2025-05-12", tracked_hours: 205.1 },
+      { week: "2025-05-19", tracked_hours: 188.4 },
+      { week: "2025-05-26", tracked_hours: 220.7 },
+      { week: "2025-06-02", tracked_hours: 215.3 },
+      { week: "2025-06-09", tracked_hours: 230.8 },
+      { week: "2025-06-16", tracked_hours: 245.2 },
+      { week: "2025-06-23", tracked_hours: 228.1 },
+      { week: "2025-06-30", tracked_hours: 252.6 },
+      { week: "2025-07-07", tracked_hours: 240.3 },
+      { week: "2025-07-14", tracked_hours: 235.8 },
+      { week: "2025-07-21", tracked_hours: 260.1 },
+      { week: "2025-07-28", tracked_hours: 248.5 },
+      { week: "2025-08-04", tracked_hours: 255.2 },
+      { week: "2025-08-11", tracked_hours: 270.4 },
+      { week: "2025-08-18", tracked_hours: 265.8 },
+      { week: "2025-08-25", tracked_hours: 258.3 },
+      { week: "2025-09-01", tracked_hours: 275.6 },
+      { week: "2025-09-08", tracked_hours: 268.2 },
+      { week: "2025-09-15", tracked_hours: 280.1 },
+      { week: "2025-09-22", tracked_hours: 290.5 },
+      { week: "2025-09-29", tracked_hours: 285.3 },
+      { week: "2025-10-06", tracked_hours: 295.7 },
+      { week: "2025-10-13", tracked_hours: 288.4 },
+      { week: "2025-10-20", tracked_hours: 302.1 },
+      { week: "2025-10-27", tracked_hours: 310.6 },
+      { week: "2025-11-03", tracked_hours: 298.2 },
+      { week: "2025-11-10", tracked_hours: 305.8 },
+      { week: "2025-11-17", tracked_hours: 315.4 },
+      { week: "2025-11-24", tracked_hours: 280.2 },
+      { week: "2025-12-01", tracked_hours: 265.5 },
+      { week: "2025-12-08", tracked_hours: 248.3 },
+      { week: "2025-12-15", tracked_hours: 230.7 },
+      { week: "2025-12-22", tracked_hours: 185.2 },
+      { week: "2025-12-29", tracked_hours: 190.6 },
+      { week: "2026-01-05", tracked_hours: 275.8 },
+      { week: "2026-01-12", tracked_hours: 290.3 },
+      { week: "2026-01-19", tracked_hours: 305.6 },
+      { week: "2026-01-26", tracked_hours: 312.4 },
+      { week: "2026-02-02", tracked_hours: 318.7 },
+      { week: "2026-02-09", tracked_hours: 308.2 },
+      { week: "2026-02-16", tracked_hours: 322.5 },
+      { week: "2026-02-23", tracked_hours: 335.1 },
+      { week: "2026-03-02", tracked_hours: 328.6 },
+      { week: "2026-03-09", tracked_hours: 315.4 },
+      { week: "2026-03-16", tracked_hours: 340.2 },
+      { week: "2026-03-23", tracked_hours: 325.8 }
+    ]
+  },
+  product_areas: [
+    { area: "Experiments", event_count: 42500, user_count: 32, trend_pct: 5.2 },
+    { area: "Artifacts", event_count: 18200, user_count: 24, trend_pct: -2.1 },
+    { area: "Model Registry", event_count: 3100, user_count: 3, trend_pct: 12.0 },
+    { area: "Sweeps", event_count: 2800, user_count: 8, trend_pct: -8.5 },
+    { area: "Reports", event_count: 5600, user_count: 18, trend_pct: 3.4 },
+    { area: "Weave", event_count: 28900, user_count: 12, trend_pct: 34.2 },
+    { area: "Launch", event_count: 1200, user_count: 4, trend_pct: 22.0 },
+    { area: "Automations", event_count: 450, user_count: 2, trend_pct: 0 }
+  ],
+  account_health: {
+    renewal_date: "2026-09-15", arr: 250000.0, cs_tier: "Strategic",
+    customer_health: "Green", churn_probability_3mo: 0.05,
+    churn_probability_5mo: 0.08, subscription_plan: "Enterprise",
+    deployment_type: "dedicated-cloud"
+  },
+  trends: {
+    seat_utilization_change: 12.5, weave_ingestion_change: -3.2,
+    tracked_hours_change: 8.7, run_count_change: 15.3
+  },
+  power_users: [
+    { username: "alice_ml", email: "alice.smith@gresearch.com", name: "Alice Smith", total_events: 12500, product_areas: ["Experiments", "Artifacts", "Weave"], last_activity: "2026-03-23" },
+    { username: "bob_research", email: "bob.jones@gresearch.com", name: "Bob Jones", total_events: 9800, product_areas: ["Experiments", "Weave"], last_activity: "2026-03-22" },
+    { username: "carol_eng", email: "carol.wu@gresearch.com", name: "Carol Wu", total_events: 8200, product_areas: ["Experiments", "Artifacts", "Model Registry"], last_activity: "2026-03-21" },
+    { username: "david_ops", email: "david.chen@gresearch.com", name: "David Chen", total_events: 7100, product_areas: ["Launch", "Automations", "Experiments"], last_activity: "2026-03-20" },
+    { username: "eva_data", email: "eva.martinez@gresearch.com", name: "Eva Martinez", total_events: 6500, product_areas: ["Experiments", "Reports"], last_activity: "2026-03-18" },
+    { username: "frank_ml", email: "frank.lee@gresearch.com", name: "Frank Lee", total_events: 5800, product_areas: ["Experiments", "Sweeps"], last_activity: "2026-03-15" },
+    { username: "grace_ai", email: "grace.patel@gresearch.com", name: "Grace Patel", total_events: 5200, product_areas: ["Weave", "Experiments"], last_activity: "2026-03-10" },
+    { username: "henry_sci", email: "henry.wang@gresearch.com", name: "Henry Wang", total_events: 4800, product_areas: ["Experiments", "Artifacts"], last_activity: "2026-03-05" },
+    { username: "iris_quant", email: "iris.garcia@gresearch.com", name: "Iris Garcia", total_events: 4200, product_areas: ["Experiments"], last_activity: "2026-02-28" },
+    { username: "jack_dev", email: "jack.taylor@gresearch.com", name: "Jack Taylor", total_events: 3800, product_areas: ["Experiments", "Reports", "Artifacts"], last_activity: "2026-02-20" },
+    { username: "kate_infra", email: "kate.brown@gresearch.com", name: "Kate Brown", total_events: 3500, product_areas: ["Launch", "Experiments"], last_activity: "2026-02-15" },
+    { username: "leo_ml", email: "leo.kim@gresearch.com", name: "Leo Kim", total_events: 3100, product_areas: ["Experiments", "Weave"], last_activity: "2026-03-22" },
+    { username: "mia_ops", email: "mia.johnson@gresearch.com", name: "Mia Johnson", total_events: 2800, product_areas: ["Artifacts", "Model Registry"], last_activity: "2026-03-19" },
+    { username: "noah_sci", email: "noah.davis@gresearch.com", name: "Noah Davis", total_events: 2500, product_areas: ["Experiments"], last_activity: "2026-03-17" },
+    { username: "olivia_res", email: "olivia.wilson@gresearch.com", name: "Olivia Wilson", total_events: 2100, product_areas: ["Reports", "Experiments"], last_activity: "2026-03-14" }
+  ]
+};
+
+/* ── AI NARRATIVE (injection point -- pipeline replaces this with real narrative) ── */
+const AI_NARRATIVE = {
+  executive_summary: "G-Research's W&B usage is concentrated in Experiments (85% of events) with growing Weave adoption (+34% MoM). Seat utilization sits at 70% (35/50) -- healthy but not growing. The 12 Weave users are your expansion wedge; 3 more teams started tracing in Q1. However, 4 power users haven't logged in for 14+ days and Model Registry adoption remains critically low (3 users). Renewal is 6 months out -- push Model Registry workshop before Q3 planning locks.",
+  highlights: [
+    "Weave adoption surging: +34% MoM, 12 active users, approaching critical mass",
+    "Experiment tracking is deeply embedded -- 32 active users, stable baseline",
+    "Launch + Automations emerging: 4 users piloting production ML workflows"
+  ],
+  recommendations: [
+    "Schedule a Model Registry workshop -- only 3 users despite 50 seats. The gap between Artifacts (24 users) and Registry (3) suggests a workflow adoption barrier.",
+    "Push Weave evaluation features in next call -- 12 users are tracing but only 2 have tried evaluations.",
+    "Investigate the December usage dip (seats dropped from 39 to 28) -- holiday effect or team departure?",
+    "Prepare renewal deck with adoption growth narrative: Weave +34%, Launch +22%, 70% seat utilization."
+  ],
+  risk_signals: [
+    "4 power users inactive 14+ days (Henry Wang, Iris Garcia, Jack Taylor, Kate Brown) -- potential champion loss",
+    "Model Registry adoption critically low (3/50 users) -- underutilized contract value",
+    "December saw 28% seat utilization drop -- need to understand if structural",
+    "Sweeps usage declining (-8.5% MoM) -- may indicate shift away from hyperparameter optimization"
+  ],
+  se_actions: [
+    "Push Model Registry in next cadence call -- bring demo showing Artifacts-to-Registry promotion flow",
+    "Reach out to Henry Wang and Kate Brown directly -- both were top-10 users, now inactive 20+ days",
+    "Prepare Weave evaluation workshop for Q2 -- capitalize on tracing momentum",
+    "Flag December dip in internal review -- get CS perspective on team changes"
+  ]
+};
+
+/* ── ECHARTS WANDB THEME ── */
+echarts.registerTheme('wandb', {
+  backgroundColor: 'transparent',
+  textStyle: {
+    fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+    fontSize: 11,
+    color: '#8b92a0'
+  },
+  title: {
+    textStyle: { fontFamily: "'Outfit', system-ui, sans-serif", fontWeight: 600, color: '#e8eaed' }
+  },
+  line: {
+    itemStyle: { borderWidth: 2 },
+    lineStyle: { width: 2 },
+    symbolSize: 4,
+    symbol: 'circle',
+    smooth: false
+  },
+  bar: {
+    itemStyle: { barBorderWidth: 0, barBorderRadius: 2 }
+  },
+  categoryAxis: {
+    axisLine: { show: false },
+    axisTick: { show: false },
+    axisLabel: { color: '#8b92a0', fontSize: 11, fontFamily: "'JetBrains Mono', monospace" },
+    splitLine: { show: false }
+  },
+  valueAxis: {
+    axisLine: { show: false },
+    axisTick: { show: false },
+    axisLabel: { color: '#5c6370', fontSize: 11, fontFamily: "'JetBrains Mono', monospace" },
+    splitLine: { lineStyle: { color: '#1e2430', type: 'dashed' } }
+  },
+  radar: {
+    axisName: { color: '#8b92a0', fontSize: 11, fontFamily: "'JetBrains Mono', monospace" },
+    splitLine: { lineStyle: { color: ['#1e2430'] } },
+    splitArea: { areaStyle: { color: ['transparent', 'rgba(26, 31, 43, 0.3)'] } },
+    axisLine: { lineStyle: { color: '#2a3040' } }
+  }
+});
+
+/* ── UTILITY FUNCTIONS ── */
+
+function getComputedThemeColors() {
+  const style = getComputedStyle(document.documentElement);
+  return {
+    blue: style.getPropertyValue('--blue').trim(),
+    green: style.getPropertyValue('--green').trim(),
+    amber: style.getPropertyValue('--amber').trim(),
+    red: style.getPropertyValue('--red').trim(),
+    accent: style.getPropertyValue('--accent').trim(),
+    textPrimary: style.getPropertyValue('--text-primary').trim(),
+    textSecondary: style.getPropertyValue('--text-secondary').trim(),
+    textTertiary: style.getPropertyValue('--text-tertiary').trim(),
+    bgSurface: style.getPropertyValue('--bg-surface').trim(),
+    bgElevated: style.getPropertyValue('--bg-elevated').trim(),
+    border: style.getPropertyValue('--border').trim(),
+    borderSubtle: style.getPropertyValue('--border-subtle').trim()
+  };
+}
+
+function classifyZone(percent) {
+  if (percent >= 80) return 'healthy';
+  if (percent >= 50) return 'at_risk';
+  return 'critical';
+}
+
+function zoneColor(zone) {
+  switch (zone) {
+    case 'healthy': return 'var(--green)';
+    case 'at_risk': return 'var(--amber)';
+    case 'critical': return 'var(--red)';
+    default: return 'var(--text-secondary)';
+  }
+}
+
+function zoneColorRaw(zone, colors) {
+  switch (zone) {
+    case 'healthy': return colors.green;
+    case 'at_risk': return colors.amber;
+    case 'critical': return colors.red;
+    default: return colors.textSecondary;
+  }
+}
+
+function zoneLabel(zone) {
+  switch (zone) {
+    case 'healthy': return 'Healthy';
+    case 'at_risk': return 'At Risk';
+    case 'critical': return 'Critical';
+    default: return '';
+  }
+}
+
+function churnZoneColor(pct) {
+  if (pct < 0.10) return 'var(--green)';
+  if (pct <= 0.25) return 'var(--amber)';
+  return 'var(--red)';
+}
+
+function formatTrend(change) {
+  if (change == null) return '';
+  const abs = Math.abs(change).toFixed(1);
+  if (change > 0.5) {
+    return '<span class="kpi-trend trend-up">\u2191 ' + abs + '% vs prior period</span>';
+  } else if (change < -0.5) {
+    return '<span class="kpi-trend trend-down">\u2193 ' + abs + '% vs prior period</span>';
+  }
+  return '<span class="kpi-trend trend-stable">\u2014 stable</span>';
+}
+
+function formatNumber(n) {
+  if (n == null) return '\u2014';
+  return n.toLocaleString('en-US');
+}
+
+function formatDate(isoDate) {
+  if (!isoDate) return '\u2014';
+  var d = new Date(isoDate + 'T00:00:00');
+  var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
+}
+
+function formatWeekLabel(weekStr) {
+  var d = new Date(weekStr + 'T00:00:00');
+  var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return months[d.getMonth()] + ' ' + d.getDate();
+}
+
+function formatMonthLabel(monthStr) {
+  var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var parts = monthStr.split('-');
+  return months[parseInt(parts[1], 10) - 1];
+}
+
+function healthDotColor(health) {
+  switch ((health || '').toLowerCase()) {
+    case 'green': return 'var(--green)';
+    case 'yellow': return 'var(--amber)';
+    case 'red': return 'var(--red)';
+    default: return 'var(--text-tertiary)';
+  }
+}
+
+function titleCase(str) {
+  if (!str) return '\u2014';
+  return str.replace(/[-_]/g, ' ').replace(/\b\w/g, function(c) { return c.toUpperCase(); });
+}
+
+function daysAgo(dateStr) {
+  if (!dateStr) return null;
+  var then = new Date(dateStr + 'T00:00:00');
+  var now = new Date();
+  return Math.floor((now - then) / (1000 * 60 * 60 * 24));
+}
+
+function activityClass(dateStr) {
+  var days = daysAgo(dateStr);
+  if (days == null) return 'stale';
+  if (days <= 7) return 'active';
+  if (days <= 30) return 'recent';
+  return 'stale';
+}
+
+function activityLabel(dateStr) {
+  var days = daysAgo(dateStr);
+  if (days == null) return 'Unknown';
+  if (days === 0) return 'Today';
+  if (days === 1) return 'Yesterday';
+  return days + 'd ago';
+}
+
+/* ── RENDER: HEADER ── */
+function renderHeader(container, data) {
+  container.innerHTML =
+    '<div class="header-subtitle">W&B \u00b7 USAGE REPORT \u00b7 <span class="internal-badge">INTERNAL</span></div>' +
+    '<h1>' + data.customer + '</h1>' +
+    '<div class="header-rule"></div>' +
+    '<div class="header-meta">Generated ' + formatDate(data.generated) + ' \u00b7 12-month lookback \u00b7 SE prep only</div>';
+}
+
+/* ── RENDER: KPI ROW ── */
+function renderKPIRow(container, data) {
+  if (!data.available) {
+    container.style.display = 'none';
+    return;
+  }
+
+  var html = '';
+  var seat = data.seat_utilization;
+  var weave = data.weave;
+  var hours = data.tracked_hours;
+  if (seat) {
+    var zone = classifyZone(seat.utilization_percent);
+    html += '<div class="kpi-item">' +
+      '<span class="kpi-value">' + seat.active + ' / ' + seat.contracted + ' seats (<span class="zone-pct" style="color:' + zoneColor(zone) + '">' + seat.utilization_percent + '%</span>)</span>' +
+    '</div>';
+  }
+
+  if (weave) {
+    var wZone = classifyZone(weave.utilization_percent);
+    html += '<div class="kpi-item">' +
+      '<span class="kpi-value">' + Math.round(weave.ingestion_gb) + ' GB of ' + Math.round(weave.limit_gb) + ' GB (<span class="zone-pct" style="color:' + zoneColor(wZone) + '">' + weave.utilization_percent + '%</span>)</span>' +
+    '</div>';
+  }
+
+  if (hours) {
+    html += '<div class="kpi-item">' +
+      '<span class="kpi-value">' + formatNumber(Math.round(hours.last_30d_hours)) + 'h compute last 30d</span>' +
+    '</div>';
+  }
+
+  if (hours && hours.last_30d_run_count) {
+    html += '<div class="kpi-item">' +
+      '<span class="kpi-value">' + formatNumber(hours.last_30d_run_count) + ' runs last 30d</span>' +
+    '</div>';
+  }
+
+  if (!html) {
+    container.style.display = 'none';
+    return;
+  }
+  container.innerHTML = html;
+}
+
+/* ── RENDER: SEAT UTILIZATION (ECharts) ── */
+function renderSeatUtilizationChart(data) {
+  var seat = data.seat_utilization;
+  if (!seat || !seat.history || seat.history.length === 0) {
+    document.getElementById('seatSection').style.display = 'none';
+    return;
+  }
+
+  var colors = getComputedThemeColors();
+  var zone = classifyZone(seat.utilization_percent);
+
+  document.getElementById('seatHeadline').innerHTML =
+    '<span class="pct" style="color:' + zoneColor(zone) + '">' + seat.utilization_percent + '%</span>' +
+    '<span class="zone-label">' + zoneLabel(zone) + ' \u00b7 ' + seat.active + ' / ' + seat.contracted + ' seats</span>';
+
+  var weeks = seat.history.map(function(h) { return formatWeekLabel(h.week); });
+  var activeVals = seat.history.map(function(h) { return h.active; });
+  var contractedVals = seat.history.map(function(h) { return h.contracted; });
+
+  var chartDom = document.getElementById('seatChart');
+  var chart = echarts.init(chartDom, 'wandb');
+
+  chart.setOption({
+    tooltip: {
+      trigger: 'axis',
+      backgroundColor: colors.bgElevated,
+      borderColor: colors.border,
+      textStyle: { color: colors.textPrimary, fontSize: 12, fontFamily: "'Outfit', sans-serif" }
+    },
+    grid: { left: 50, right: 20, top: 20, bottom: 40 },
+    xAxis: {
+      type: 'category',
+      data: weeks,
+      axisLabel: {
+        interval: Math.floor(weeks.length / 8),
+        rotate: 0,
+        fontSize: 11
+      }
+    },
+    yAxis: {
+      type: 'value',
+      min: 0,
+      max: function(value) { return Math.max(value.max, seat.contracted + 5); },
+      splitLine: { lineStyle: { color: colors.borderSubtle, type: 'dashed' } }
+    },
+    series: [
+      {
+        name: 'Active Seats',
+        type: 'line',
+        data: activeVals,
+        lineStyle: { color: colors.blue, width: 2 },
+        areaStyle: { color: colors.blue + '22' },
+        itemStyle: { color: colors.blue },
+        symbol: 'circle',
+        symbolSize: 4,
+        smooth: true
+      },
+      {
+        name: 'Contracted',
+        type: 'line',
+        data: contractedVals,
+        lineStyle: { color: colors.accent, width: 2, type: 'dashed', opacity: 0.6 },
+        symbol: 'none',
+        silent: true
+      }
+    ]
+  });
+
+  window.addEventListener('resize', function() { chart.resize(); });
+}
+
+/* ── RENDER: PRODUCT ADOPTION RADAR (ECharts) ── */
+function renderProductRadar(data) {
+  var areas = data.product_areas;
+  if (!areas || areas.length === 0) {
+    document.getElementById('radarSection').style.display = 'none';
+    return;
+  }
+
+  var colors = getComputedThemeColors();
+  var indicator = areas.map(function(a) {
+    return { name: a.area, max: 100 };
+  });
+
+  var radarValues = areas.map(function(a) { return Math.round(a.radar_value || 0); });
+
+  var chartDom = document.getElementById('radarChart');
+  var chart = echarts.init(chartDom, 'wandb');
+
+  chart.setOption({
+    tooltip: {
+      trigger: 'item',
+      backgroundColor: colors.bgElevated,
+      borderColor: colors.border,
+      textStyle: { color: colors.textPrimary, fontSize: 12, fontFamily: "'Outfit', sans-serif" },
+      formatter: function(params) {
+        var lines = [];
+        areas.forEach(function(a, i) {
+          lines.push(a.area + ': ' + formatNumber(a.total_events) + ' events (' + a.unique_users + ' users)');
+        });
+        return '<strong>Product Adoption</strong><br/>' + lines.join('<br/>');
+      }
+    },
+    radar: {
+      indicator: indicator,
+      shape: 'polygon',
+      radius: '65%',
+      splitNumber: 4,
+      axisName: {
+        color: colors.textSecondary,
+        fontSize: 11,
+        fontFamily: "'JetBrains Mono', monospace"
+      },
+      splitLine: { lineStyle: { color: colors.borderSubtle } },
+      splitArea: { show: false },
+      axisLine: { lineStyle: { color: colors.borderSubtle } }
+    },
+    series: [{
+      name: 'Product Adoption',
+      type: 'radar',
+      data: [{
+        value: radarValues,
+        name: 'Usage',
+        lineStyle: { color: colors.blue, width: 2 },
+        areaStyle: { color: colors.blue + '22' },
+        itemStyle: { color: colors.blue, borderColor: colors.blue, borderWidth: 2 },
+        symbol: 'circle',
+        symbolSize: 6
+      }],
+      emphasis: {
+        lineStyle: { width: 3 },
+        areaStyle: { color: colors.blue + '33' }
+      }
+    }]
+  });
+
+  window.addEventListener('resize', function() { chart.resize(); });
+}
+
+/* ── RENDER: WEAVE INGESTION (ECharts) ── */
+function renderWeaveIngestionChart(data) {
+  var weave = data.weave;
+  if (!weave || !weave.history || weave.history.length === 0) {
+    document.getElementById('weaveSection').style.display = 'none';
+    return;
+  }
+
+  var colors = getComputedThemeColors();
+  var zone = classifyZone(weave.utilization_percent);
+
+  document.getElementById('weaveHeadline').innerHTML =
+    '<span class="pct" style="color:' + zoneColor(zone) + '">' + weave.utilization_percent + '%</span>' +
+    '<span class="zone-label">of contract limit</span>';
+
+  document.getElementById('weaveStat').textContent = weave.unique_users_last_90d + ' unique users (last 90d)';
+
+  var months = weave.history.map(function(h) { return formatMonthLabel(h.month); });
+  var gbVals = weave.history.map(function(h) { return h.ingestion_gb; });
+
+  var chartDom = document.getElementById('weaveChart');
+  var chart = echarts.init(chartDom, 'wandb');
+
+  chart.setOption({
+    tooltip: {
+      trigger: 'axis',
+      backgroundColor: colors.bgElevated,
+      borderColor: colors.border,
+      textStyle: { color: colors.textPrimary, fontSize: 12, fontFamily: "'Outfit', sans-serif" },
+      formatter: function(params) {
+        var d = params[0];
+        return d.name + ': ' + d.value.toFixed(1) + ' GB';
+      }
+    },
+    grid: { left: 50, right: 20, top: 20, bottom: 40 },
+    xAxis: {
+      type: 'category',
+      data: months
+    },
+    yAxis: {
+      type: 'value',
+      axisLabel: { formatter: '{value} GB' },
+      splitLine: { lineStyle: { color: colors.borderSubtle, type: 'dashed' } }
+    },
+    series: [{
+      name: 'Ingestion',
+      type: 'bar',
+      data: gbVals,
+      itemStyle: { color: colors.blue, borderRadius: [2, 2, 0, 0] },
+      barWidth: '50%',
+      label: {
+        show: true,
+        position: 'top',
+        formatter: function(p) { return p.value.toFixed(1); },
+        color: colors.textTertiary,
+        fontSize: 11,
+        fontFamily: "'JetBrains Mono', monospace"
+      }
+    }]
+  });
+
+  window.addEventListener('resize', function() { chart.resize(); });
+}
+
+/* ── RENDER: TRACKED HOURS (ECharts) ── */
+function renderTrackedHoursChart(data) {
+  var hours = data.tracked_hours;
+  if (!hours || !hours.history || hours.history.length === 0) {
+    document.getElementById('hoursSection').style.display = 'none';
+    return;
+  }
+
+  var colors = getComputedThemeColors();
+
+  document.getElementById('hoursHeadline').innerHTML =
+    '<span class="headline-value">' + formatNumber(Math.round(hours.last_30d_hours)) + 'h last 30d</span>';
+
+  document.getElementById('hoursStat').textContent = formatNumber(hours.last_30d_run_count) + ' runs last 30d';
+
+  var weeks = hours.history.map(function(h) { return formatWeekLabel(h.week); });
+  var hourVals = hours.history.map(function(h) { return Math.round(h.tracked_hours); });
+
+  var chartDom = document.getElementById('hoursChart');
+  var chart = echarts.init(chartDom, 'wandb');
+
+  chart.setOption({
+    tooltip: {
+      trigger: 'axis',
+      backgroundColor: colors.bgElevated,
+      borderColor: colors.border,
+      textStyle: { color: colors.textPrimary, fontSize: 12, fontFamily: "'Outfit', sans-serif" },
+      formatter: function(params) {
+        var d = params[0];
+        return d.name + ': ' + d.value + 'h';
+      }
+    },
+    grid: { left: 50, right: 20, top: 20, bottom: 40 },
+    xAxis: {
+      type: 'category',
+      data: weeks,
+      axisLabel: {
+        interval: Math.floor(weeks.length / 8),
+        rotate: 0,
+        fontSize: 11
+      }
+    },
+    yAxis: {
+      type: 'value',
+      axisLabel: { formatter: function(v) { return v >= 1000 ? (v / 1000).toFixed(1) + 'kh' : v + 'h'; } },
+      splitLine: { lineStyle: { color: colors.borderSubtle, type: 'dashed' } }
+    },
+    series: [{
+      name: 'Hours',
+      type: 'line',
+      data: hourVals,
+      lineStyle: { color: colors.blue, width: 2 },
+      areaStyle: { color: 'rgba(96, 165, 250, 0.10)' },
+      itemStyle: { color: colors.blue },
+      symbol: 'circle',
+      symbolSize: 4,
+      smooth: true
+    }]
+  });
+
+  window.addEventListener('resize', function() { chart.resize(); });
+}
+
+/* ── RENDER: AI EXECUTIVE SUMMARY ── */
+function renderAISummary(container, narrative) {
+  if (!narrative) {
+    container.style.display = 'none';
+    return;
+  }
+
+  var html = '<div class="section-header">AI EXECUTIVE SUMMARY</div>';
+
+  if (narrative.executive_summary) {
+    html += '<div class="ai-summary-text">' + narrative.executive_summary + '</div>';
+  }
+
+  if (narrative.highlights && narrative.highlights.length > 0) {
+    html += '<div class="section-header" style="margin-top:20px">HIGHLIGHTS</div>';
+    html += '<ul class="ai-highlights">';
+    narrative.highlights.forEach(function(h) {
+      html += '<li>' + h + '</li>';
+    });
+    html += '</ul>';
+  }
+
+  if (narrative.recommendations && narrative.recommendations.length > 0) {
+    html += '<div class="section-header" style="margin-top:20px">RECOMMENDATIONS</div>';
+    html += '<ol class="ai-recommendations">';
+    narrative.recommendations.forEach(function(r) {
+      html += '<li>' + r + '</li>';
+    });
+    html += '</ol>';
+  }
+
+  container.innerHTML = html;
+}
+
+/* ── RENDER: POWER USER MAP ── */
+function renderPowerUserMap(container, data) {
+  var users = data.power_users;
+  if (!users || users.length === 0) {
+    container.style.display = 'none';
+    return;
+  }
+
+  var sorted = users.slice().sort(function(a, b) { return b.total_events - a.total_events; });
+  var top20 = sorted.slice(0, 20);
+
+  var html = '<div class="section-header">POWER USERS</div>';
+  html += '<div style="overflow-x:auto">';
+  html += '<table class="power-user-table">';
+  html += '<thead><tr>' +
+    '<th style="width:36px">#</th>' +
+    '<th>Name</th>' +
+    '<th>Username</th>' +
+    '<th style="text-align:right">Events (90d)</th>' +
+    '<th>Product Areas</th>' +
+    '<th>Last Active</th>' +
+  '</tr></thead>';
+  html += '<tbody>';
+
+  top20.forEach(function(user, i) {
+    var ac = activityClass(user.last_activity);
+    var badges = (user.product_areas || []).map(function(pa) {
+      return '<span class="product-badge">' + pa + '</span>';
+    }).join('');
+
+    var displayName = user.name || 'Server User #' + (i + 1);
+    var displayEmail = user.email || '';
+    var displayUsername = user.username || '';
+
+    html += '<tr>' +
+      '<td class="power-user-rank">' + (i + 1) + '</td>' +
+      '<td><span class="power-user-name">' + displayName + '</span>' + (displayEmail ? '<span class="power-user-email">' + displayEmail + '</span>' : '') + '</td>' +
+      '<td><span style="font-family:var(--font-mono);font-size:12px;color:var(--text-secondary)">' + displayUsername + '</span></td>' +
+      '<td style="text-align:right"><span class="power-user-events">' + formatNumber(user.total_events) + '</span></td>' +
+      '<td>' + badges + '</td>' +
+      '<td><span class="activity-dot ' + ac + '"></span>' + activityLabel(user.last_activity) + '</td>' +
+    '</tr>';
+  });
+
+  html += '</tbody></table></div>';
+  container.innerHTML = html;
+}
+
+/* ── RENDER: ACCOUNT HEALTH GRID ── */
+function renderAccountHealth(container, data) {
+  var health = data.account_health;
+  if (!health) {
+    container.style.display = 'none';
+    return;
+  }
+
+  var html = '<div class="section-header">ACCOUNT HEALTH</div>';
+  html += '<div class="health-grid">';
+
+  /* Row 1: Renewal + CS Tier */
+  html += '<div class="health-field">' +
+    '<span class="health-field-label">RENEWAL</span>' +
+    '<span class="health-field-value">' + formatDate(health.renewal_date) + '</span>' +
+  '</div>';
+  html += '<div class="health-field">' +
+    '<span class="health-field-label">CS TIER</span>' +
+    '<span class="health-field-value">' + titleCase(health.cs_tier) + '</span>' +
+  '</div>';
+
+  /* Row 2: ARR + Health */
+  html += '<div class="health-field">' +
+    '<span class="health-field-label">ARR</span>' +
+    '<span class="health-field-value">$' + formatNumber(Math.round(health.arr)) + '</span>' +
+  '</div>';
+
+  var dotColor = healthDotColor(health.customer_health);
+  html += '<div class="health-field">' +
+    '<span class="health-field-label">HEALTH</span>' +
+    '<span class="health-field-value"><span class="health-dot" style="background:' + dotColor + '"></span>' + titleCase(health.customer_health) + '</span>' +
+  '</div>';
+
+  /* Row 3: Plan + Deployment */
+  html += '<div class="health-field">' +
+    '<span class="health-field-label">PLAN</span>' +
+    '<span class="health-field-value">' + titleCase(health.subscription_plan) + '</span>' +
+  '</div>';
+  html += '<div class="health-field">' +
+    '<span class="health-field-label">DEPLOYMENT</span>' +
+    '<span class="health-field-value">' + titleCase(health.deployment_type) + '</span>' +
+  '</div>';
+
+  /* Row 4: Churn Risk (full width) */
+  if (health.churn_probability_3mo != null || health.churn_probability_5mo != null) {
+    var p3 = health.churn_probability_3mo != null ? (health.churn_probability_3mo * 100).toFixed(0) : '\u2014';
+    var p5 = health.churn_probability_5mo != null ? (health.churn_probability_5mo * 100).toFixed(0) : '\u2014';
+    var maxChurn = Math.max(health.churn_probability_3mo || 0, health.churn_probability_5mo || 0);
+    var churnColor = churnZoneColor(maxChurn);
+    html += '<div class="health-field" style="grid-column: 1 / -1">' +
+      '<span class="health-field-label">CHURN RISK</span>' +
+      '<span class="health-field-value" style="color:' + churnColor + '">' + p3 + '% (3mo) / ' + p5 + '% (5mo)</span>' +
+    '</div>';
+  }
+
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+/* ── RENDER: RISK SIGNALS & SE ACTIONS ── */
+function renderRiskActions(container, narrative) {
+  if (!narrative) {
+    container.style.display = 'none';
+    return;
+  }
+
+  var hasRisks = narrative.risk_signals && narrative.risk_signals.length > 0;
+  var hasActions = narrative.se_actions && narrative.se_actions.length > 0;
+
+  if (!hasRisks && !hasActions) {
+    container.style.display = 'none';
+    return;
+  }
+
+  var html = '';
+
+  if (hasRisks) {
+    html += '<div class="section-header">RISK SIGNALS</div>';
+    html += '<ul class="risk-signals-list">';
+    narrative.risk_signals.forEach(function(r) {
+      html += '<li>' + r + '</li>';
+    });
+    html += '</ul>';
+  }
+
+  if (hasActions) {
+    html += '<div class="section-header" style="margin-top:' + (hasRisks ? '24px' : '0') + '">SE ACTIONS</div>';
+    html += '<ol class="se-actions-list">';
+    narrative.se_actions.forEach(function(a) {
+      html += '<li>' + a + '</li>';
+    });
+    html += '</ol>';
+  }
+
+  container.innerHTML = html;
+}
+
+/* ── RENDER: FOOTER ── */
+function renderFooter(container, data) {
+  container.innerHTML = '<span class="footer-text">Generated ' + formatDate(data.generated) + ' \u00b7 W&B Usage Report (Internal) \u00b7 Not for customer distribution</span>';
+}
+
+/* ── RENDER: EMPTY STATE ── */
+function renderEmptyState(data) {
+  renderHeader(document.getElementById('reportHeader'), data);
+
+  /* Hide all data sections */
+  ['kpiRow', 'seatSection', 'radarSection', 'weaveSection', 'hoursSection', 'aiSummarySection', 'powerUserSection', 'healthSection', 'riskActionsSection'].forEach(function(id) {
+    document.getElementById(id).style.display = 'none';
+  });
+
+  /* Show empty state message */
+  var emptyDiv = document.createElement('section');
+  emptyDiv.className = 'empty-state animate-in';
+  emptyDiv.style.animationDelay = '100ms';
+
+  var message = '';
+  var reason = data.reason || 'unknown';
+  if (reason === 'config_error') {
+    message = 'Customer not configured for BigQuery access. Add sfdc_account_id to templates/customers.yaml and retry.';
+  } else if (reason === 'no_data') {
+    message = 'No usage data found for ' + data.customer + '. Verify the sfdc_account_id in templates/customers.yaml matches the Salesforce account.';
+  } else if (reason === 'api_error') {
+    message = 'BigQuery data unavailable \u2014 check ADC credentials with /bigquery-setup';
+  } else {
+    message = 'No usage data available for ' + data.customer + '.';
+  }
+
+  emptyDiv.innerHTML = '<h2>Usage Report</h2><p>' + message + '</p>';
+  var containerEl = document.querySelector('.container');
+  var footer = document.getElementById('reportFooter');
+  containerEl.insertBefore(emptyDiv, footer);
+}
+
+/* ── MAIN RENDER ── */
+function render() {
+  var data = USAGE_DATA;
+  var narrative = (typeof AI_NARRATIVE !== 'undefined') ? AI_NARRATIVE : null;
+
+  /* Footer always renders */
+  renderFooter(document.getElementById('reportFooter'), data);
+
+  /* Empty / unavailable state */
+  if (!data.available) {
+    renderEmptyState(data);
+    return;
+  }
+
+  /* Header */
+  renderHeader(document.getElementById('reportHeader'), data);
+
+  /* KPI overview row */
+  renderKPIRow(document.getElementById('kpiRow'), data);
+
+  /* ECharts sections -- each independently omits when data is absent */
+  renderSeatUtilizationChart(data);
+  renderProductRadar(data);
+  renderWeaveIngestionChart(data);
+  renderTrackedHoursChart(data);
+
+  /* AI Executive Summary (candid internal tone) */
+  renderAISummary(document.getElementById('aiSummarySection'), narrative);
+
+  /* Internal-only sections */
+  renderPowerUserMap(document.getElementById('powerUserSection'), data);
+  renderAccountHealth(document.getElementById('healthSection'), data);
+  renderRiskActions(document.getElementById('riskActionsSection'), narrative);
+}
+
+document.addEventListener('DOMContentLoaded', render);
+</script>
+</body>
+</html>

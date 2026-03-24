@@ -1,0 +1,1360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Usage Report</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<style>
+/* ── DESIGN TOKENS (dark mode default) ── */
+:root {
+  --bg-primary: #0c0f14;
+  --bg-elevated: #141820;
+  --bg-surface: #1a1f2b;
+  --bg-hover: #222838;
+  --border: #2a3040;
+  --border-subtle: #1e2430;
+  --text-primary: #e8eaed;
+  --text-secondary: #8b92a0;
+  --text-tertiary: #5c6370;
+  --accent: #d4a853;
+  --accent-dim: rgba(212, 168, 83, 0.12);
+  --accent-border: rgba(212, 168, 83, 0.25);
+  --green: #4ade80;
+  --green-dim: rgba(74, 222, 128, 0.10);
+  --green-border: rgba(74, 222, 128, 0.22);
+  --blue: #60a5fa;
+  --blue-dim: rgba(96, 165, 250, 0.10);
+  --blue-border: rgba(96, 165, 250, 0.22);
+  --amber: #fbbf24;
+  --amber-dim: rgba(251, 191, 36, 0.10);
+  --amber-border: rgba(251, 191, 36, 0.22);
+  --red: #f87171;
+  --red-dim: rgba(248, 113, 113, 0.10);
+  --red-border: rgba(248, 113, 113, 0.22);
+  --font-display: 'Instrument Serif', Georgia, serif;
+  --font-body: 'Outfit', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --radius: 6px;
+  --noise-opacity: 0.025;
+  --mode: dark;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg-primary: #f6f4f0;
+    --bg-elevated: #ffffff;
+    --bg-surface: #eeece8;
+    --bg-hover: #e6e4e0;
+    --border: #d4d2ce;
+    --border-subtle: #e0ded9;
+    --text-primary: #1a1a1a;
+    --text-secondary: #5c5c5c;
+    --text-tertiary: #8c8c8c;
+    --accent: #b8922e;
+    --accent-dim: rgba(184, 146, 46, 0.10);
+    --accent-border: rgba(184, 146, 46, 0.25);
+    --green: #1a7a4c;
+    --green-dim: rgba(26, 122, 76, 0.08);
+    --green-border: rgba(26, 122, 76, 0.20);
+    --blue: #1565a0;
+    --blue-dim: rgba(96, 165, 250, 0.08);
+    --blue-border: rgba(21, 101, 160, 0.20);
+    --amber: #9a6e08;
+    --amber-dim: rgba(154, 110, 8, 0.08);
+    --amber-border: rgba(154, 110, 8, 0.20);
+    --red: #dc2626;
+    --red-dim: rgba(220, 38, 38, 0.08);
+    --red-border: rgba(220, 38, 38, 0.20);
+    --noise-opacity: 0;
+    --mode: light;
+  }
+}
+
+/* ── RESET ── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* ── BASE ── */
+body {
+  font-family: var(--font-body);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── NOISE TEXTURE (dark mode only via opacity token) ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  opacity: var(--noise-opacity);
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 256px;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* ── CONTAINER ── */
+.container {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: clamp(48px, 6vw, 80px) clamp(16px, 3vw, 32px) clamp(32px, 4vw, 64px);
+}
+
+/* ── HEADER ── */
+.header {
+  margin-bottom: clamp(32px, 4vw, 48px);
+}
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.header-brand svg {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+}
+
+.header-brand-text {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.5px;
+}
+
+.header-subtitle {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+.header-title {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 4vw, 42px);
+  font-weight: 400;
+  line-height: 1.1;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+
+.header-rule {
+  width: 64px;
+  height: 2px;
+  background: var(--accent);
+  border: none;
+  margin-bottom: 12px;
+}
+
+.header-meta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-tertiary);
+  letter-spacing: 0.5px;
+}
+
+/* ── SECTION ── */
+.section {
+  margin-bottom: clamp(24px, 3vw, 40px);
+  opacity: 0;
+  transform: translateY(12px);
+  animation: fadeUp 0.4s ease-out forwards;
+}
+
+.section:nth-child(2) { animation-delay: 0.05s; }
+.section:nth-child(3) { animation-delay: 0.10s; }
+.section:nth-child(4) { animation-delay: 0.15s; }
+.section:nth-child(5) { animation-delay: 0.20s; }
+.section:nth-child(6) { animation-delay: 0.25s; }
+.section:nth-child(7) { animation-delay: 0.30s; }
+.section:nth-child(8) { animation-delay: 0.35s; }
+
+@keyframes fadeUp {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .section {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+}
+
+.section-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+/* ── KPI ROW ── */
+.kpi-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(24px, 4vw, 48px);
+  margin-bottom: 8px;
+}
+
+.kpi-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.kpi-value {
+  font-family: var(--font-body);
+  font-size: clamp(24px, 3vw, 32px);
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--text-primary);
+}
+
+.kpi-value.zone-healthy { color: var(--green); }
+.kpi-value.zone-at-risk { color: var(--amber); }
+.kpi-value.zone-critical { color: var(--red); }
+
+.kpi-unit {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-tertiary);
+}
+
+.kpi-trend {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 400;
+  margin-top: 2px;
+}
+
+.kpi-trend.trend-up { color: var(--green); }
+.kpi-trend.trend-down { color: var(--red); }
+.kpi-trend.trend-stable { color: var(--text-tertiary); }
+
+/* ── CHART CONTAINERS ── */
+.chart-container {
+  width: 100%;
+  background: transparent;
+  border-radius: var(--radius);
+}
+
+.chart-supplementary {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-tertiary);
+  margin-top: 12px;
+}
+
+.chart-supplementary strong {
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+/* ── AI NARRATIVE ── */
+.narrative-section {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  padding: clamp(24px, 3vw, 32px);
+}
+
+.narrative-text {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.55;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+}
+
+.narrative-text:last-child {
+  margin-bottom: 0;
+}
+
+.narrative-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 16px 0;
+}
+
+.narrative-list:last-child {
+  margin-bottom: 0;
+}
+
+.narrative-list li {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.55;
+  color: var(--text-secondary);
+  padding: 4px 0;
+  padding-left: 16px;
+  position: relative;
+}
+
+.narrative-list li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 12px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.narrative-list.numbered {
+  counter-reset: narrative;
+}
+
+.narrative-list.numbered li {
+  padding-left: 24px;
+}
+
+.narrative-list.numbered li::before {
+  content: counter(narrative);
+  counter-increment: narrative;
+  width: auto;
+  height: auto;
+  border-radius: 0;
+  background: none;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  top: 5px;
+}
+
+.narrative-sublabel {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-tertiary);
+  margin: 24px 0 12px 0;
+}
+
+.narrative-sublabel:first-child {
+  margin-top: 0;
+}
+
+/* ── EMPTY STATE ── */
+.empty-state {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-tertiary);
+  padding: clamp(24px, 3vw, 48px) 0;
+  text-align: center;
+}
+
+/* ── FOOTER ── */
+.footer {
+  margin-top: clamp(32px, 4vw, 64px);
+  padding-top: 16px;
+  border-top: 1px solid var(--border-subtle);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-tertiary);
+  letter-spacing: 0.5px;
+  text-align: center;
+}
+</style>
+</head>
+<body>
+
+<div class="container" id="app">
+  <!-- Content rendered by JavaScript -->
+</div>
+
+<script>
+/* ── DATA INJECTION POINTS ── */
+const USAGE_DATA = {
+  customer: "GResearch",
+  generated: "2026-03-24",
+  period: { start: "2025-03-24", end: "2026-03-24" },
+  available: true,
+  seat_utilization: {
+    contracted: 50,
+    claimed: 42,
+    active: 35,
+    utilization_percent: 70.0,
+    zone: "at_risk",
+    history: [
+      { week: "2025-04-07", contracted: 50, active: 28 },
+      { week: "2025-04-14", contracted: 50, active: 29 },
+      { week: "2025-04-21", contracted: 50, active: 27 },
+      { week: "2025-04-28", contracted: 50, active: 30 },
+      { week: "2025-05-05", contracted: 50, active: 31 },
+      { week: "2025-05-12", contracted: 50, active: 29 },
+      { week: "2025-05-19", contracted: 50, active: 30 },
+      { week: "2025-05-26", contracted: 50, active: 32 },
+      { week: "2025-06-02", contracted: 50, active: 33 },
+      { week: "2025-06-09", contracted: 50, active: 31 },
+      { week: "2025-06-16", contracted: 50, active: 30 },
+      { week: "2025-06-23", contracted: 50, active: 32 },
+      { week: "2025-06-30", contracted: 50, active: 34 },
+      { week: "2025-07-07", contracted: 50, active: 33 },
+      { week: "2025-07-14", contracted: 50, active: 31 },
+      { week: "2025-07-21", contracted: 50, active: 30 },
+      { week: "2025-07-28", contracted: 50, active: 29 },
+      { week: "2025-08-04", contracted: 50, active: 28 },
+      { week: "2025-08-11", contracted: 50, active: 27 },
+      { week: "2025-08-18", contracted: 50, active: 29 },
+      { week: "2025-08-25", contracted: 50, active: 30 },
+      { week: "2025-09-01", contracted: 50, active: 31 },
+      { week: "2025-09-08", contracted: 50, active: 28 },
+      { week: "2025-09-15", contracted: 50, active: 27 },
+      { week: "2025-09-22", contracted: 50, active: 29 },
+      { week: "2025-09-29", contracted: 50, active: 30 },
+      { week: "2025-10-06", contracted: 50, active: 31 },
+      { week: "2025-10-13", contracted: 50, active: 32 },
+      { week: "2025-10-20", contracted: 50, active: 30 },
+      { week: "2025-10-27", contracted: 50, active: 31 },
+      { week: "2025-11-03", contracted: 50, active: 33 },
+      { week: "2025-11-10", contracted: 50, active: 34 },
+      { week: "2025-11-17", contracted: 50, active: 32 },
+      { week: "2025-11-24", contracted: 50, active: 31 },
+      { week: "2025-12-01", contracted: 50, active: 30 },
+      { week: "2025-12-08", contracted: 50, active: 29 },
+      { week: "2025-12-15", contracted: 50, active: 31 },
+      { week: "2025-12-22", contracted: 50, active: 30 },
+      { week: "2025-12-29", contracted: 50, active: 32 },
+      { week: "2026-01-05", contracted: 50, active: 33 },
+      { week: "2026-01-12", contracted: 50, active: 34 },
+      { week: "2026-01-19", contracted: 50, active: 33 },
+      { week: "2026-01-26", contracted: 50, active: 35 },
+      { week: "2026-02-02", contracted: 50, active: 34 },
+      { week: "2026-02-09", contracted: 50, active: 36 },
+      { week: "2026-02-16", contracted: 50, active: 35 },
+      { week: "2026-02-23", contracted: 50, active: 34 },
+      { week: "2026-03-02", contracted: 50, active: 36 },
+      { week: "2026-03-09", contracted: 50, active: 37 },
+      { week: "2026-03-16", contracted: 50, active: 35 },
+      { week: "2026-03-24", contracted: 50, active: 35 }
+    ]
+  },
+  weave: {
+    ingestion_gb: 156.3,
+    limit_gb: 500.0,
+    utilization_percent: 31.3,
+    unique_users_last_90d: 12,
+    history: [
+      { month: "2025-04", ingestion_gb: 8.2, unique_users: 5 },
+      { month: "2025-05", ingestion_gb: 9.1, unique_users: 6 },
+      { month: "2025-06", ingestion_gb: 10.5, unique_users: 7 },
+      { month: "2025-07", ingestion_gb: 11.8, unique_users: 8 },
+      { month: "2025-08", ingestion_gb: 12.4, unique_users: 8 },
+      { month: "2025-09", ingestion_gb: 13.2, unique_users: 9 },
+      { month: "2025-10", ingestion_gb: 14.1, unique_users: 10 },
+      { month: "2025-11", ingestion_gb: 13.8, unique_users: 9 },
+      { month: "2025-12", ingestion_gb: 14.6, unique_users: 10 },
+      { month: "2026-01", ingestion_gb: 15.2, unique_users: 11 },
+      { month: "2026-02", ingestion_gb: 16.8, unique_users: 12 },
+      { month: "2026-03", ingestion_gb: 16.6, unique_users: 12 }
+    ]
+  },
+  tracked_hours: {
+    last_30d_hours: 1250.0,
+    last_30d_run_count: 342,
+    history: [
+      { week: "2025-04-07", tracked_hours: 180.5 },
+      { week: "2025-04-14", tracked_hours: 195.2 },
+      { week: "2025-04-21", tracked_hours: 172.3 },
+      { week: "2025-04-28", tracked_hours: 188.9 },
+      { week: "2025-05-05", tracked_hours: 201.4 },
+      { week: "2025-05-12", tracked_hours: 210.3 },
+      { week: "2025-05-19", tracked_hours: 198.7 },
+      { week: "2025-05-26", tracked_hours: 185.2 },
+      { week: "2025-06-02", tracked_hours: 220.1 },
+      { week: "2025-06-09", tracked_hours: 215.8 },
+      { week: "2025-06-16", tracked_hours: 203.4 },
+      { week: "2025-06-23", tracked_hours: 196.2 },
+      { week: "2025-06-30", tracked_hours: 188.5 },
+      { week: "2025-07-07", tracked_hours: 175.3 },
+      { week: "2025-07-14", tracked_hours: 168.9 },
+      { week: "2025-07-21", tracked_hours: 172.4 },
+      { week: "2025-07-28", tracked_hours: 180.1 },
+      { week: "2025-08-04", tracked_hours: 155.8 },
+      { week: "2025-08-11", tracked_hours: 162.3 },
+      { week: "2025-08-18", tracked_hours: 170.6 },
+      { week: "2025-08-25", tracked_hours: 178.2 },
+      { week: "2025-09-01", tracked_hours: 185.9 },
+      { week: "2025-09-08", tracked_hours: 192.4 },
+      { week: "2025-09-15", tracked_hours: 188.7 },
+      { week: "2025-09-22", tracked_hours: 195.1 },
+      { week: "2025-09-29", tracked_hours: 201.8 },
+      { week: "2025-10-06", tracked_hours: 210.5 },
+      { week: "2025-10-13", tracked_hours: 218.3 },
+      { week: "2025-10-20", tracked_hours: 225.9 },
+      { week: "2025-10-27", tracked_hours: 215.6 },
+      { week: "2025-11-03", tracked_hours: 230.2 },
+      { week: "2025-11-10", tracked_hours: 242.1 },
+      { week: "2025-11-17", tracked_hours: 238.5 },
+      { week: "2025-11-24", tracked_hours: 220.8 },
+      { week: "2025-12-01", tracked_hours: 205.4 },
+      { week: "2025-12-08", tracked_hours: 198.7 },
+      { week: "2025-12-15", tracked_hours: 210.3 },
+      { week: "2025-12-22", tracked_hours: 190.5 },
+      { week: "2025-12-29", tracked_hours: 185.2 },
+      { week: "2026-01-05", tracked_hours: 225.6 },
+      { week: "2026-01-12", tracked_hours: 238.9 },
+      { week: "2026-01-19", tracked_hours: 245.2 },
+      { week: "2026-01-26", tracked_hours: 252.8 },
+      { week: "2026-02-02", tracked_hours: 260.3 },
+      { week: "2026-02-09", tracked_hours: 268.1 },
+      { week: "2026-02-16", tracked_hours: 272.5 },
+      { week: "2026-02-23", tracked_hours: 265.8 },
+      { week: "2026-03-02", tracked_hours: 278.4 },
+      { week: "2026-03-09", tracked_hours: 285.2 },
+      { week: "2026-03-16", tracked_hours: 290.1 },
+      { week: "2026-03-24", tracked_hours: 295.8 }
+    ]
+  },
+  trends: {
+    seat_utilization_change: 12.5,
+    weave_ingestion_change: -3.2,
+    tracked_hours_change: 8.7,
+    run_count_change: 5.3
+  },
+  product_areas: [
+    {
+      area: "Experiments",
+      monthly_events: [
+        { month: "2025-04", count: 1520, users: 22 },
+        { month: "2025-05", count: 1680, users: 24 },
+        { month: "2025-06", count: 1590, users: 23 },
+        { month: "2025-07", count: 1750, users: 25 },
+        { month: "2025-08", count: 1620, users: 22 },
+        { month: "2025-09", count: 1800, users: 26 },
+        { month: "2025-10", count: 1920, users: 27 },
+        { month: "2025-11", count: 1850, users: 25 },
+        { month: "2025-12", count: 1780, users: 24 },
+        { month: "2026-01", count: 1950, users: 28 },
+        { month: "2026-02", count: 2100, users: 30 },
+        { month: "2026-03", count: 2050, users: 29 }
+      ],
+      total_events: 21610,
+      unique_users: 30
+    },
+    {
+      area: "Artifacts",
+      monthly_events: [
+        { month: "2025-04", count: 420, users: 10 },
+        { month: "2025-05", count: 480, users: 12 },
+        { month: "2025-06", count: 510, users: 13 },
+        { month: "2025-07", count: 490, users: 12 },
+        { month: "2025-08", count: 520, users: 14 },
+        { month: "2025-09", count: 550, users: 15 },
+        { month: "2025-10", count: 580, users: 15 },
+        { month: "2025-11", count: 560, users: 14 },
+        { month: "2025-12", count: 600, users: 16 },
+        { month: "2026-01", count: 620, users: 17 },
+        { month: "2026-02", count: 650, users: 18 },
+        { month: "2026-03", count: 640, users: 17 }
+      ],
+      total_events: 6620,
+      unique_users: 18
+    },
+    {
+      area: "Model Registry",
+      monthly_events: [
+        { month: "2025-04", count: 15, users: 2 },
+        { month: "2025-05", count: 18, users: 2 },
+        { month: "2025-06", count: 22, users: 3 },
+        { month: "2025-07", count: 20, users: 3 },
+        { month: "2025-08", count: 25, users: 3 },
+        { month: "2025-09", count: 28, users: 3 },
+        { month: "2025-10", count: 32, users: 4 },
+        { month: "2025-11", count: 30, users: 3 },
+        { month: "2025-12", count: 35, users: 4 },
+        { month: "2026-01", count: 38, users: 4 },
+        { month: "2026-02", count: 42, users: 5 },
+        { month: "2026-03", count: 40, users: 5 }
+      ],
+      total_events: 345,
+      unique_users: 5
+    },
+    {
+      area: "Reports",
+      monthly_events: [
+        { month: "2025-04", count: 85, users: 8 },
+        { month: "2025-05", count: 92, users: 9 },
+        { month: "2025-06", count: 88, users: 8 },
+        { month: "2025-07", count: 95, users: 10 },
+        { month: "2025-08", count: 90, users: 9 },
+        { month: "2025-09", count: 98, users: 10 },
+        { month: "2025-10", count: 105, users: 11 },
+        { month: "2025-11", count: 100, users: 10 },
+        { month: "2025-12", count: 108, users: 11 },
+        { month: "2026-01", count: 112, users: 12 },
+        { month: "2026-02", count: 118, users: 13 },
+        { month: "2026-03", count: 115, users: 12 }
+      ],
+      total_events: 1206,
+      unique_users: 13
+    },
+    {
+      area: "Weave Tracing",
+      monthly_events: [
+        { month: "2025-04", count: 320, users: 5 },
+        { month: "2025-05", count: 380, users: 6 },
+        { month: "2025-06", count: 450, users: 7 },
+        { month: "2025-07", count: 520, users: 8 },
+        { month: "2025-08", count: 580, users: 9 },
+        { month: "2025-09", count: 650, users: 10 },
+        { month: "2025-10", count: 720, users: 11 },
+        { month: "2025-11", count: 780, users: 11 },
+        { month: "2025-12", count: 850, users: 12 },
+        { month: "2026-01", count: 920, users: 13 },
+        { month: "2026-02", count: 980, users: 14 },
+        { month: "2026-03", count: 1050, users: 15 }
+      ],
+      total_events: 8200,
+      unique_users: 15
+    },
+    {
+      area: "Sweeps",
+      monthly_events: [
+        { month: "2025-04", count: 45, users: 4 },
+        { month: "2025-05", count: 50, users: 5 },
+        { month: "2025-06", count: 42, users: 4 },
+        { month: "2025-07", count: 48, users: 5 },
+        { month: "2025-08", count: 55, users: 5 },
+        { month: "2025-09", count: 52, users: 5 },
+        { month: "2025-10", count: 60, users: 6 },
+        { month: "2025-11", count: 58, users: 6 },
+        { month: "2025-12", count: 62, users: 6 },
+        { month: "2026-01", count: 65, users: 7 },
+        { month: "2026-02", count: 70, users: 7 },
+        { month: "2026-03", count: 68, users: 7 }
+      ],
+      total_events: 675,
+      unique_users: 7
+    },
+    {
+      area: "Launch",
+      monthly_events: [
+        { month: "2025-04", count: 0, users: 0 },
+        { month: "2025-05", count: 0, users: 0 },
+        { month: "2025-06", count: 0, users: 0 },
+        { month: "2025-07", count: 5, users: 1 },
+        { month: "2025-08", count: 8, users: 1 },
+        { month: "2025-09", count: 12, users: 2 },
+        { month: "2025-10", count: 15, users: 2 },
+        { month: "2025-11", count: 18, users: 2 },
+        { month: "2025-12", count: 22, users: 3 },
+        { month: "2026-01", count: 25, users: 3 },
+        { month: "2026-02", count: 28, users: 3 },
+        { month: "2026-03", count: 30, users: 3 }
+      ],
+      total_events: 163,
+      unique_users: 3
+    },
+    {
+      area: "Automations",
+      monthly_events: [
+        { month: "2025-04", count: 0, users: 0 },
+        { month: "2025-05", count: 0, users: 0 },
+        { month: "2025-06", count: 0, users: 0 },
+        { month: "2025-07", count: 0, users: 0 },
+        { month: "2025-08", count: 0, users: 0 },
+        { month: "2025-09", count: 0, users: 0 },
+        { month: "2025-10", count: 5, users: 1 },
+        { month: "2025-11", count: 8, users: 1 },
+        { month: "2025-12", count: 12, users: 2 },
+        { month: "2026-01", count: 15, users: 2 },
+        { month: "2026-02", count: 18, users: 2 },
+        { month: "2026-03", count: 20, users: 2 }
+      ],
+      total_events: 78,
+      unique_users: 2
+    }
+  ],
+  power_users: [
+    { username: "alice_ml", total_events: 5200, product_areas: ["Experiments", "Artifacts", "Weave Tracing"], last_activity: "2026-03-23" },
+    { username: "bob_research", total_events: 4800, product_areas: ["Experiments", "Sweeps", "Reports"], last_activity: "2026-03-24" },
+    { username: "carol_eng", total_events: 3900, product_areas: ["Experiments", "Artifacts", "Model Registry", "Launch"], last_activity: "2026-03-22" },
+    { username: "dan_data", total_events: 3200, product_areas: ["Experiments", "Weave Tracing", "Weave Tracing"], last_activity: "2026-03-21" },
+    { username: "eve_ops", total_events: 2800, product_areas: ["Experiments", "Launch", "Automations"], last_activity: "2026-03-20" }
+  ]
+};
+
+const AI_NARRATIVE = {
+  executive_summary: "GResearch's W&B platform adoption continues to strengthen across the organization, with 35 active seats out of 50 contracted representing 70% utilization. The most significant growth trend is in Weave Tracing, which has seen a 228% increase in monthly events over the past 12 months, reflecting the team's expanding investment in AI observability and LLM application monitoring.\n\nExperiment tracking remains the foundation of GResearch's W&B usage with 30 unique users generating over 21,000 events in the past year. The recent uptick in Artifact usage (18 unique users, up from 10 a year ago) suggests maturing ML pipelines with better reproducibility practices. Compute hours have grown steadily, reaching 295 hours per week in March 2026, an 8.7% increase over the prior period.\n\nWeave ingestion is at 31% of the contracted limit, with healthy room for growth. The 12 unique Weave users represent a growing cohort that could become a key driver of expanded platform value as LLM workloads scale.",
+  recommendations: [
+    "Schedule a Model Registry workshop to accelerate adoption beyond the current 5 users -- the team's growing Artifact usage creates a natural pathway to model versioning and promotion workflows.",
+    "Explore Launch and Automations enablement sessions with the 3 users already experimenting in this space -- early adoption signals suggest appetite for production ML workflows.",
+    "Consider expanding Weave ingestion capacity planning given the consistent month-over-month growth trajectory, which if continued would approach 50% utilization within 6 months.",
+    "Facilitate cross-team knowledge sharing between the 15 Weave Tracing users and the broader Experiments user base to drive observability adoption across more ML workflows."
+  ],
+  highlights: [
+    "Weave Tracing adoption grew 228% year-over-year, from 320 monthly events to over 1,050 -- the fastest-growing product area.",
+    "5 power users are actively spanning 3+ product areas, indicating deep platform integration into daily workflows.",
+    "Artifact usage nearly doubled in unique users (10 to 18), reflecting improved ML pipeline maturity and reproducibility practices.",
+    "Compute tracked hours increased 8.7% period-over-period, reaching nearly 296 hours per week -- demonstrating sustained and growing workload activity.",
+    "New product area adoption: Launch and Automations usage emerged in the second half of the year, with 3 and 2 users respectively exploring production ML capabilities."
+  ]
+};
+
+/* ── DETECT COLOR MODE ── */
+function isDarkMode() {
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+}
+
+/* ── ECHARTS THEME REGISTRATION ── */
+function getThemeColors() {
+  const dark = isDarkMode();
+  return {
+    bg: 'transparent',
+    textPrimary: dark ? '#e8eaed' : '#1a1a1a',
+    textSecondary: dark ? '#8b92a0' : '#5c5c5c',
+    textTertiary: dark ? '#5c6370' : '#8c8c8c',
+    accent: dark ? '#d4a853' : '#b8922e',
+    blue: dark ? '#60a5fa' : '#1565a0',
+    green: dark ? '#4ade80' : '#1a7a4c',
+    amber: dark ? '#fbbf24' : '#9a6e08',
+    red: dark ? '#f87171' : '#dc2626',
+    borderSubtle: dark ? '#1e2430' : '#e0ded9',
+    bgElevated: dark ? '#141820' : '#ffffff',
+    bgSurface: dark ? '#1a1f2b' : '#eeece8'
+  };
+}
+
+function registerWandbTheme() {
+  const c = getThemeColors();
+  echarts.registerTheme('wandb', {
+    backgroundColor: c.bg,
+    textStyle: {
+      fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+      fontSize: 11,
+      color: c.textSecondary
+    },
+    title: {
+      textStyle: { color: c.textPrimary, fontFamily: "'Outfit', system-ui, sans-serif" }
+    },
+    legend: {
+      textStyle: { color: c.textSecondary, fontFamily: "'Outfit', system-ui, sans-serif", fontSize: 12 }
+    },
+    tooltip: {
+      backgroundColor: c.bgElevated,
+      borderColor: c.borderSubtle,
+      borderWidth: 1,
+      textStyle: {
+        color: c.textPrimary,
+        fontFamily: "'Outfit', system-ui, sans-serif",
+        fontSize: 13
+      },
+      extraCssText: 'border-radius: 6px; box-shadow: 0 4px 16px rgba(0,0,0,0.2);'
+    },
+    categoryAxis: {
+      axisLine: { lineStyle: { color: c.borderSubtle } },
+      axisTick: { show: false },
+      axisLabel: {
+        color: c.textTertiary,
+        fontFamily: "'JetBrains Mono', monospace",
+        fontSize: 11
+      },
+      splitLine: { lineStyle: { color: c.borderSubtle, type: 'dashed' } }
+    },
+    valueAxis: {
+      axisLine: { show: false },
+      axisTick: { show: false },
+      axisLabel: {
+        color: c.textTertiary,
+        fontFamily: "'JetBrains Mono', monospace",
+        fontSize: 11
+      },
+      splitLine: { lineStyle: { color: c.borderSubtle, type: 'dashed' } }
+    },
+    color: [c.blue, c.accent, c.green, c.amber, c.red],
+    animationDuration: 600,
+    animationEasing: 'cubicOut'
+  });
+}
+
+/* ── UTILITY FUNCTIONS ── */
+function formatDate(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00');
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
+}
+
+function formatWeekLabel(weekStr) {
+  const d = new Date(weekStr + 'T00:00:00');
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return months[d.getMonth()] + ' ' + d.getDate();
+}
+
+function formatMonthLabel(monthStr) {
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const parts = monthStr.split('-');
+  return months[parseInt(parts[1]) - 1] + ' ' + parts[0].slice(2);
+}
+
+function getZoneClass(zone) {
+  if (zone === 'healthy') return 'zone-healthy';
+  if (zone === 'at_risk') return 'zone-at-risk';
+  return 'zone-critical';
+}
+
+function getZoneLabel(zone) {
+  if (zone === 'healthy') return 'Healthy';
+  if (zone === 'at_risk') return 'At Risk';
+  return 'Critical';
+}
+
+function getTrendArrow(value) {
+  if (value === null || value === undefined) return null;
+  if (value > 0) return { arrow: '\u2191', cls: 'trend-up', text: '+' + value.toFixed(1) + '%' };
+  if (value < 0) return { arrow: '\u2193', cls: 'trend-down', text: value.toFixed(1) + '%' };
+  return { arrow: '\u2014', cls: 'trend-stable', text: '0%' };
+}
+
+function numberWithCommas(x) {
+  if (x === null || x === undefined) return 'N/A';
+  return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
+/* ── RENDER FUNCTIONS ── */
+function renderHeader() {
+  const data = USAGE_DATA;
+  return `
+    <div class="header">
+      <div class="header-brand">
+        <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="64" height="64" rx="12" fill="var(--accent)"/>
+          <text x="32" y="44" text-anchor="middle" font-family="'Outfit', sans-serif" font-weight="700" font-size="32" fill="#0c0f14">W</text>
+        </svg>
+        <span class="header-brand-text">Weights & Biases by CoreWeave</span>
+      </div>
+      <div class="header-subtitle">USAGE REPORT</div>
+      <h1 class="header-title">${data.customer}</h1>
+      <hr class="header-rule">
+      <div class="header-meta">Generated ${formatDate(data.generated)} &middot; 12-month lookback</div>
+    </div>
+  `;
+}
+
+function renderKPIRow() {
+  const data = USAGE_DATA;
+  if (!data.available) return '';
+
+  let kpis = [];
+
+  if (data.seat_utilization) {
+    const s = data.seat_utilization;
+    kpis.push(`
+      <div class="kpi-item">
+        <div class="kpi-value ${getZoneClass(s.zone)}">${s.utilization_percent}%</div>
+        <div class="kpi-unit">Seat Utilization</div>
+      </div>
+    `);
+  }
+
+  if (data.weave) {
+    const w = data.weave;
+    const wZone = w.utilization_percent >= 80 ? 'healthy' : w.utilization_percent >= 50 ? 'at_risk' : 'critical';
+    kpis.push(`
+      <div class="kpi-item">
+        <div class="kpi-value ${getZoneClass(wZone)}">${w.utilization_percent}%</div>
+        <div class="kpi-unit">Weave Utilization</div>
+      </div>
+    `);
+  }
+
+  if (data.tracked_hours) {
+    const h = data.tracked_hours;
+    kpis.push(`
+      <div class="kpi-item">
+        <div class="kpi-value">${numberWithCommas(Math.round(h.last_30d_hours))}h</div>
+        <div class="kpi-unit">Tracked Hours (30d)</div>
+      </div>
+    `);
+  }
+
+  if (data.tracked_hours && data.tracked_hours.last_30d_run_count) {
+    kpis.push(`
+      <div class="kpi-item">
+        <div class="kpi-value">${numberWithCommas(data.tracked_hours.last_30d_run_count)}</div>
+        <div class="kpi-unit">Runs (30d)</div>
+      </div>
+    `);
+  }
+
+  if (kpis.length === 0) return '';
+
+  return `
+    <div class="section">
+      <div class="section-label">Usage Overview</div>
+      <div class="kpi-row">${kpis.join('')}</div>
+    </div>
+  `;
+}
+
+function renderSeatChart() {
+  const data = USAGE_DATA;
+  if (!data.seat_utilization || !data.seat_utilization.history || data.seat_utilization.history.length === 0) return '';
+
+  const s = data.seat_utilization;
+  return `
+    <div class="section">
+      <div class="section-label">
+        Seat Utilization
+        <span style="float: right; font-family: var(--font-mono); font-size: 14px; font-weight: 600;" class="${getZoneClass(s.zone)}">
+          ${s.utilization_percent}% &middot; ${getZoneLabel(s.zone)}
+        </span>
+      </div>
+      <div class="chart-container" id="chart-seats" style="height: 300px;"></div>
+      <div class="chart-supplementary">
+        <strong>${s.active} / ${s.contracted}</strong> active seats${s.claimed ? ` &middot; ${s.claimed} claimed` : ''}
+      </div>
+    </div>
+  `;
+}
+
+function initSeatChart() {
+  const el = document.getElementById('chart-seats');
+  if (!el) return;
+
+  const s = USAGE_DATA.seat_utilization;
+  const c = getThemeColors();
+  const chart = echarts.init(el, 'wandb');
+
+  const weeks = s.history.map(h => formatWeekLabel(h.week));
+  const active = s.history.map(h => h.active);
+  const contracted = s.history.map(h => h.contracted);
+
+  chart.setOption({
+    grid: { left: 48, right: 24, top: 24, bottom: 40 },
+    xAxis: {
+      type: 'category',
+      data: weeks,
+      axisLabel: {
+        interval: Math.floor(weeks.length / 8),
+        rotate: 0
+      }
+    },
+    yAxis: {
+      type: 'value',
+      min: 0,
+      max: function(value) { return Math.max(value.max, s.contracted + 5); },
+      splitNumber: 4
+    },
+    tooltip: {
+      trigger: 'axis',
+      formatter: function(params) {
+        let result = '<div style="font-family: \'JetBrains Mono\', monospace; font-size: 11px; color: ' + c.textTertiary + ';">' + params[0].axisValue + '</div>';
+        params.forEach(function(p) {
+          result += '<div style="margin-top: 4px;"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + p.color + ';margin-right:6px;"></span>' + p.seriesName + ': <strong>' + p.value + '</strong></div>';
+        });
+        return result;
+      }
+    },
+    legend: {
+      data: ['Active Seats', 'Contracted'],
+      bottom: 0,
+      itemWidth: 16,
+      itemHeight: 2
+    },
+    series: [
+      {
+        name: 'Active Seats',
+        type: 'line',
+        data: active,
+        smooth: true,
+        symbol: 'none',
+        lineStyle: { width: 2, color: c.blue },
+        areaStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: c.blue + '33' },
+            { offset: 1, color: c.blue + '05' }
+          ])
+        },
+        itemStyle: { color: c.blue }
+      },
+      {
+        name: 'Contracted',
+        type: 'line',
+        data: contracted,
+        symbol: 'none',
+        lineStyle: { width: 2, type: 'dashed', color: c.accent, opacity: 0.6 },
+        itemStyle: { color: c.accent }
+      }
+    ]
+  });
+
+  window.addEventListener('resize', function() { chart.resize(); });
+  return chart;
+}
+
+function renderRadarChart() {
+  const data = USAGE_DATA;
+  if (!data.product_areas || data.product_areas.length === 0) return '';
+
+  return `
+    <div class="section">
+      <div class="section-label">Product Adoption</div>
+      <div class="chart-container" id="chart-radar" style="height: 350px;"></div>
+      <div class="chart-supplementary">
+        ${data.product_areas.length} product areas tracked &middot; Values normalized to relative scale (highest area = 100)
+      </div>
+    </div>
+  `;
+}
+
+function initRadarChart() {
+  const el = document.getElementById('chart-radar');
+  if (!el) return;
+
+  const areas = USAGE_DATA.product_areas;
+  const c = getThemeColors();
+  const chart = echarts.init(el, 'wandb');
+
+  const normalized = areas.map(a => Math.round(a.radar_value));
+
+  chart.setOption({
+    radar: {
+      indicator: areas.map(a => ({ name: a.area, max: 100 })),
+      shape: 'polygon',
+      splitNumber: 4,
+      axisName: {
+        color: c.textSecondary,
+        fontFamily: "'JetBrains Mono', monospace",
+        fontSize: 11
+      },
+      splitLine: { lineStyle: { color: c.borderSubtle } },
+      splitArea: { show: false },
+      axisLine: { lineStyle: { color: c.borderSubtle } }
+    },
+    tooltip: {
+      trigger: 'item',
+      formatter: function(params) {
+        let result = '<div style="font-weight: 600; margin-bottom: 8px;">Product Adoption</div>';
+        areas.forEach(function(a, i) {
+          result += '<div style="margin: 2px 0;">' + a.area + ': ' + numberWithCommas(a.total_events) + ' events (' + a.unique_users + ' users)</div>';
+        });
+        return result;
+      }
+    },
+    series: [{
+      type: 'radar',
+      data: [{
+        value: normalized,
+        name: 'Usage',
+        symbol: 'circle',
+        symbolSize: 6,
+        lineStyle: { width: 2, color: c.blue },
+        areaStyle: { color: c.blue + '22' },
+        itemStyle: { color: c.blue, borderColor: c.blue, borderWidth: 2 }
+      }],
+      emphasis: {
+        lineStyle: { width: 3 },
+        areaStyle: { color: c.blue + '33' }
+      }
+    }]
+  });
+
+  window.addEventListener('resize', function() { chart.resize(); });
+  return chart;
+}
+
+function renderWeaveChart() {
+  const data = USAGE_DATA;
+  if (!data.weave || !data.weave.history || data.weave.history.length === 0) return '';
+
+  const w = data.weave;
+  const wZone = w.utilization_percent >= 80 ? 'healthy' : w.utilization_percent >= 50 ? 'at_risk' : 'critical';
+
+  return `
+    <div class="section">
+      <div class="section-label">
+        Weave Ingestion
+        <span style="float: right; font-family: var(--font-mono); font-size: 14px; font-weight: 600;" class="${getZoneClass(wZone)}">
+          ${w.utilization_percent}% of limit
+        </span>
+      </div>
+      <div class="chart-container" id="chart-weave" style="height: 250px;"></div>
+      <div class="chart-supplementary">
+        <strong>${w.ingestion_gb} GB</strong> of ${w.limit_gb} GB ingested &middot; ${w.unique_users_last_90d} unique users (last 90d)
+      </div>
+    </div>
+  `;
+}
+
+function initWeaveChart() {
+  const el = document.getElementById('chart-weave');
+  if (!el) return;
+
+  const w = USAGE_DATA.weave;
+  const c = getThemeColors();
+  const chart = echarts.init(el, 'wandb');
+
+  const months = w.history.map(h => formatMonthLabel(h.month));
+  const values = w.history.map(h => h.ingestion_gb);
+
+  const options = {
+    grid: { left: 48, right: 24, top: 24, bottom: 40 },
+    xAxis: {
+      type: 'category',
+      data: months
+    },
+    yAxis: {
+      type: 'value',
+      axisLabel: { formatter: '{value} GB' },
+      splitNumber: 4
+    },
+    tooltip: {
+      trigger: 'axis',
+      formatter: function(params) {
+        const p = params[0];
+        const idx = p.dataIndex;
+        const users = w.history[idx] ? w.history[idx].unique_users : 'N/A';
+        return '<div style="font-family: \'JetBrains Mono\', monospace; font-size: 11px; color: ' + c.textTertiary + ';">' + p.axisValue + '</div>' +
+          '<div style="margin-top: 4px;"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + c.blue + ';margin-right:6px;"></span>Ingestion: <strong>' + p.value + ' GB</strong></div>' +
+          '<div style="margin-top: 2px; color: ' + c.textTertiary + ';">' + users + ' unique users</div>';
+      }
+    },
+    series: [{
+      type: 'bar',
+      data: values,
+      barWidth: '60%',
+      itemStyle: {
+        color: c.blue,
+        borderRadius: [3, 3, 0, 0]
+      },
+      emphasis: {
+        itemStyle: { color: c.blue + 'dd' }
+      }
+    }]
+  };
+
+  /* Add contracted limit reference line if available */
+  if (w.limit_gb) {
+    options.yAxis.max = function(value) { return Math.max(value.max * 1.1, w.limit_gb * 0.5); };
+    options.series.push({
+      type: 'line',
+      data: months.map(function() { return w.limit_gb; }),
+      symbol: 'none',
+      lineStyle: { width: 2, type: 'dashed', color: c.accent, opacity: 0.6 },
+      itemStyle: { color: c.accent },
+      tooltip: { show: false },
+      silent: true
+    });
+  }
+
+  chart.setOption(options);
+  window.addEventListener('resize', function() { chart.resize(); });
+  return chart;
+}
+
+function renderTrackedHoursChart() {
+  const data = USAGE_DATA;
+  if (!data.tracked_hours || !data.tracked_hours.history || data.tracked_hours.history.length === 0) return '';
+
+  const h = data.tracked_hours;
+  return `
+    <div class="section">
+      <div class="section-label">
+        Tracked Hours
+        <span style="float: right; font-family: var(--font-body); font-size: 14px; font-weight: 600;">
+          ${numberWithCommas(Math.round(h.last_30d_hours))}h last 30d
+        </span>
+      </div>
+      <div class="chart-container" id="chart-hours" style="height: 250px;"></div>
+      <div class="chart-supplementary">
+        <strong>${numberWithCommas(h.last_30d_run_count)}</strong> runs last 30d
+      </div>
+    </div>
+  `;
+}
+
+function initTrackedHoursChart() {
+  const el = document.getElementById('chart-hours');
+  if (!el) return;
+
+  const h = USAGE_DATA.tracked_hours;
+  const c = getThemeColors();
+  const chart = echarts.init(el, 'wandb');
+
+  const weeks = h.history.map(w => formatWeekLabel(w.week));
+  const values = h.history.map(w => Math.round(w.tracked_hours));
+
+  chart.setOption({
+    grid: { left: 48, right: 24, top: 24, bottom: 40 },
+    xAxis: {
+      type: 'category',
+      data: weeks,
+      axisLabel: {
+        interval: Math.floor(weeks.length / 8),
+        rotate: 0
+      }
+    },
+    yAxis: {
+      type: 'value',
+      axisLabel: { formatter: function(v) { return v >= 1000 ? (v/1000).toFixed(1) + 'kh' : v + 'h'; } },
+      splitNumber: 4
+    },
+    tooltip: {
+      trigger: 'axis',
+      formatter: function(params) {
+        const p = params[0];
+        return '<div style="font-family: \'JetBrains Mono\', monospace; font-size: 11px; color: ' + c.textTertiary + ';">' + p.axisValue + '</div>' +
+          '<div style="margin-top: 4px;"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + c.blue + ';margin-right:6px;"></span>Tracked: <strong>' + p.value + 'h</strong></div>';
+      }
+    },
+    series: [{
+      type: 'bar',
+      data: values,
+      barWidth: '60%',
+      itemStyle: {
+        color: c.blue,
+        borderRadius: [3, 3, 0, 0]
+      },
+      emphasis: {
+        itemStyle: { color: c.blue + 'dd' }
+      }
+    }]
+  });
+
+  window.addEventListener('resize', function() { chart.resize(); });
+  return chart;
+}
+
+function renderNarrative() {
+  if (!AI_NARRATIVE || !AI_NARRATIVE.executive_summary) return '';
+
+  const n = AI_NARRATIVE;
+  let html = '<div class="section"><div class="narrative-section">';
+
+  /* Executive Summary */
+  html += '<div class="narrative-sublabel">Executive Summary</div>';
+  const paragraphs = n.executive_summary.split('\n').filter(p => p.trim());
+  paragraphs.forEach(function(p) {
+    html += '<div class="narrative-text">' + p + '</div>';
+  });
+
+  /* Highlights */
+  if (n.highlights && n.highlights.length > 0) {
+    html += '<div class="narrative-sublabel">Key Highlights</div>';
+    html += '<ul class="narrative-list">';
+    n.highlights.forEach(function(h) {
+      html += '<li>' + h + '</li>';
+    });
+    html += '</ul>';
+  }
+
+  /* Recommendations */
+  if (n.recommendations && n.recommendations.length > 0) {
+    html += '<div class="narrative-sublabel">Recommendations</div>';
+    html += '<ol class="narrative-list numbered">';
+    n.recommendations.forEach(function(r) {
+      html += '<li>' + r + '</li>';
+    });
+    html += '</ol>';
+  }
+
+  html += '</div></div>';
+  return html;
+}
+
+function renderFooter() {
+  return `
+    <div class="footer">
+      Weights & Biases &middot; Usage Intelligence
+    </div>
+  `;
+}
+
+function renderEmptyState(reason) {
+  let message = '';
+  if (reason === 'config_error') {
+    message = 'Customer not configured for BigQuery access. Add sfdc_account_id to templates/customers.yaml and retry.';
+  } else if (reason === 'no_data') {
+    message = 'No usage data found for ' + USAGE_DATA.customer + '. Verify the sfdc_account_id in templates/customers.yaml matches the Salesforce account.';
+  } else if (reason === 'api_error') {
+    message = 'BigQuery data unavailable -- check ADC credentials with /bigquery-setup';
+  } else {
+    message = 'No usage data available.';
+  }
+
+  return `
+    <div class="section">
+      <div class="section-label">Usage Report</div>
+      <div class="empty-state">${message}</div>
+    </div>
+  `;
+}
+
+/* ── MAIN RENDER ── */
+function render() {
+  registerWandbTheme();
+
+  const app = document.getElementById('app');
+  let html = renderHeader();
+
+  if (!USAGE_DATA.available) {
+    html += renderEmptyState(USAGE_DATA.reason || 'no_data');
+  } else {
+    html += renderKPIRow();
+    html += renderSeatChart();
+    html += renderRadarChart();
+    html += renderWeaveChart();
+    html += renderTrackedHoursChart();
+    html += renderNarrative();
+  }
+
+  html += renderFooter();
+  app.innerHTML = html;
+
+  /* Initialize ECharts after DOM is ready */
+  if (USAGE_DATA.available) {
+    requestAnimationFrame(function() {
+      initSeatChart();
+      initRadarChart();
+      initWeaveChart();
+      initTrackedHoursChart();
+    });
+  }
+}
+
+/* ── INIT ── */
+document.addEventListener('DOMContentLoaded', render);
+
+/* ── THEME CHANGE LISTENER ── */
+if (window.matchMedia) {
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function() {
+    render();
+  });
+}
+</script>
+</body>
+</html>

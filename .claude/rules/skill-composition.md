@@ -26,7 +26,7 @@ Generate an intelligence dashboard summarizing a customer's Jira issues, Slack s
 
 1. **jira** — Pull all open issues for the customer. Include components, labels, priority, and status.
 2. **asana** — Fetch SE action tasks from the customer's Asana project (if configured).
-3. **bigquery** — Fetch usage data from BigQuery if sfdc_account_id is configured. Provides seat utilization, Weave ingestion, tracked hours, account health metrics.
+3. **bigquery** — Fetch usage data from BigQuery if sfdc_account_id is configured. Provides seat utilization, Weave ingestion, tracked hours, account health, product areas. Renders as ECharts charts in the Usage panel.
 4. **customer-snapshot** — Generate HTML dashboard with intelligence panels, SE actions, theme clustering, and filter controls.
 5. Output saved to `customers/<name>/trackers/YYYY-MM-DD-dashboard.html`.
 
@@ -82,11 +82,13 @@ Manage RAID logs (Risks, Assumptions, Issues, Dependencies) across customer acco
 
 ## Usage Report
 
-Generate a standalone usage visualization for a customer from BigQuery data.
+Generate a standalone usage visualization for a customer from BigQuery data. Two report types available.
 
-1. **bigquery** — Fetch all usage metrics (seats, Weave, tracked hours, account health) for the customer.
-2. **usage-report** — Generate self-contained HTML usage report.
-3. Output saved to `customers/<name>/usage/YYYY-MM-DD-usage-report.html`.
+1. **bigquery** — Fetch all usage metrics (seats, Weave, tracked hours, account health, product areas, power users) for the customer.
+2. **usage-report** — Generate self-contained HTML usage report with ECharts charts.
+   - Default: external report (customer-facing, QBR-ready, W&B branded, positive AI narrative)
+   - With `--internal`: full SE prep report (power users with real names, churn risk, candid AI narrative)
+3. Output saved to `customers/<name>/usage/YYYY-MM-DD-usage-report.html` (external) or `customers/<name>/usage/YYYY-MM-DD-usage-report-internal.html` (internal).
 
 ## Customer Onboarding
 

@@ -23,6 +23,8 @@ Claude Code skills for W&B Solutions Engineers. Integrates with W&B Jira (wandb.
     asana/                  -- Asana project/task queries and mutations (SE action tracking)
     asana-setup/            -- One-time Asana PAT setup
     atlassian-setup/        -- One-time Atlassian API token setup (Jira + Confluence)
+    bigquery/               -- BigQuery usage data queries (wandb-production.analytics) with product area mapping
+    bigquery-setup/         -- One-time BigQuery ADC connectivity verification
     cadence-prep/           -- Customer cadence call preparation
     confluence/             -- CoreWeave Confluence pages, spaces (coreweave.atlassian.net)
     credential-reference/   -- Reference table for all API credential keys
@@ -30,7 +32,6 @@ Claude Code skills for W&B Solutions Engineers. Integrates with W&B Jira (wandb.
     customer-setup/         -- Interactive customer onboarding (SFDC + SE overlays -> customers.yaml)
     customer-snapshot/      -- Customer intelligence dashboard from Jira + Slack data
     ghosted/                -- Customer silence tracker (Waiting on Customer thread monitoring)
-    humanizer/              -- Tone adjustment for written content
     jira/                   -- W&B Jira queries, issue creation, FE-UPDATE (wandb.atlassian.net)
     jira-check/             -- Jira issue triage and FE-UPDATE pipeline
     maction/                -- Meeting notes to Asana actions + RAID items
@@ -42,6 +43,7 @@ Claude Code skills for W&B Solutions Engineers. Integrates with W&B Jira (wandb.
     salesforce-setup/       -- One-time Salesforce credential setup
     slack/                  -- CoreWeave Slack channel history, search, threads
     slack-setup/            -- One-time Slack credential setup
+    usage-report/           -- Standalone usage visualization (external QBR-ready + internal SE prep reports with ECharts)
   rules/                    -- Auto-loaded project rules
     asana.md                -- Asana workspace conventions (sections, custom fields, RAID, portfolio, staleness rules)
     atlassian.md            -- Atlassian workspace conventions
@@ -67,6 +69,8 @@ All API credentials stored in `~/.tsm-ai/.env`. Run `/credential-status` to chec
 | `ASANA_TOKEN` | Asana | app.asana.com |
 | `SFDC_SESSION_ID` | W&B Salesforce (session auth) | wandb.my.salesforce.com |
 | `SFDC_INSTANCE` | W&B Salesforce (session auth) | wandb.my.salesforce.com |
+
+BigQuery uses Application Default Credentials (ADC) -- no token in ~/.tsm-ai/.env. Run `gcloud auth application-default login` to configure. Verify with `/bigquery-setup`.
 
 Asana PAT (`ASANA_TOKEN`) for SE action tracking. Asana uses a two-project model per customer: Actions project (day-to-day SE work, safe to share) and RAID Portfolio project (internal strategic view). Run `/raid` to manage RAID logs. Master portfolio holds all customer portfolios. Run `setup-customer` to onboard new customers into the portfolio structure.
 
