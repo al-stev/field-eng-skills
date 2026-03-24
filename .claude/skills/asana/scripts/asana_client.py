@@ -8,6 +8,7 @@ from ~/.tsm-ai/.env configured by /asana-setup.
 """
 
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -20,6 +21,8 @@ import asana
 # Updated during /asana-setup with the user's workspace GID.
 # Can also be overridden via ASANA_WORKSPACE_GID environment variable.
 _ASANA_WORKSPACE_GID_DEFAULT = "1208076155392173"
+WORKSPACE_GID = os.environ.get("ASANA_WORKSPACE_GID", _ASANA_WORKSPACE_GID_DEFAULT)
+DEFAULT_TEAM_GID = os.environ.get("ASANA_DEFAULT_TEAM_GID", "1211862347384669")
 DEFAULT_LIMIT = 100
 
 TSM_ENV = Path.home() / '.tsm-ai' / '.env'
@@ -39,12 +42,8 @@ def get_workspace_gid() -> str:
     Raises:
         ValueError: If workspace GID is not configured
     """
-    import os
-    env_val = os.environ.get("ASANA_WORKSPACE_GID")
-    if env_val:
-        return env_val
-    if _ASANA_WORKSPACE_GID_DEFAULT and _ASANA_WORKSPACE_GID_DEFAULT != "REPLACE_AFTER_SETUP":
-        return _ASANA_WORKSPACE_GID_DEFAULT
+    if WORKSPACE_GID and WORKSPACE_GID != "REPLACE_AFTER_SETUP":
+        return WORKSPACE_GID
     raise ValueError(
         "Workspace GID not configured. Run /asana-setup to discover and set "
         "your workspace GID, or set ASANA_WORKSPACE_GID environment variable."

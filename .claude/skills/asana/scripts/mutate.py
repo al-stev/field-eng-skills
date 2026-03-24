@@ -36,6 +36,7 @@ from asana_client import (
     serialize_section,
     output_json,
     output_error,
+    DEFAULT_TEAM_GID,
 )
 
 
@@ -50,9 +51,6 @@ PRIORITY_OPTION_GIDS = {
     "MEDIUM": "1208185034501271",
     "LOW": "1208185034501272",
 }
-
-# Default team GID for Organization workspace project creation
-DEFAULT_TEAM_GID = "1211862347384669"  # W&B EMEA Post-Sales
 
 # ---------------------------------------------------------------------------
 # RAID custom field definitions
