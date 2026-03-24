@@ -233,10 +233,10 @@ This provides richer task context and confirms the Jira issue exists.
 
 #### Step 4: Auto-resolve customer project
 
-Look up the `channel_id` in `templates/customers.yaml` under `slack_channels[].id` to find the matching customer. From that customer entry, read `asana_project_gid`.
+Look up the `channel_id` in `templates/customers.yaml` under `slack_channels[].id` to find the matching customer. From that customer entry, read `action_tracker_id` (the Asana project GID when `action_tracker` is `"asana"`).
 
 - If the channel is not in customers.yaml, ask the user which customer project to use.
-- If `asana_project_gid` is `PLACEHOLDER`, warn the user and ask for the project GID or offer to run `setup-project`.
+- If `action_tracker_id` is `PLACEHOLDER`, warn the user and ask for the project GID or offer to run `setup-project`.
 
 #### Step 5: Infer metadata
 

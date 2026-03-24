@@ -119,7 +119,7 @@ Shows the current RAID log from Asana. Does NOT do a fresh scan -- that's a sepa
 **Pipeline:**
 
 1. Parse customer name, resolve from `templates/customers.yaml`
-2. Look up the customer's RAID project GID from `asana_raid_project_gid` field
+2. Look up the customer's RAID project GID from `raid_tracker_id` field (when `raid_tracker` is `"asana"`)
 3. Fetch tasks from all 4 sections:
    ```bash
    uv run --project .claude/skills/asana python .claude/skills/asana/scripts/query.py tasks \
@@ -269,7 +269,7 @@ Manually add a RAID item with user guidance.
 
 **Invocation:** `/raid` (no customer name)
 
-Loops over all customers in `templates/customers.yaml` where `asana_raid_project_gid` is not `PLACEHOLDER` and not empty. Shows aggregated RAID summary across all customers.
+Loops over all customers in `templates/customers.yaml` where `raid_tracker_id` is not `PLACEHOLDER` and not empty. Shows aggregated RAID summary across all customers.
 
 **Output format:**
 ```
@@ -294,7 +294,7 @@ uv run --project .claude/skills/asana python .claude/skills/asana/scripts/mutate
 
 This creates `GResearch RAID Log` with 4 sections (Risks, Assumptions, Issues, Dependencies), finds or creates 6 custom fields at workspace level, and attaches all fields + Priority to the project.
 
-Copy the output `project_gid` to `templates/customers.yaml` under `asana_raid_project_gid`.
+Copy the output `project_gid` to `templates/customers.yaml` under `raid_tracker_id`.
 
 ## Safety Rules
 
@@ -309,9 +309,9 @@ Copy the output `project_gid` to `templates/customers.yaml` under `asana_raid_pr
 
 | Problem | Fix |
 |---|---|
-| `asana_raid_project_gid` not configured | Run `mutate.py setup-raid-project --name "Customer"` and copy GID to customers.yaml |
+| `raid_tracker_id` not configured | Run `mutate.py setup-raid-project --name "Customer"` and copy GID to customers.yaml |
 | Custom fields not found on project | Re-run `setup-raid-project` -- it finds existing fields by name and attaches them |
-| "No RAID project for customer" | Check `templates/customers.yaml` has `asana_raid_project_gid` set (not PLACEHOLDER) |
+| "No RAID project for customer" | Check `templates/customers.yaml` has `raid_tracker_id` set (not PLACEHOLDER) |
 | Multi-homing fails with 404 | Verify both the task GID and target project GID are correct |
 | Scan mode finds no suggestions | Normal for well-maintained accounts. Try expanding Slack lookback or Jira query scope |
 | HTML output not styled | Ensure design-system.md conventions are followed. Check Google Fonts CDN import |

@@ -22,11 +22,13 @@ Build a picture of a customer's issue landscape and current engagement state.
 
 ## Customer Snapshot
 
-Generate an intelligence dashboard summarizing a customer's Jira issues, Slack sentiment, trending metrics, and executive summary.
+Generate an intelligence dashboard summarizing a customer's Jira issues, Slack sentiment, Asana actions, trending metrics, and executive summary.
 
 1. **jira** — Pull all open issues for the customer. Include components, labels, priority, and status.
-2. **customer-snapshot** — Generate HTML dashboard with intelligence panels, theme clustering, and filter controls.
-3. Output saved to `customers/<name>/trackers/YYYY-MM-DD-dashboard.html`.
+2. **asana** — Fetch SE action tasks from the customer's Asana project (if configured).
+3. **bigquery** — Fetch usage data from BigQuery if sfdc_account_id is configured. Provides seat utilization, Weave ingestion, tracked hours, account health metrics.
+4. **customer-snapshot** — Generate HTML dashboard with intelligence panels, SE actions, theme clustering, and filter controls.
+5. Output saved to `customers/<name>/trackers/YYYY-MM-DD-dashboard.html`.
 
 ## Communication Prep
 
@@ -35,6 +37,7 @@ Prepare for a customer meeting or email update by gathering current context.
 1. **slack** — Read recent messages in the customer's `#ext-*` and `#supp-*` channels. Look for unresolved threads or new issues since the last meeting.
 2. **jira** — Check the customer's open issues for status updates to report. Note any blocked or overdue items. Review recent FE-UPDATE comments.
 3. **confluence** — Check for relevant documentation or meeting notes.
+4. **bigquery** — Optionally pull usage stats for data-driven talking points (seat adoption trends, Weave ingestion).
 
 ## FE-UPDATE Workflow
 
@@ -77,6 +80,14 @@ Manage RAID logs (Risks, Assumptions, Issues, Dependencies) across customer acco
 3. **jira** — Scan mode data source: open issues, stale items, FE-UPDATE status for Issue and Dependency detection.
 4. **slack** — Scan mode data source: customer channel sentiment for Risk detection.
 
+## Usage Report
+
+Generate a standalone usage visualization for a customer from BigQuery data.
+
+1. **bigquery** — Fetch all usage metrics (seats, Weave, tracked hours, account health) for the customer.
+2. **usage-report** — Generate self-contained HTML usage report.
+3. Output saved to `customers/<name>/usage/YYYY-MM-DD-usage-report.html`.
+
 ## Customer Onboarding
 
 Set up a new customer's full Asana structure with portfolio, projects, and metadata.
@@ -85,7 +96,7 @@ Set up a new customer's full Asana structure with portfolio, projects, and metad
 2. **salesforce** — Look up SFDC account for ARR, contract dates, account team (if `/customer-setup` available).
 3. **jira** — Verify the Jira customer name mapping. Search for issues using the customer name to confirm it matches.
 4. **slack** — Look up Slack channel IDs for the customer's ext-* and supp-* channels.
-5. Update `templates/customers.yaml` with the new GIDs (asana_project_gid, asana_raid_project_gid, asana_portfolio_gid) and customer metadata.
+5. Update `templates/customers.yaml` with the new GIDs (action_tracker_id, raid_tracker_id, portfolio_id) and customer metadata.
 
 ## Customer Silence Check
 

@@ -48,7 +48,7 @@ Summarize the thread in 1-2 sentences: what was discussed, what response is expe
 
 Present the proposed task to the user for confirmation:
 
-- **Project**: customer's `asana_project_gid` from `templates/customers.yaml`
+- **Project**: customer's `action_tracker_id` from `templates/customers.yaml` (when `action_tracker` is `"asana"`)
 - **Section**: "Waiting on Customer"
 - **Name**: concise summary of what you're waiting for, with Jira ref if found (e.g., "Customer to provide repro steps (WB-1234)")
 - **Notes**: Source Slack URL, thread summary, what response is expected
@@ -59,7 +59,7 @@ Present the proposed task to the user for confirmation:
 
 ```bash
 uv run --project .claude/skills/asana python .claude/skills/asana/scripts/mutate.py create \
-  --project-gid <asana_project_gid> \
+  --project-gid <action_tracker_id> \
   --name "<task name>" \
   --section "Waiting on Customer" --assignee me --due <YYYY-MM-DD> --priority P2 \
   --notes "Source: <Slack thread URL>\n\nContext: <thread summary>\nWaiting for: <what response is expected>" \
@@ -76,7 +76,7 @@ Pipeline:
 
 ### Step 1: Determine scope
 
-- `/ghosted` (no args): scan all customers in `templates/customers.yaml` where `asana_project_gid` is not `PLACEHOLDER`
+- `/ghosted` (no args): scan all customers in `templates/customers.yaml` where `action_tracker_id` is not `PLACEHOLDER`
 - `/ghosted GResearch`: scan only that customer (fuzzy-match against customers.yaml names)
 
 ### Step 2: Fetch "Waiting on Customer" tasks
@@ -85,7 +85,7 @@ For each customer in scope, fetch tasks:
 
 ```bash
 uv run --project .claude/skills/asana python .claude/skills/asana/scripts/query.py tasks \
-  --project-gid <asana_project_gid> --limit 100 --pretty
+  --project-gid <action_tracker_id> --limit 100 --pretty
 ```
 
 Filter to tasks in the "Waiting on Customer" section (check `memberships[].section.name`).
@@ -152,7 +152,7 @@ If no ghosted threads found: "No ghosted threads. All Waiting on Customer items 
 | No tasks found in Waiting on Customer | Check that tasks were created with `/ghosted track` or moved to the section manually |
 | Slack thread returns empty | Thread may have been deleted or channel archived |
 | Customer reply not detected | Reply detection is heuristic; check if the reply was from an internal user |
-| `asana_project_gid` is PLACEHOLDER | Run `/asana setup-project` for the customer first |
+| `action_tracker_id` is PLACEHOLDER | Run `/asana setup-project` for the customer first |
 
 ## Related Skills
 

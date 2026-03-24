@@ -73,7 +73,7 @@ if [ -n "${ASANA_TOKEN:-}" ]; then
     -H "Authorization: Bearer ${ASANA_TOKEN}" \
     "https://app.asana.com/api/1.0/users/me" 2>/dev/null || echo "000")
   if [ "$HTTP_CODE_ASANA" = "200" ]; then
-    ok "Asana (app.asana.com)"
+    ok "Asana"
   else
     expired "Asana" "HTTP $HTTP_CODE_ASANA — run /asana-setup"
   fi

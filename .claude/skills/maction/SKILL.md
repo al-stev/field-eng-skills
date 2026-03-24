@@ -85,7 +85,7 @@ For user-confirmed **action items**:
 
 ```bash
 uv run --project .claude/skills/asana python .claude/skills/asana/scripts/mutate.py create \
-  --project-gid <asana_project_gid> --name "<task name>" \
+  --project-gid <action_tracker_id> --name "<task name>" \
   --section "<section>" --assignee me --due <YYYY-MM-DD> --priority <P0-P3> \
   --notes "Source: Meeting notes [date]\n\nContext: <relevant excerpt from notes>" \
   --pretty
@@ -95,7 +95,7 @@ For user-confirmed **RAID items**:
 
 ```bash
 uv run --project .claude/skills/asana python .claude/skills/asana/scripts/mutate.py create \
-  --project-gid <asana_raid_project_gid> --name "<description>" \
+  --project-gid <raid_tracker_id> --name "<description>" \
   --section "<Risks|Assumptions|Issues|Dependencies>" --assignee me \
   --notes "Source: <source>\n\nContext: <relevant excerpt from notes>" \
   --pretty
@@ -137,8 +137,8 @@ Context matters: "risk mitigation" is different from "there's a risk of churn". 
 
 ## Edge Cases
 
-- **RAID project not configured** (`asana_raid_project_gid` is `PLACEHOLDER`): extract RAID items and display them but warn that they can't be created in Asana. Suggest running `/asana setup-raid-project` first.
-- **Customer Actions project not configured** (`asana_project_gid` is `PLACEHOLDER`): same warning, suggest `/asana setup-project`.
+- **RAID project not configured** (`raid_tracker_id` is `PLACEHOLDER`): extract RAID items and display them but warn that they can't be created in Asana. Suggest running `/asana setup-raid-project` first.
+- **Customer Actions project not configured** (`action_tracker_id` is `PLACEHOLDER`): same warning, suggest `/asana setup-project`.
 - **Meeting notes are very short** (< 50 words): ask user if they have more context to share before extracting.
 - **No action items or RAID items found**: "No actionable items or RAID signals detected in these notes. If you expected items, try providing more context."
 - **Ambiguous customer**: if customer name matches multiple entries, ask user to clarify.
@@ -156,7 +156,7 @@ Context matters: "risk mitigation" is different from "there's a risk of churn". 
 |---------|-----|
 | No actions extracted | Notes may be too vague. Ask user to highlight specific commitments. |
 | Wrong customer matched | Specify exact customer name from `templates/customers.yaml` |
-| RAID items can't be created | `asana_raid_project_gid` is `PLACEHOLDER` -- run `/asana setup-raid-project` first |
+| RAID items can't be created | `raid_tracker_id` is `PLACEHOLDER` -- run `/asana setup-raid-project` first |
 | Custom fields not set on RAID items | Custom fields must be created first via `setup-raid-project` |
 | Due date inference wrong | User can adjust dates during the confirmation step |
 

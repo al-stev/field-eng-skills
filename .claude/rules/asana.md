@@ -95,7 +95,7 @@ Created at workspace level by `mutate.py setup-raid-project`. GIDs discovered fr
 uv run --project .claude/skills/asana python .claude/skills/asana/scripts/mutate.py setup-raid-project --name "GResearch" --pretty
 ```
 
-Creates `[CustomerName] RAID Log` project with 4 sections, finds or creates 6 custom fields, attaches all fields + Priority. Copy the output `project_gid` to `customers.yaml` under `asana_raid_project_gid`.
+Creates `[CustomerName] RAID Log` project with 4 sections, finds or creates 6 custom fields, attaches all fields + Priority. Copy the output `project_gid` to `customers.yaml` under `raid_tracker_id`.
 
 ### Multi-Homing Tasks
 
@@ -149,8 +149,8 @@ Asana tasks may reference Jira issues (via name suffix), but Asana is NOT a mirr
 
 ## Project Structure
 
-- **One Actions project per customer** -- all SEs can see all projects. GID stored in `templates/customers.yaml` under `asana_project_gid`
-- **One RAID project per customer** -- internal strategic view. GID stored in `templates/customers.yaml` under `asana_raid_project_gid`
+- **One Actions project per customer** -- all SEs can see all projects. GID stored in `templates/customers.yaml` under `action_tracker_id` (with `action_tracker: asana`)
+- **One RAID project per customer** -- internal strategic view. GID stored in `templates/customers.yaml` under `raid_tracker_id` (with `raid_tracker: asana`)
 - **SE Team project** -- shared project for internal/cross-cutting work (GID in table above)
 - Actions projects have 6 standard sections; RAID projects have 4 RAID sections (see Two-Project Model above)
 - Each customer's Actions and RAID projects live inside a customer portfolio within the master portfolio. See Portfolio Structure below.

@@ -15,7 +15,7 @@ Your personal task hygiene scanner. Finds overdue and stale tasks across all you
 
 ### Step 1: Determine scope
 
-- `/nag` (no args): scan all customers in `templates/customers.yaml` where `asana_project_gid` is not `PLACEHOLDER`
+- `/nag` (no args): scan all customers in `templates/customers.yaml` where `action_tracker_id` is not `PLACEHOLDER`
 - `/nag GResearch`: scan only that customer (fuzzy-match against customers.yaml names)
 
 ### Step 2: Fetch tasks for each customer
@@ -24,7 +24,7 @@ For each customer in scope, fetch tasks:
 
 ```bash
 uv run --project .claude/skills/asana python .claude/skills/asana/scripts/query.py tasks \
-  --project-gid <asana_project_gid> --limit 100 --pretty
+  --project-gid <action_tracker_id> --limit 100 --pretty
 ```
 
 ### Step 3: Scan the SE Team project
@@ -102,7 +102,7 @@ Tasks without any priority signal are treated as P3 (lowest urgency) for sorting
 
 | Problem | Fix |
 |---------|-----|
-| No tasks found | Check `asana_project_gid` in `templates/customers.yaml` is not `PLACEHOLDER` |
+| No tasks found | Check `action_tracker_id` in `templates/customers.yaml` is not `PLACEHOLDER` |
 | Tasks without due dates | These can't be overdue, only stale. Consider adding due dates. |
 | False stale flags | Task may have been updated in Asana UI but not via the skill. Check `modified_at`. |
 

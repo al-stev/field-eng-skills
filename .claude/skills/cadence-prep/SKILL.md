@@ -7,6 +7,7 @@ requires-credentials:
   - ATLASSIAN_TOKEN
   - SLACK_TOKEN
   - SLACK_COOKIE
+  - ASANA_TOKEN
 setup-skill: atlassian-setup
 service-url: https://wandb.atlassian.net
 auto-refresh: false
@@ -104,23 +105,42 @@ From the gathered data, compute:
 - **Stale issues**: open issues where the most recent comment (excluding SE's own FE-UPDATE comments) is older than 30 days
 - Issue URLs: `https://wandb.atlassian.net/browse/WB-XXX`
 
-### Step 2.5: Gather Asana Actions
+### Step 2.5: Gather Asana Actions and RAID Items
 
-If the customer has `asana_project_gid` configured in `templates/customers.yaml` (not `PLACEHOLDER`), fetch SE action tasks:
+This step gathers two data sources from Asana to feed into the meeting agenda. Both are optional -- cadence-prep works without Asana data.
+
+#### 2.5a: Asana Actions (from customer project)
 
 ```bash
 uv run --project .claude/skills/asana python .claude/skills/asana/scripts/query.py tasks \
-  --project-gid <asana_project_gid> --limit 100 --pretty
+  --project-gid <action_tracker_id> --limit 100 --pretty
 ```
 
-From the gathered data, extract:
+Process the response:
 
-- **Open actions**: incomplete tasks grouped by section (To Do, In Progress, Waiting on Customer, Waiting on Eng)
-- **Recently completed**: tasks completed within the lookback window (check `completed_at`)
-- **Overdue tasks**: tasks where `due_on` is in the past and `completed` is false
-- **Jira cross-references**: tasks with `(WB-XXXX)` suffix in name, cross-reference with Jira data from Step 2
+- **Open actions** (incomplete tasks in To Do, In Progress, Waiting on Customer, Waiting on Eng, Scheduled/Future): feed into the Action Items table in the agenda.
+- **Recently completed** (tasks with `completed_at` within the cadence lookback window): feed into "What's New" section as wins to highlight.
+- Format each action for the Action Items table: `| # | Action | Owner | Due | Status | Source |`
+- Map Asana sections to Status: To Do -> "Open", In Progress -> "In Progress", Waiting on Customer -> "Waiting (Customer)", Waiting on Eng -> "Waiting (Eng)", Scheduled/Future -> "Scheduled"
 
-If `asana_project_gid` is `PLACEHOLDER` or not set, skip this step and note: "Asana not configured for this customer. Run `/asana setup-project` to enable action tracking."
+If `action_tracker_id` is `"PLACEHOLDER"` or not present: skip Asana actions, note "Asana actions not configured -- add action_tracker_id to templates/customers.yaml" in the Action Items section.
+
+#### 2.5b: Open RAID Items (from RAID project)
+
+```bash
+uv run --project .claude/skills/asana python .claude/skills/asana/scripts/query.py tasks \
+  --project-gid <raid_tracker_id> --limit 100 --pretty
+```
+
+Process the response:
+
+- Filter to incomplete tasks only.
+- Group by section (Risks, Assumptions, Issues, Dependencies).
+- **Risks and Dependencies** with Status = "Open" or "Accepted": feed into the RAID Log table in the agenda. These are the items that should be discussed in the meeting.
+- Include custom field values: Impact, Likelihood, Status.
+- Format for RAID Log table: `| Type | Item | Owner | Status |`
+
+If `raid_tracker_id` is `"PLACEHOLDER"` or not present: skip RAID items, note "RAID log not configured -- add raid_tracker_id to templates/customers.yaml" in the RAID Log section. This is graceful degradation -- cadence-prep works without RAID.
 
 ### Step 3: Gather Slack Data
 
@@ -168,7 +188,7 @@ If a previous doc exists, read it and extract:
 
 - **Attendees table**: carry forward as-is (SE edits at presentation time)
 - **Action Items**: items with Status = "Open" or "In Progress". Cross-reference with current Jira data: if an action item references a WB-XXX key that is now in Done/Closed/Resolved status, mark it "Resolved" in the new doc. Items without Jira links carry forward unchanged.
-- **RAID Log**: carry forward items with Status != "Closed" or "Resolved"
+- **RAID Log**: If RAID project is configured (Step 2.5b returned data), use live RAID data from Asana instead of carrying forward from previous doc -- the Asana RAID project is the source of truth. If RAID project is NOT configured, carry forward items with Status != "Closed" or "Resolved" from the previous doc (backward compatible).
 - **Key Initiatives**: carry forward entire section as-is
 
 If no previous doc exists (first run for this customer), note: "First cadence doc for [Customer]. No carry-forward data."
@@ -233,12 +253,13 @@ Read `templates/cadence-review.md` as the structural blueprint. The agenda follo
 
 | Agenda Section | Source |
 |----------------|--------|
-| **1. What's New** | Lead with wins: recently resolved Jira issues (from Step 2) framed as "we fixed X" or "Y is now available". Then key highlights from Slack threads (Step 3) and notable product updates (Step 5). Frame everything from the customer's perspective — what changed for them, not what W&B shipped internally. |
-| **2. Ongoing Actions and Updates** | Carry-forward action items from Step 4 + new items from Slack threads. Cross-reference with Jira status for resolution. |
+| **1. What's New** | Lead with wins: recently resolved Jira issues (from Step 2) framed as "we fixed X" or "Y is now available". Recently completed Asana actions (from Step 2.5a) as wins. Then key highlights from Slack threads (Step 3) and notable product updates (Step 5). Frame everything from the customer's perspective. |
+| **2. Ongoing Actions and Updates** | Asana actions from Step 2.5a + carry-forward from Step 4 + new items from Slack threads. Cross-reference with Jira status for resolution. |
 | **3. Summary of Recent Events** | Recent Slack Threads (Step 3 summaries) + Support Tickets (Step 2 open/closed/stale tables) |
 | **4. Product Updates and Announcements** | Filtered product updates from Step 5, relevant to customer's deployment type |
 | **5. Usage and Initiatives** | Key Initiatives carry-forward from Step 4. Usage data placeholder for future BigQuery integration. |
 | **6. Any Other Business** | Open floor — empty placeholder for live discussion |
+| **RAID Log** | Asana RAID items from Step 2.5b (Risks, Dependencies) or carry-forward from Step 4 |
 
 All agenda sections must appear in the output. If a section has no data, use a brief placeholder (e.g., "No new product updates in this period.", "No open action items.").
 
@@ -297,6 +318,7 @@ After saving (or previewing), show what was gathered:
 ```
 Cadence Prep Summary for [Customer] ([type])
   Jira: [N] open issues, [M] recently closed, [K] stale
+  Asana: [N] open actions, [M] recently completed, [K] open RAID items
   Slack: [N] notable threads from [channels]
   Carry-forward: [N] action items, [M] RAID items from [previous doc date]
   Confluence: <page URL>

@@ -1,27 +1,38 @@
-# Customer registry -- shared across agents (jira-updater, cadence-prep, customer-tracker)
-# Add customers as you work with them. Channel IDs from Slack, customer names from Jira.
+# Customer routing table — thin pointers to external systems, not a data store.
+# Each system owns its own data; this file just tells skills WHERE to look.
+#
+# SFDC is the source of truth for business data (ARR, contracts, account team).
+# Use /customer-setup to pull from Salesforce. Use /salesforce for ad-hoc queries.
+#
+# Asana master portfolio: use `mutate.py setup-customer --master-portfolio-gid <GID>` to onboard new customers.
 #
 # Schema:
 #   name:                    Display name used in conversation
-#   jira_customer:           Value in Jira "Customer" field (may differ from display name)
+#   sfdc_account_id:         18-char Salesforce Account ID (-> SFDC for business data: ARR, contracts, account team)
+#   jira_customer:           Value in Jira "Customer" field (only if different from name)
 #   jira_customer_variants:  Alternative spellings in Jira (for fuzzy matching)
 #   slack_channels:          List of Slack channels for this customer
 #     - id:                  Slack channel ID (e.g., C01234ABCDE)
-#       name:                Channel name (e.g., ext-gresearch)
+#       name:                Channel name (e.g., wandb-gresearch)
 #       type:                external | internal | support
-#   cadence:                 Meeting cadence schedule
+#   action_tracker:          System holding SE actions ("asana" or "sheets")
+#   action_tracker_id:       Asana project GID or Google Sheets URL
+#   raid_tracker:            System holding RAID log ("asana" or "sheets")
+#   raid_tracker_id:         Asana RAID project GID or Google Sheets URL
+#   portfolio_id:            Asana portfolio GID (for the customer portfolio)
+#   deployment_type:         saas | dedicated-cloud | server
+#                            Filters product updates to relevant deployment context
+#   cadence:                 Meeting cadence schedule (SE-managed, no other home)
 #     type:                  weekly | biweekly | monthly | qbr
 #     day:                   Day of week (e.g., Tuesday)
-#     time:                  Time with timezone (e.g., 10:00 AM PT)
-#   deployment_type:          saas | dedicated-cloud | server
-#                            Filters product updates to relevant deployment context
-#   asana_project_gid:       Asana Actions project GID (from /asana setup-project)
-#   asana_raid_project_gid:  Asana RAID Log project GID (from /asana setup-raid-project)
-#   asana_portfolio_gid:     Asana customer portfolio GID (from /asana setup-customer)
-#   contacts:                Key contacts (built up over time)
+#     time:                  Time with timezone in the attendee's local TZ (e.g., 10:00 AM GMT)
+#   contacts:                Key contacts (SE-managed, built up over time)
 #     - name:                Contact name
 #       org:                 Organization (e.g., W&B, G-Research)
 #       role:                Contact role
+#
+# Fields REMOVED (pulled from SFDC at runtime via /salesforce skill):
+#   arr, contract_end, renewal_date, cs_tier, subscription_plan, account_team
 #
 # Cadence type drives lookback window for data gathering:
 #   weekly=7d, biweekly=14d, monthly=30d, qbr=90d
@@ -32,26 +43,22 @@
 #   server:           Self-hosted by customer (on-prem or customer cloud)
 
 customers:
-  - name: GResearch
-    jira_customer: GResearch
-    jira_customer_variants:
-      - "G-Research"
+  - name: ExampleCustomer
+    sfdc_account_id: "PLACEHOLDER"
+    jira_customer: ExampleCustomer
+    jira_customer_variants: []
     slack_channels:
       - id: PLACEHOLDER
-        name: ext-gresearch
+        name: wandb-example
         type: external
-    deployment_type: dedicated-cloud
-    asana_project_gid: PLACEHOLDER
-    asana_raid_project_gid: PLACEHOLDER
-    asana_portfolio_gid: PLACEHOLDER
+    action_tracker: asana
+    action_tracker_id: PLACEHOLDER
+    raid_tracker: asana
+    raid_tracker_id: PLACEHOLDER
+    portfolio_id: PLACEHOLDER
+    deployment_type: saas
     cadence:
       type: weekly
-      day: Tuesday
-      time: "10:00 AM PT"
-    contacts:
-      - name: Allan Stevenson
-        org: W&B
-        role: Solutions Engineer
-      - name: PLACEHOLDER
-        org: G-Research
-        role: PLACEHOLDER
+      day: Monday
+      time: "10:00 AM GMT"
+    contacts: PLACEHOLDER

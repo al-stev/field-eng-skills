@@ -36,7 +36,6 @@ from asana_client import (
     serialize_section,
     output_json,
     output_error,
-    DEFAULT_TEAM_GID,
 )
 
 
@@ -51,6 +50,9 @@ PRIORITY_OPTION_GIDS = {
     "MEDIUM": "1208185034501271",
     "LOW": "1208185034501272",
 }
+
+# Default team GID for Organization workspace project creation
+DEFAULT_TEAM_GID = "1211862347384669"  # W&B EMEA Post-Sales
 
 # ---------------------------------------------------------------------------
 # RAID custom field definitions
@@ -668,7 +670,7 @@ def cmd_setup_project(args):
 
     result["next_steps"] = (
         f"Copy project_gid '{result['project_gid']}' to the appropriate location:\n"
-        f"  - For customer project: templates/customers.yaml -> asana_project_gid\n"
+        f"  - For customer project: templates/customers.yaml -> action_tracker_id\n"
         f"  - For SE Team project: .claude/rules/asana.md -> SE Team project GID"
     )
 
@@ -692,7 +694,7 @@ def cmd_setup_raid_project(args):
     }
     result["next_steps"] = (
         f"Copy project_gid '{result['project_gid']}' to customers.yaml:\n"
-        f"  asana_raid_project_gid: \"{result['project_gid']}\""
+        f"  raid_tracker_id: \"{result['project_gid']}\""
     )
 
     output_json(result, args.pretty)
@@ -1013,9 +1015,9 @@ def cmd_setup_customer(args):
         "gaps": gaps,
         "next_steps": (
             f"Update templates/customers.yaml for {args.name}:\n"
-            f"  asana_project_gid: \"{actions_project_gid}\"\n"
-            f"  asana_raid_project_gid: \"{raid_project_gid}\"\n"
-            f"  asana_portfolio_gid: \"{customer_portfolio_gid}\""
+            f"  action_tracker_id: \"{actions_project_gid}\"\n"
+            f"  raid_tracker_id: \"{raid_project_gid}\"\n"
+            f"  portfolio_id: \"{customer_portfolio_gid}\""
         ) if mode == "created" else f"Customer '{args.name}' fields updated. No changes to customers.yaml needed.",
     }
 

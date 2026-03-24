@@ -8,38 +8,48 @@ Claude Code skills for W&B Solutions Engineers. Integrates with W&B Jira (wandb.
 - The CoreWeave Slack workspace IS the user's Slack workspace
 - Skills are invoked via `/skill-name` in Claude Code
 
+## Preferences
+
+- Narrate before acting — explain what you're about to do so user can validate
+- Don't over-adapt source material — copy as-is when already correct
+- Be additive, not subtractive with existing context
+
 ## Project Structure
 
 ```
 .claude/
-  skills/                   -- Claude Code skills
-    jira/                   -- W&B Jira queries, issue creation, FE-UPDATE
-    slack/                  -- CoreWeave Slack channel history, search, threads
-    confluence/             -- CoreWeave Confluence pages, spaces
-    asana/                  -- Asana task management (SE actions, RAID, portfolios)
+  skills/                   -- Claude Code skills (invoked via /skill-name)
+    3p-update/              -- 3P (Progress/Plans/Problems) update generation from Asana + Jira + Slack
+    asana/                  -- Asana project/task queries and mutations (SE action tracking)
     asana-setup/            -- One-time Asana PAT setup
-    salesforce/             -- Read-only Salesforce account queries (W&B SFDC)
-    salesforce-setup/       -- One-time Salesforce credential setup
-    customer-setup/         -- Interactive customer registry onboarding from SFDC
+    atlassian-setup/        -- One-time Atlassian API token setup (Jira + Confluence)
     cadence-prep/           -- Customer cadence call preparation
-    customer-snapshot/      -- Customer intelligence dashboard
-    jira-check/             -- FE-UPDATE maintenance and stale issue review
-    pre-read/               -- Meeting pre-read document generation
-    raid/                   -- RAID log management (Risks, Assumptions, Issues, Dependencies)
-    ghosted/                -- Customer silence tracking on Slack threads
-    nag/                    -- Overdue and stale task scanner
-    maction/                -- Meeting notes to Asana actions + RAID pipeline
-    rats/                   -- Roses & Thorns biweekly update
-    atlassian-setup/        -- One-time Atlassian credential setup
-    slack-setup/            -- One-time Slack credential setup
+    confluence/             -- CoreWeave Confluence pages, spaces (coreweave.atlassian.net)
     credential-reference/   -- Reference table for all API credential keys
     credential-status/      -- Check health of all configured credentials
+    customer-setup/         -- Interactive customer onboarding (SFDC + SE overlays -> customers.yaml)
+    customer-snapshot/      -- Customer intelligence dashboard from Jira + Slack data
+    ghosted/                -- Customer silence tracker (Waiting on Customer thread monitoring)
+    humanizer/              -- Tone adjustment for written content
+    jira/                   -- W&B Jira queries, issue creation, FE-UPDATE (wandb.atlassian.net)
+    jira-check/             -- Jira issue triage and FE-UPDATE pipeline
+    maction/                -- Meeting notes to Asana actions + RAID items
+    nag/                    -- Stale/overdue task scanner across customer projects
+    pre-read/               -- Meeting pre-read document generation
+    raid/                   -- RAID log management (Risks, Assumptions, Issues, Dependencies)
+    rats/                   -- Roses & Thorns biweekly update
+    salesforce/             -- Salesforce account queries (read-only: accounts, team members, field discovery)
+    salesforce-setup/       -- One-time Salesforce credential setup
+    slack/                  -- CoreWeave Slack channel history, search, threads
+    slack-setup/            -- One-time Slack credential setup
   rules/                    -- Auto-loaded project rules
+    asana.md                -- Asana workspace conventions (sections, custom fields, RAID, portfolio, staleness rules)
     atlassian.md            -- Atlassian workspace conventions
     slack.md                -- Slack workspace conventions
     skill-composition.md    -- Multi-skill workflow patterns
-templates/                  -- Shared templates (customers.yaml, cadence-review.md, etc.)
 customers/                  -- Per-customer output directory (gitignored)
+templates/                  -- Agent and output templates
+scripts/                    -- Shared shell scripts
 ```
 
 ## Credentials
@@ -58,12 +68,8 @@ All API credentials stored in `~/.tsm-ai/.env`. Run `/credential-status` to chec
 | `SFDC_SESSION_ID` | W&B Salesforce (session auth) | wandb.my.salesforce.com |
 | `SFDC_INSTANCE` | W&B Salesforce (session auth) | wandb.my.salesforce.com |
 
+Asana PAT (`ASANA_TOKEN`) for SE action tracking. Asana uses a two-project model per customer: Actions project (day-to-day SE work, safe to share) and RAID Portfolio project (internal strategic view). Run `/raid` to manage RAID logs. Master portfolio holds all customer portfolios. Run `setup-customer` to onboard new customers into the portfolio structure.
+
 ## Python Skills
 
 Python skills use `uv run --project .claude/skills/<skill>` for dependency isolation. uv is installed at `~/.local/bin/uv`.
-
-## Preferences
-
-- Narrate before acting — explain what you're about to do so user can validate
-- Don't over-adapt source material — copy as-is when already correct
-- Be additive, not subtractive with existing context

@@ -164,19 +164,21 @@ All stored in `~/.tsm-ai/.env`. API tokens are generated at [id.atlassian.com](h
 
 ## Customer Registry
 
-`templates/customers.yaml` is the shared customer registry used by cadence-prep, customer-snapshot, and jira-check. Each customer entry has:
+`templates/customers.yaml` is a routing table — thin pointers to external systems, not a data store. Each system owns its own data; this file just tells skills WHERE to look. SFDC is the source of truth for business data (ARR, contracts, account team).
 
-- `name` / `jira_customer` — for Jira queries
-- `slack_channels` — channel IDs for Slack data
-- `cadence` — meeting schedule (type/day/time drives lookback window)
+Each customer entry has:
+
+- `name` / `jira_customer` / `jira_customer_variants` — for Jira queries and fuzzy matching
+- `sfdc_account_id` — 18-char Salesforce Account ID (business data pulled at runtime via `/salesforce`)
+- `slack_channels` — channel IDs for Slack data (id, name, type)
+- `action_tracker` / `action_tracker_id` — system and GID for SE actions ("asana" + Asana project GID)
+- `raid_tracker` / `raid_tracker_id` — system and GID for RAID log ("asana" + Asana RAID project GID)
+- `portfolio_id` — Asana customer portfolio GID (from `/asana setup-customer`)
 - `deployment_type` — saas / dedicated-cloud / server (filters product updates)
-- `asana_project_gid` — Asana Actions project (from `/asana setup-project`)
-- `asana_raid_project_gid` — Asana RAID Log project (from `/asana setup-raid-project`)
-- `asana_portfolio_gid` — Asana customer portfolio (from `/asana setup-customer`)
-- `sfdc_account_id` — Salesforce Account ID (also used as BigQuery account ID)
-- `arr` / `contract_end` / `renewal_date` / `cs_tier` / `subscription_plan` — SFDC-sourced account data
-- `account_team` — account team members with roles (from SFDC reference fields)
-- `contacts` — key contacts with org and role
+- `cadence` — meeting schedule (type/day/time drives lookback window)
+- `contacts` — key contacts with org and role (SE-managed, built up over time)
+
+Business data fields (ARR, contract dates, account team, CS tier) are no longer stored here — they are pulled from SFDC at runtime via the `/salesforce` skill.
 
 ## Python Skills
 

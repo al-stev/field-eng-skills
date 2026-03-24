@@ -47,6 +47,56 @@ The `--with-comments` flag includes per-issue comment analysis: comment count, l
 
 Parse the JSON output. If no issues are returned, generate a dashboard with an empty state message rather than failing.
 
+### Step 3.5: Fetch Asana tasks
+
+If the customer has `action_tracker_id` in customers.yaml (and it is not "PLACEHOLDER", and `action_tracker` is `"asana"`):
+
+1. Determine current user GID:
+   ```bash
+   uv run --project .claude/skills/asana python .claude/skills/asana/scripts/query.py project --gid <action_tracker_id> --pretty
+   ```
+   (The user GID comes from the PAT owner, resolved during task filtering)
+
+2. Fetch all incomplete tasks in the customer's Asana project:
+   ```bash
+   uv run --project .claude/skills/asana python .claude/skills/asana/scripts/query.py tasks \
+     --project-gid <action_tracker_id> --limit 100 --pretty
+   ```
+
+3. Filter to incomplete tasks only (completed=false or null)
+4. For each task, compute:
+   - `overdue`: true if due_on is before today and task is not completed
+   - `stale`: true if (today - modified_at) > 7 days AND section is "To Do" or "In Progress"
+   - `stale_days`: days since modified_at
+   - `priority`: from custom_fields Priority enum, or parsed from name prefix `[P0]`/`[P1]`/`[P2]`/`[P3]`, or null
+   - `linked_jira`: extracted from task name using regex `\(WB-\d+\)`, or from notes field
+   - `section`: from memberships[0].section.name
+5. Default scope: filter to tasks where assignee matches current user ("my tasks")
+6. Build the `actions` object for INTELLIGENCE_DATA (see schema in Step 7)
+
+If `action_tracker_id` is missing or "PLACEHOLDER": set `actions: { available: false, reason: "not_configured" }` and proceed.
+If Asana API fails: set `actions: { available: false, reason: "api_error" }` and proceed gracefully.
+
+### Step 3.7: Fetch BigQuery usage data
+
+If the customer has `sfdc_account_id` in customers.yaml (and it is not "PLACEHOLDER"):
+
+```bash
+uv run --project .claude/skills/bigquery python .claude/skills/bigquery/scripts/usage.py \
+  --customer "<CustomerName>" --format json
+```
+
+Parse the JSON output. The output matches the `INTELLIGENCE_DATA.usage` schema (see Step 7).
+
+The usage data powers ECharts time-series and radar charts in the dashboard's Usage panel
+(replacing the previous CSS horizontal bars). ECharts is loaded from CDN and themed to
+match the design system. The dashboard coexists: Jira/Slack panels use CSS bars, Usage
+panel uses ECharts.
+
+If `available: false`: set `usage: { available: false, reason: "<from output>" }` and proceed.
+If `sfdc_account_id` is missing or "PLACEHOLDER": set `usage: { available: false, reason: "not_configured" }` and proceed.
+If BigQuery skill fails: set `usage: { available: false, reason: "api_error" }` and proceed gracefully.
+
 ### Step 4: Fetch Slack channel history
 
 For each channel in `slack_channels` where `id` is not "PLACEHOLDER":
@@ -172,7 +222,80 @@ const INTELLIGENCE_DATA = {
   trending: null,
 
   // Executive summary (computed client-side from issues + sentiment in JS)
-  exec_summary: null
+  exec_summary: null,
+
+  // SE Actions from Asana (populated by Step 3.5, null/unavailable when Asana not configured)
+  actions: {
+    available: true,           // false when Asana not configured or fetch failed
+    source: "asana",
+    current_user: { gid: "12345", name: "Allan Stevenson" },
+    scope: "my_tasks",         // or "team"
+    project_gid: "98765",
+    project_url: "https://app.asana.com/0/98765",
+    tasks: [
+      {
+        gid: "11111",
+        name: "Follow up on SDK crash (WB-1234)",
+        section: "In Progress",
+        due_on: "2026-03-28",
+        overdue: false,          // computed: due_on < today
+        stale: false,            // computed: 7+ days since modified_at AND section in [To Do, In Progress]
+        stale_days: 2,
+        priority: "P1",          // from custom field or parsed from name prefix [P1]
+        assignee: { gid: "12345", name: "Allan Stevenson" },
+        linked_jira: "WB-1234", // extracted from name via regex \(WB-\d+\)
+        slack_source: "https://coreweave.slack.com/archives/...",
+        url: "https://app.asana.com/0/0/11111",
+        modified_at: "2026-03-21T10:00:00Z"
+      }
+    ],
+    summary: {
+      total: 8,
+      in_progress: 3,
+      waiting: 2,
+      todo: 2,
+      overdue: 1,
+      stale: 1
+    }
+  },
+
+  // Usage data from BigQuery (populated by Step 3.7, null/unavailable when BQ not configured)
+  usage: {
+    available: true,           // false when BigQuery not configured or fetch failed
+    period: { start: "2025-03-24", end: "2026-03-24" },
+    seat_utilization: {
+      contracted: 50, claimed: 42, active: 35,
+      utilization_percent: 70.0,
+      history: [{ week: "2025-04-07", contracted: 50, active: 28 }]
+    },
+    weave: {
+      ingestion_gb: 156.3, limit_gb: 500.0, utilization_percent: 31.3,
+      unique_users_last_90d: 12,
+      history: [{ month: "2025-04", ingestion_gb: 8.2, unique_users: 5 }]
+    },
+    tracked_hours: {
+      last_30d_hours: 1250.0, last_30d_run_count: 342,
+      history: [{ week: "2025-04-07", tracked_hours: 180.5 }]
+    },
+    account_health: {  // internal-only
+      renewal_date: "2026-09-15", arr: 250000.0, cs_tier: "Strategic",
+      customer_health: "Green", churn_probability_3mo: 0.05,
+      churn_probability_5mo: 0.08, subscription_plan: "Enterprise",
+      deployment_type: "dedicated-cloud"
+    },
+    trends: {
+      seat_utilization_change: 12.5, weave_ingestion_change: -3.2,
+      tracked_hours_change: 8.7, run_count_change: 15.3
+    },
+    product_areas: [  // NEW - from Plan 01 expansion, powers radar chart
+      { area: "Experiments", total_events: 1800, unique_users: 25,
+        monthly_events: [{month: "2025-04", count: 150, users: 12}] }
+    ],
+    power_users: [  // NEW - anonymized by default, real names with --internal
+      { username: "alice_ml", total_events: 5000, product_areas: ["Experiments"],
+        last_activity: "2026-03-20" }
+    ]
+  }
 };
 ```
 
@@ -204,6 +327,8 @@ The template handles all rendering -- charts, filters, theme sections, sentiment
 Tell the user:
 - File path
 - Brief summary: total issues, sentiment score (or "not configured"), backlog trajectory
+- Usage stats if available (seat utilization %, Weave ingestion %, trend direction)
+- Asana action counts if available (e.g., "8 open actions, 1 overdue")
 - Hot issues or threads needing attention
 - Flag any P0/P1 stale issues
 
@@ -211,7 +336,7 @@ Tell the user:
 
 Read `references/design-system.md` for the complete visual specification. Key principles:
 
-- Custom HTML/CSS horizontal bars for all charts -- no external charting libraries
+- Custom HTML/CSS horizontal bars for Jira/Slack panels -- no external charting libraries for those
 - Instrument Serif + Outfit + JetBrains Mono typography
 - Gold accent (#d4a853), warm cream light mode (#f6f4f0), deep navy dark mode (#0c0f14)
 - Inline header stats, not KPI cards
@@ -220,6 +345,14 @@ Read `references/design-system.md` for the complete visual specification. Key pr
 - Resolved issues hidden by default with toggle to show
 - Both light and dark mode via prefers-color-scheme
 - Internal/External audience toggle in header area
+
+## Visualization
+
+- Usage panel: Apache ECharts (CDN, custom 'wandb' theme) -- seat utilization (line), product adoption (radar), weave ingestion (bar), tracked hours (bar)
+- Jira/Slack panels: Custom CSS bars (unchanged from Phase 3/6)
+- Both coexist in the same template
+- ECharts loaded from `https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js`
+- Custom theme registered as `'wandb'` matching design system colors (dark/light mode aware)
 
 ## Status Mapping
 
