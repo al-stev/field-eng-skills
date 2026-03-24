@@ -39,11 +39,10 @@ PROJECT_ROOT = Path(__file__).parent.parent.parent.parent.parent
 COOKIE_REFRESH_SCRIPT = PROJECT_ROOT / 'scripts' / 'gong-cookie-refresh.sh'
 CDP_FETCH_SCRIPT = PROJECT_ROOT / 'scripts' / 'gmail-cdp-fetch.sh'
 
-# Region-specific base URL — override via GONG_BASE_URL in ~/.tsm-ai/.env
-GONG_BASE_URL = _load_credential('GONG_BASE_URL') or 'https://app.gong.io'
-
-# Workspace ID — override via GONG_WORKSPACE_ID in ~/.tsm-ai/.env
-WORKSPACE_ID = _load_credential('GONG_WORKSPACE_ID') or ''
+# W&B Gong instance defaults (company-level, same for all W&B users)
+# Override via GONG_BASE_URL / GONG_WORKSPACE_ID in ~/.tsm-ai/.env if needed
+GONG_BASE_URL = _load_credential('GONG_BASE_URL') or 'https://us-39259.app.gong.io'
+WORKSPACE_ID = _load_credential('GONG_WORKSPACE_ID') or '315301294163453491'
 
 
 def get_session() -> requests.Session:
