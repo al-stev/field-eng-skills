@@ -34,6 +34,39 @@ def _ref(table: str, dataset: str = "analytics") -> str:
     return f"`{PROJECT_ID}.{dataset}.{table}`"
 
 
+def identity_resolution_cte(table_alias: str = "src") -> str:
+    """
+    Returns a SQL CTE that resolves user identity for server deployments.
+
+    Server deployments do not populate username/email in ext_daily_user_event_usage.
+    This CTE LEFT JOINs dim_users to resolve local_username and local_user_email.
+
+    The source query must have columns: universal_user_id, username, email.
+    The enclosing query must have @account_id parameter bound.
+
+    Args:
+        table_alias: Alias for the source table/CTE that has universal_user_id,
+                     username, and email columns.
+
+    Returns:
+        SQL string for a CTE named 'resolved_users' with columns:
+        universal_user_id, resolved_username, resolved_email
+    """
+    dim_users = _ref("dim_users")
+    return f"""
+    resolved_users AS (
+        SELECT
+            {table_alias}.universal_user_id,
+            COALESCE({table_alias}.username, du.local_username) AS resolved_username,
+            COALESCE({table_alias}.email, du.local_user_email) AS resolved_email
+        FROM {table_alias}
+        LEFT JOIN {dim_users} du
+            ON {table_alias}.universal_user_id = du.universal_user_id
+            AND du.account_id = @account_id
+    )
+    """
+
+
 def seat_utilization_query() -> str:
     """
     Daily seat utilization query -- contracted vs claimed vs active seats.
@@ -259,6 +292,49 @@ def power_users_query() -> str:
         ON a.universal_user_id = du.universal_user_id
         AND du.account_id = @account_id
     ORDER BY a.total_events DESC
+    """
+
+
+def support_tickets_query() -> str:
+    """
+    Support tickets from Zendesk (synced via dim_helpdesk_tickets).
+
+    Joins through stg_salesforce_accounts to filter by @account_id.
+    Excludes deleted tickets. Returns per-ticket rows for builder aggregation.
+
+    Returns:
+        SQL string with @account_id parameter placeholder
+    """
+    helpdesk = _ref("dim_helpdesk_tickets")
+    salesforce = _ref("stg_salesforce_accounts")
+    return f"""
+    SELECT
+        t.zendesk_ticket_id,
+        t.ticket_subject,
+        t.ticket_status,
+        t.ticket_priority,
+        t.ticket_created_at,
+        t.ticket_created_date_day,
+        t.ticket_last_updated_at,
+        t.primary_ticket_concern,
+        t.sa_ticket_type,
+        t.channel,
+        t.jira_id,
+        t.jira_link,
+        t.jira_status,
+        t.escalated_to_jira,
+        t.escalated_to_t2,
+        t.ticket_satisfaction_score,
+        t.submitter_name,
+        t.submitter_email,
+        t.assignee_name
+    FROM {helpdesk} t
+    JOIN {salesforce} s
+        ON LOWER(t.account_name) = LOWER(s.name)
+    WHERE s.account_id = @account_id
+        AND t.ticket_status != 'deleted'
+        AND t.ticket_created_at >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 365 DAY)
+    ORDER BY t.ticket_created_at DESC
     """
 
 
