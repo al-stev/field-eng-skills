@@ -12,6 +12,7 @@ per-customer parameterized queries (replacing AISE name filters).
 
 import os
 import re
+import sys
 from pathlib import Path
 from typing import Optional
 
@@ -51,30 +52,66 @@ def run_query(
     client: bigquery.Client,
     query: str,
     account_id: Optional[str] = None,
+    maximum_bytes_billed: Optional[int] = None,
+    dry_run: bool = False,
 ) -> pd.DataFrame:
     """
-    Execute a BigQuery query, optionally with account_id parameter.
+    Execute a BigQuery query with optional cost guardrails.
 
-    When account_id is provided, builds a QueryJobConfig with a
-    ScalarQueryParameter for safe parameterized filtering.
+    When account_id is provided, adds a ScalarQueryParameter for safe
+    parameterized filtering. When maximum_bytes_billed is set, caps the
+    query cost. When dry_run is True, validates the query without executing.
+
+    Every query logs bytes processed to stderr for traceability. Queries
+    exceeding 500 MB trigger an additional cost warning.
 
     Args:
         client: Authenticated BigQuery client
         query: SQL query string (may contain @account_id placeholder)
         account_id: Optional SFDC account ID for parameterized filtering
+        maximum_bytes_billed: Optional byte limit for query cost control.
+            None means unlimited (backwards-compatible default).
+            Deep-analytics callers should pass 1_000_000_000 (1 GB).
+        dry_run: If True, validate query without executing. Returns empty DataFrame.
 
     Returns:
-        Query results as a pandas DataFrame
+        Query results as a pandas DataFrame (empty if dry_run)
     """
+    job_config = bigquery.QueryJobConfig()
+
+    if maximum_bytes_billed is not None:
+        job_config.maximum_bytes_billed = maximum_bytes_billed
+
+    if dry_run:
+        job_config.dry_run = True
+        job_config.use_query_cache = False
+
     if account_id is not None:
-        job_config = bigquery.QueryJobConfig(
-            query_parameters=[
-                bigquery.ScalarQueryParameter("account_id", "STRING", account_id)
-            ]
+        job_config.query_parameters = [
+            bigquery.ScalarQueryParameter("account_id", "STRING", account_id)
+        ]
+
+    job = client.query(query, job_config=job_config)
+
+    if dry_run:
+        return pd.DataFrame()
+
+    df = job.to_dataframe()
+
+    # Log bytes processed for traceability
+    bytes_processed = getattr(job, "total_bytes_processed", 0) or 0
+    bytes_billed = getattr(job, "total_bytes_billed", 0) or 0
+
+    if bytes_processed > 500_000_000:
+        print(
+            f"[BQ COST] {bytes_processed / 1e9:.2f} GB processed, "
+            f"{bytes_billed / 1e9:.2f} GB billed",
+            file=sys.stderr,
         )
-        return client.query(query, job_config=job_config).to_dataframe()
-    else:
-        return client.query(query).to_dataframe()
+
+    print(f"[BQ] {bytes_processed / 1e6:.1f} MB processed", file=sys.stderr)
+
+    return df
 
 
 def get_sfdc_account_id(
