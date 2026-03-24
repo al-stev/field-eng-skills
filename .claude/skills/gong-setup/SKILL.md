@@ -38,7 +38,20 @@ This launches an isolated Chrome window with Gong pre-loaded. If it's your first
 ./scripts/gong-cookie-refresh.sh
 ```
 
-This extracts all cookies for `app.gong.io` via CDP, saves them as `GONG_COOKIE` in `~/.tsm-ai/.env`, and verifies access automatically.
+This extracts all cookies for `app.gong.io` via CDP, saves them as `GONG_COOKIE` in `~/.tsm-ai/.env`, and auto-discovers the base URL from the `cell` JWT cookie.
+
+### Step 2b: Set Workspace ID and Base URL
+
+The cookie refresh script discovers the base URL automatically, but the workspace ID must be set manually. For the W&B instance these are already known:
+
+```bash
+# Add to ~/.tsm-ai/.env (one-time)
+source scripts/tsm-env.sh
+tsm_save GONG_BASE_URL "https://us-39259.app.gong.io"
+tsm_save GONG_WORKSPACE_ID "315301294163453491"
+```
+
+**How these were discovered:** The base URL region (`us-39259`) comes from the `cell` JWT cookie. The workspace ID (`315301294163453491`) is found by opening DevTools Network tab in Gong and looking at the `workspace-id=` query parameter on any API request. Note: the `ajs_group_id` cookie (`4819131706209630954`) is the company ID, not the workspace ID.
 
 ### Step 3: Install Python Dependencies
 

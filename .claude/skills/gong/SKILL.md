@@ -103,12 +103,12 @@ All Python tools perform read-only operations and require no user confirmation.
 
 | Property | Value |
 |---|---|
-| Workspace ID | *To be discovered — set `GONG_WORKSPACE_ID` in `~/.tsm-ai/.env`* |
-| Company ID | *To be discovered — set `GONG_COMPANY_ID` in `~/.tsm-ai/.env`* |
-| Base URL | *To be discovered — set `GONG_BASE_URL` in `~/.tsm-ai/.env`* |
+| Workspace ID | `315301294163453491` (`GONG_WORKSPACE_ID` in `~/.tsm-ai/.env`) |
+| Company ID | `4819131706209630954` (appears in profile image URLs, stored as `ajs_group_id` cookie) |
+| Base URL | `https://us-39259.app.gong.io` (`GONG_BASE_URL` in `~/.tsm-ai/.env`) |
 | Company name | W&B |
 
-To discover these values: sign into Gong in the Chrome debug instance, open DevTools Network tab, and look at any API call — the workspace ID appears in query params and the base URL is the region-specific subdomain.
+**Discovery notes:** The workspace ID is found in the `workspace-id=` query param of network requests in DevTools (NOT the `ajs_group_id` cookie, which is the company ID). The base URL region (`us-39259`) is in the `cell` JWT cookie. The `gong-cookie-refresh.sh` script auto-discovers the base URL from the cookie, but the workspace ID must be set manually.
 
 ### Cookie Details
 
