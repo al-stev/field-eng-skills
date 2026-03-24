@@ -47,7 +47,7 @@ Copy the output — you'll need it in Steps 2 and 4.
 3. Settings:
    - **Description**: `gdocs-cli` (or anything)
    - **Execute as**: `Me`
-   - **Who has access**: `Anyone within W&B` (or `Anyone` if available)
+   - **Who has access**: `Only myself` (most secure — the script still accesses shared docs via your Google account permissions)
 4. Click **Deploy**
 5. Click **Authorize access** → sign in → **Allow** (grants the script access to your Google Docs)
 6. **Copy the Web app URL** — it looks like `https://script.google.com/a/macros/wandb.com/s/AKfyc.../exec`
@@ -112,7 +112,7 @@ To re-authorize:
 
 > This section is for troubleshooting and understanding the architecture. You don't need it for initial setup.
 
-The Apps Script uses the built-in `DocumentApp` service to access Google Docs (read and write). It's deployed as a web app (accessible to anyone within W&B). No GCP Console or API enablement is needed. The Python tools call this endpoint through the Chrome debug instance (CDP), which handles Okta SSO authentication transparently. A shared API key prevents unauthorized access.
+The Apps Script uses the built-in `DocumentApp` service to access Google Docs (read and write). It's deployed as a web app (restricted to the deploying user). No GCP Console or API enablement is needed. The Python tools call this endpoint through the Chrome debug instance (CDP), which handles Okta SSO authentication transparently. A shared API key prevents unauthorized access.
 
 ## Troubleshooting
 
