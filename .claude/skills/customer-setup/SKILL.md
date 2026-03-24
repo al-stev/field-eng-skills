@@ -24,17 +24,15 @@ Partial entries are acceptable -- use PLACEHOLDER markers for any field the SE s
 | jira_customer | SE confirms from SFDC name | jira-check, customer-snapshot, cadence-prep |
 | jira_customer_variants | SE input | jira-check |
 | sfdc_account_id | SFDC Account.Id | bigquery, customer-snapshot |
-| arr | SFDC (Renewal_ARR__c or AnnualRevenue) | customer-setup only (future: exec dashboards) |
-| contract_end | SFDC | customer-setup only (future: renewal alerts) |
-| renewal_date | SFDC (CS_Renewal_Date__c) | customer-setup only (future: renewal alerts) |
-| cs_tier | SFDC (CS_Tier__c) | customer-setup only (future: prioritization) |
-| subscription_plan | SFDC (Subscription_Plan__c) | customer-setup only (future: feature scoping) |
-| account_team | SFDC AccountTeamMember | customer-setup only (future: contact lookup) |
 | slack_channels | SE input (Slack search) | customer-snapshot, cadence-prep, 3p-update |
-| asana_project_gid | SE input (Asana query) | 3p-update, customer-snapshot |
+| action_tracker | SE input ("asana" or "sheets") | 3p-update, customer-snapshot, nag, ghosted |
+| action_tracker_id | SE input (Asana project GID or Sheets URL) | 3p-update, customer-snapshot |
+| raid_tracker | SE input ("asana" or "sheets") | raid, cadence-prep, maction |
+| raid_tracker_id | SE input (Asana RAID project GID or Sheets URL) | raid, cadence-prep |
+| portfolio_id | SE input (Asana portfolio GID) | asana portfolio views |
 | deployment_type | SFDC or SE input | cadence-prep |
 | cadence | SE input | cadence-prep |
-| contacts | SFDC team + SE additions | cadence-prep |
+| contacts | SE-managed | cadence-prep |
 
 ---
 
@@ -112,17 +110,9 @@ Extract `user` field from the first match. Derive handle from email prefix (e.g.
 
 Auto-fill from SFDC (W&B field mapping discovered 2026-03-24):
 - `sfdc_account_id` -- Account.Id (18-char, also used as BigQuery account ID)
-- `arr` -- `Renewal_ARR__c`
-- `contract_end` -- `CS_Renewal_Date__c`
-- `renewal_date` -- `CS_Renewal_Date__c` (same source as contract_end in W&B org)
-- `cs_tier` -- `CS_Tier__c`
-- `subscription_plan` -- `Subscription_Plan__c`
 - `deployment_type` -- `Opportunity_Deployment_Types__c` (map to saas/dedicated-cloud/server)
-- `account_team` -- from Account reference fields:
-  - `OwnerId` → Account Owner (name, email from User lookup)
-  - `Post_Sales_SMLE__c` → Post-Sales AISE (name, email from User lookup)
-  - `Solutions_Architect__c` → Solutions Architect (name, email from User lookup)
-  - `slack_user_id` for each → from Slack `users.py search-name`
+
+Note: Business data fields (arr, contract_end, renewal_date, cs_tier, subscription_plan, account_team) are pulled from SFDC at runtime via the /salesforce skill -- they are NOT stored in customers.yaml. The routing table only stores pointers to external systems.
 
 **If SFDC unavailable** (credentials not configured, auth fails, or no API permissions): Prompt the SE to enter each field manually. This is the D-05 fallback -- the schema is SFDC-ready even when populated by hand.
 
@@ -221,7 +211,7 @@ If not already resolved from SFDC in Step 3, ask the SE:
 
 **Contacts:**
 
-Merge SFDC `account_team` (from Step 3) with any additional contacts the SE wants to add. Each contact has:
+Build contacts list from SE input (account team data is pulled from SFDC at runtime, not stored in customers.yaml). Each contact has:
 - `name` -- Contact name
 - `org` -- Organization (e.g., W&B, G-Research)
 - `role` -- Contact role

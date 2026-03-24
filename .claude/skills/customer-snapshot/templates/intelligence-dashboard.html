@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
 <style>
 /* ── DESIGN TOKENS (dark mode default) ── */
 :root {
@@ -771,6 +772,224 @@ body::before {
   .bar-row { grid-template-columns: 100px 1fr 32px; }
 }
 
+/* ── SE ACTIONS PANEL ── */
+.actions-section {
+  padding: clamp(24px, 3vw, 40px) 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.actions-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.actions-title {
+  font-family: var(--font-display);
+  font-size: clamp(20px, 3vw, 28px);
+  font-weight: 400;
+}
+
+.actions-count-badge {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 100px;
+  background: var(--accent-dim);
+  color: var(--accent);
+  border: 1px solid var(--accent-border);
+}
+
+.actions-scope-toggle {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.actions-summary-bar {
+  display: flex;
+  gap: clamp(16px, 3vw, 28px);
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.actions-stat {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.actions-stat-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.actions-stat-count {
+  font-weight: 600;
+}
+
+.actions-stat-label {
+  color: var(--text-tertiary);
+}
+
+.actions-group-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-tertiary);
+  margin-top: 12px;
+  margin-bottom: 6px;
+}
+
+.actions-task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.actions-task-row {
+  display: grid;
+  grid-template-columns: 10px 1fr auto auto auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  background: var(--bg-elevated);
+  min-height: 36px;
+  transition: background 0.15s ease-out;
+}
+
+.actions-task-row:first-child { border-radius: var(--radius) var(--radius) 0 0; }
+.actions-task-row:last-child { border-radius: 0 0 var(--radius) var(--radius); }
+.actions-task-row:only-child { border-radius: var(--radius); }
+.actions-task-row:hover { background: var(--bg-hover); }
+
+.actions-priority-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.actions-priority-dot.p0 { background: var(--red); }
+.actions-priority-dot.p1 { background: var(--orange); }
+.actions-priority-dot.p2 { background: var(--amber); }
+.actions-priority-dot.p3 { background: var(--gray); }
+.actions-priority-dot.none { background: var(--border); }
+
+.actions-task-name {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--text-primary);
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.actions-task-name:hover { color: var(--accent); }
+
+.actions-section-pill {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 500;
+  padding: 2px 6px;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+.actions-due {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
+.actions-due.overdue {
+  color: var(--red);
+  font-weight: 600;
+}
+
+.actions-stale-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--amber);
+  flex-shrink: 0;
+}
+
+.actions-jira-badge {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 500;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: var(--blue-dim);
+  color: var(--blue);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.actions-jira-badge:hover { text-decoration: underline; }
+
+.actions-assignee {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
+.actions-expand-link {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--accent);
+  cursor: pointer;
+  padding: 8px 14px;
+  background: var(--bg-elevated);
+  border-radius: 0 0 var(--radius) var(--radius);
+  text-align: center;
+  transition: background 0.15s ease-out;
+}
+
+.actions-expand-link:hover { background: var(--bg-hover); }
+
+.actions-unavailable {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--text-tertiary);
+  padding: 24px 0;
+}
+
+.actions-unavailable-hint {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: 4px;
+}
+
+/* Asana badge on Jira issue rows (bidirectional cross-link) */
+.asana-badge {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: var(--orange-dim);
+  color: var(--orange);
+  text-decoration: none;
+  margin-left: 6px;
+  white-space: nowrap;
+}
+
+.asana-badge:hover { text-decoration: underline; }
+
 /* ── SENTIMENT PANEL ── */
 .sentiment-section {
   padding: clamp(24px, 3vw, 40px) 0;
@@ -1289,6 +1508,46 @@ body::before {
   color: var(--text-tertiary);
   font-style: italic;
 }
+
+/* ── USAGE PANEL (ECharts) ── */
+.usage-section { padding: clamp(24px, 3vw, 40px) 0; border-bottom: 1px solid var(--border-subtle); }
+.usage-header { margin-bottom: 16px; }
+.usage-kpi-row { display: flex; gap: clamp(24px, 4vw, 48px); flex-wrap: wrap; margin-bottom: 24px; }
+.usage-kpi-item { }
+.usage-kpi-value { font-family: var(--font-body); font-size: 14px; font-weight: 600; }
+.usage-kpi-trend { font-family: var(--font-body); font-size: 14px; font-weight: 400; margin-left: 8px; }
+.usage-chart-section { margin-bottom: 32px; }
+.usage-chart-section .chart-label { margin-bottom: 12px; display: block; }
+.usage-supplementary {
+  font-family: var(--font-body); font-size: 14px;
+  font-weight: 400; color: var(--text-tertiary); margin-top: 8px;
+}
+.zone-green { color: var(--green); }
+.zone-amber { color: var(--amber); }
+.zone-red { color: var(--red); }
+.trend-up { color: var(--green); }
+.trend-down { color: var(--red); }
+.trend-stable { color: var(--text-tertiary); }
+.health-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;
+}
+@media (max-width: 640px) { .health-grid { grid-template-columns: 1fr; } }
+.health-field-label {
+  font-family: var(--font-mono);
+  font-size: 11px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 1.5px;
+  color: var(--text-secondary); margin-bottom: 4px;
+}
+.health-field-value {
+  font-family: var(--font-body); font-size: 14px; font-weight: 600;
+  color: var(--text-primary);
+}
+.health-dot {
+  display: inline-block; width: 8px; height: 8px;
+  border-radius: 50%; margin-right: 6px; vertical-align: middle;
+}
+.kpi-item { white-space: nowrap; }
+.usage-kpis { margin-top: 12px; }
 </style>
 </head>
 <body>
@@ -1313,6 +1572,12 @@ body::before {
   <!-- EXECUTIVE SUMMARY -->
   <section class="exec-summary-section animate-in" style="animation-delay: 40ms" id="execSummary">
     <!-- Rendered by JS -->
+    <div id="usageKPIs" class="usage-kpis"></div>
+  </section>
+
+  <!-- SE ACTIONS PANEL -->
+  <section class="actions-section animate-in" style="animation-delay: 45ms" id="actionsPanel">
+    <!-- Rendered by JS -->
   </section>
 
   <!-- SENTIMENT PANEL -->
@@ -1323,6 +1588,42 @@ body::before {
   <!-- TRENDING CHARTS -->
   <section class="trending-section animate-in" style="animation-delay: 55ms" id="trendingCharts">
     <!-- Rendered by JS -->
+  </section>
+
+  <!-- Usage Panel (ECharts) -->
+  <section class="usage-section animate-in" style="animation-delay: 57ms" id="usagePanel">
+    <div class="usage-header">
+      <span class="chart-label">USAGE</span>
+    </div>
+    <div id="usageEmpty" style="display:none;">
+      <p class="empty-state"></p>
+    </div>
+    <div id="usageContent" style="display:none;">
+      <!-- KPI summary row -->
+      <div id="usagePanelKPIs" class="usage-kpi-row"></div>
+      <!-- Seat Utilization chart -->
+      <div class="usage-chart-section">
+        <span class="chart-label">SEAT UTILIZATION</span>
+        <div id="seatChart" style="width:100%;height:280px;"></div>
+      </div>
+      <!-- Product Adoption Radar -->
+      <div class="usage-chart-section" id="radarSection" style="display:none;">
+        <span class="chart-label">PRODUCT ADOPTION</span>
+        <div id="radarChart" style="width:100%;height:320px;"></div>
+      </div>
+      <!-- Weave Ingestion chart -->
+      <div class="usage-chart-section">
+        <span class="chart-label">WEAVE INGESTION</span>
+        <div id="weaveChart" style="width:100%;height:240px;"></div>
+      </div>
+      <!-- Tracked Hours chart -->
+      <div class="usage-chart-section">
+        <span class="chart-label">TRACKED HOURS</span>
+        <div id="hoursChart" style="width:100%;height:240px;"></div>
+      </div>
+      <!-- Account Health (internal-only) -->
+      <div id="accountHealthGrid" class="internal-only" style="display:none;"></div>
+    </div>
   </section>
 
   <!-- ANALYSIS -->
@@ -1413,7 +1714,142 @@ const INTELLIGENCE_DATA = {
   trending: null,
 
   // Executive summary (computed from issues + sentiment in JS)
-  exec_summary: null
+  exec_summary: null,
+
+  // Usage data from BigQuery (populated by pipeline Step 3.7, null when BQ unavailable)
+  // Set usage: null or usage: { available: false, reason: "not_configured" } to test graceful degradation
+  usage: {
+    available: true,
+    period: { start: "2025-03-24", end: "2026-03-24" },
+    seat_utilization: {
+      contracted: 50, claimed: 42, active: 35,
+      utilization_percent: 70.0,
+      history: [
+        { week: "2025-04-07", contracted: 50, active: 28 },
+        { week: "2025-05-05", contracted: 50, active: 30 },
+        { week: "2025-06-02", contracted: 50, active: 29 },
+        { week: "2025-07-07", contracted: 50, active: 31 },
+        { week: "2025-08-04", contracted: 50, active: 33 },
+        { week: "2025-09-01", contracted: 50, active: 32 },
+        { week: "2025-10-06", contracted: 50, active: 30 },
+        { week: "2025-11-03", contracted: 50, active: 34 },
+        { week: "2025-12-01", contracted: 50, active: 36 },
+        { week: "2026-01-05", contracted: 50, active: 33 },
+        { week: "2026-02-02", contracted: 50, active: 34 },
+        { week: "2026-03-02", contracted: 50, active: 35 }
+      ]
+    },
+    weave: {
+      ingestion_gb: 156.3, limit_gb: 500.0, utilization_percent: 31.3,
+      unique_users_last_90d: 12,
+      history: [
+        { month: "2025-04", ingestion_gb: 8.2, unique_users: 5 },
+        { month: "2025-05", ingestion_gb: 10.1, unique_users: 6 },
+        { month: "2025-06", ingestion_gb: 9.8, unique_users: 5 },
+        { month: "2025-07", ingestion_gb: 11.4, unique_users: 7 },
+        { month: "2025-08", ingestion_gb: 12.6, unique_users: 8 },
+        { month: "2025-09", ingestion_gb: 14.2, unique_users: 9 },
+        { month: "2025-10", ingestion_gb: 13.8, unique_users: 8 },
+        { month: "2025-11", ingestion_gb: 15.1, unique_users: 10 },
+        { month: "2025-12", ingestion_gb: 14.5, unique_users: 9 },
+        { month: "2026-01", ingestion_gb: 16.2, unique_users: 11 },
+        { month: "2026-02", ingestion_gb: 15.8, unique_users: 11 },
+        { month: "2026-03", ingestion_gb: 14.6, unique_users: 12 }
+      ]
+    },
+    tracked_hours: {
+      last_30d_hours: 1250.0, last_30d_run_count: 342,
+      history: [
+        { week: "2025-04-07", tracked_hours: 180.5 },
+        { week: "2025-05-05", tracked_hours: 195.2 },
+        { week: "2025-06-02", tracked_hours: 210.8 },
+        { week: "2025-07-07", tracked_hours: 188.3 },
+        { week: "2025-08-04", tracked_hours: 225.1 },
+        { week: "2025-09-01", tracked_hours: 198.7 },
+        { week: "2025-10-06", tracked_hours: 215.4 },
+        { week: "2025-11-03", tracked_hours: 240.6 },
+        { week: "2025-12-01", tracked_hours: 205.9 },
+        { week: "2026-01-05", tracked_hours: 230.2 },
+        { week: "2026-02-02", tracked_hours: 245.8 },
+        { week: "2026-03-02", tracked_hours: 260.3 }
+      ]
+    },
+    account_health: {
+      renewal_date: "2026-09-15", arr: 250000.0, cs_tier: "Strategic",
+      customer_health: "Green", churn_probability_3mo: 0.05,
+      churn_probability_5mo: 0.08, subscription_plan: "Enterprise",
+      deployment_type: "dedicated-cloud"
+    },
+    trends: {
+      seat_utilization_change: 12.5, weave_ingestion_change: -3.2,
+      tracked_hours_change: 8.7, run_count_change: 15.3
+    },
+    product_areas: [
+      { area: "Experiments", total_events: 1800, unique_users: 25, monthly_events: [
+        {month: "2025-04", count: 150, users: 12}, {month: "2025-05", count: 180, users: 14},
+        {month: "2025-06", count: 160, users: 13}, {month: "2025-07", count: 200, users: 16},
+        {month: "2025-08", count: 190, users: 15}, {month: "2025-09", count: 210, users: 17}
+      ]},
+      { area: "Artifacts", total_events: 1200, unique_users: 18, monthly_events: [
+        {month: "2025-04", count: 90, users: 8}, {month: "2025-05", count: 110, users: 10},
+        {month: "2025-06", count: 100, users: 9}, {month: "2025-07", count: 120, users: 11},
+        {month: "2025-08", count: 115, users: 10}, {month: "2025-09", count: 130, users: 12}
+      ]},
+      { area: "Weave Tracing", total_events: 950, unique_users: 12, monthly_events: [
+        {month: "2025-04", count: 60, users: 4}, {month: "2025-05", count: 80, users: 5},
+        {month: "2025-06", count: 90, users: 6}, {month: "2025-07", count: 100, users: 7},
+        {month: "2025-08", count: 110, users: 8}, {month: "2025-09", count: 120, users: 9}
+      ]},
+      { area: "Model Registry", total_events: 600, unique_users: 10, monthly_events: [
+        {month: "2025-04", count: 50, users: 5}, {month: "2025-05", count: 55, users: 5},
+        {month: "2025-06", count: 60, users: 6}, {month: "2025-07", count: 65, users: 6},
+        {month: "2025-08", count: 70, users: 7}, {month: "2025-09", count: 75, users: 7}
+      ]},
+      { area: "Reports", total_events: 400, unique_users: 8, monthly_events: [
+        {month: "2025-04", count: 30, users: 3}, {month: "2025-05", count: 35, users: 4},
+        {month: "2025-06", count: 40, users: 4}, {month: "2025-07", count: 45, users: 5},
+        {month: "2025-08", count: 50, users: 5}, {month: "2025-09", count: 55, users: 6}
+      ]},
+      { area: "Launch", total_events: 200, unique_users: 4, monthly_events: [
+        {month: "2025-04", count: 10, users: 1}, {month: "2025-05", count: 15, users: 2},
+        {month: "2025-06", count: 20, users: 2}, {month: "2025-07", count: 25, users: 3},
+        {month: "2025-08", count: 30, users: 3}, {month: "2025-09", count: 35, users: 4}
+      ]}
+    ],
+    power_users: [
+      { username: "alice_ml", total_events: 5000, product_areas: ["Experiments", "Artifacts", "Weave Tracing"], last_activity: "2026-03-20" },
+      { username: "bob_research", total_events: 3200, product_areas: ["Experiments", "Model Registry"], last_activity: "2026-03-22" },
+      { username: "carol_eng", total_events: 2800, product_areas: ["Artifacts", "Launch", "Reports"], last_activity: "2026-03-18" }
+    ]
+  },
+
+  // SE Actions from Asana (populated by pipeline Step 3.5, null when Asana unavailable)
+  // Set actions: null or actions: { available: false } to test graceful degradation
+  actions: {
+    available: true,
+    source: "asana",
+    current_user: { gid: "12345", name: "Allan Stevenson" },
+    scope: "my_tasks",
+    project_gid: "98765",
+    project_url: "https://app.asana.com/0/98765",
+    tasks: [
+      { gid: "20001", name: "Follow up on SDK crash (WB-1001)", section: "In Progress", due_on: "2026-03-25", overdue: false, stale: false, stale_days: 1, priority: "P0", assignee: { gid: "12345", name: "Allan Stevenson" }, linked_jira: "WB-1001", slack_source: null, url: "https://app.asana.com/0/0/20001", modified_at: "2026-03-22T10:00:00Z" },
+      { gid: "20002", name: "Chase OIDC SSO timeline with eng (WB-1004)", section: "In Progress", due_on: "2026-03-20", overdue: true, stale: false, stale_days: 0, priority: "P1", assignee: { gid: "12345", name: "Allan Stevenson" }, linked_jira: "WB-1004", slack_source: null, url: "https://app.asana.com/0/0/20002", modified_at: "2026-03-23T08:00:00Z" },
+      { gid: "20003", name: "Prepare QBR deck for next week", section: "In Progress", due_on: "2026-03-28", overdue: false, stale: false, stale_days: 2, priority: "P2", assignee: { gid: "12345", name: "Allan Stevenson" }, linked_jira: null, slack_source: null, url: "https://app.asana.com/0/0/20003", modified_at: "2026-03-21T14:00:00Z" },
+      { gid: "20004", name: "Get status on sweep custom metrics", section: "Waiting on Eng", due_on: "2026-04-01", overdue: false, stale: false, stale_days: 3, priority: "P2", assignee: { gid: "12345", name: "Allan Stevenson" }, linked_jira: "WB-1002", slack_source: null, url: "https://app.asana.com/0/0/20004", modified_at: "2026-03-20T10:00:00Z" },
+      { gid: "20005", name: "Share artifact upload workaround", section: "Waiting on Customer", due_on: null, overdue: false, stale: false, stale_days: 5, priority: "P3", assignee: { gid: "12345", name: "Allan Stevenson" }, linked_jira: null, slack_source: null, url: "https://app.asana.com/0/0/20005", modified_at: "2026-03-18T10:00:00Z" },
+      { gid: "20006", name: "Set up dedicated GPU node monitoring", section: "To Do", due_on: "2026-04-10", overdue: false, stale: true, stale_days: 9, priority: "P2", assignee: { gid: "12345", name: "Allan Stevenson" }, linked_jira: null, slack_source: null, url: "https://app.asana.com/0/0/20006", modified_at: "2026-03-14T10:00:00Z" },
+      { gid: "20007", name: "Draft migration guide for SDK v2", section: "To Do", due_on: null, overdue: false, stale: false, stale_days: 4, priority: "P3", assignee: { gid: "12345", name: "Allan Stevenson" }, linked_jira: null, slack_source: null, url: "https://app.asana.com/0/0/20007", modified_at: "2026-03-19T10:00:00Z" }
+    ],
+    summary: {
+      total: 7,
+      in_progress: 3,
+      waiting: 2,
+      todo: 2,
+      overdue: 1,
+      stale: 1
+    }
+  }
 };
 
 // ── CONFIGURATION ──
@@ -1522,6 +1958,264 @@ function initAudienceToggle() {
     if (extBtn) extBtn.classList.add('active');
     if (intBtn) intBtn.classList.remove('active');
   }
+}
+
+// ── SE ACTIONS PANEL ──
+const ACTIONS_SECTION_COLORS = {
+  'In Progress': { bg: 'var(--blue-dim)', color: 'var(--blue)' },
+  'To Do': { bg: 'var(--amber-dim)', color: 'var(--amber)' },
+  'Waiting on Customer': { bg: 'var(--orange-dim)', color: 'var(--orange)' },
+  'Waiting on Eng': { bg: 'var(--orange-dim)', color: 'var(--orange)' },
+  'Scheduled/Future': { bg: 'var(--gray-dim)', color: 'var(--gray)' },
+  'Done': { bg: 'var(--green-dim)', color: 'var(--green)' }
+};
+
+const ACTIONS_PRIO_ORDER = { 'P0': 0, 'P1': 1, 'P2': 2, 'P3': 3 };
+
+let _actionsScope = 'my_tasks';
+let _actionsExpanded = false;
+
+function renderActionsPanel() {
+  const container = document.getElementById('actionsPanel');
+  const actions = INTELLIGENCE_DATA.actions;
+
+  // Graceful degradation
+  if (!actions || !actions.available) {
+    const reason = actions && actions.reason === 'api_error'
+      ? 'Asana data unavailable &mdash; API error during fetch'
+      : 'Asana not configured for this customer';
+    const hint = actions && actions.reason === 'api_error'
+      ? 'Check ASANA_TOKEN in ~/.tsm-ai/.env'
+      : 'Add action_tracker_id to templates/customers.yaml, or run /asana-setup';
+    container.innerHTML = `
+      <div class="section-label">SE Actions</div>
+      <div class="actions-unavailable">${reason}</div>
+      <div class="actions-unavailable-hint">${hint}</div>`;
+    return;
+  }
+
+  // Filter tasks by scope
+  let tasks = actions.tasks || [];
+  if (_actionsScope === 'my_tasks' && actions.current_user) {
+    tasks = tasks.filter(t => t.assignee && t.assignee.gid === actions.current_user.gid);
+  }
+
+  // Sort: overdue first, then by priority (P0 > P1 > P2 > P3 > null), then by due date
+  tasks.sort((a, b) => {
+    if (a.overdue !== b.overdue) return a.overdue ? -1 : 1;
+    const pa = ACTIONS_PRIO_ORDER[a.priority] !== undefined ? ACTIONS_PRIO_ORDER[a.priority] : 99;
+    const pb = ACTIONS_PRIO_ORDER[b.priority] !== undefined ? ACTIONS_PRIO_ORDER[b.priority] : 99;
+    if (pa !== pb) return pa - pb;
+    if (a.due_on && b.due_on) return a.due_on.localeCompare(b.due_on);
+    if (a.due_on) return -1;
+    if (b.due_on) return 1;
+    return 0;
+  });
+
+  // Group by status category
+  const groups = { 'In Progress': [], 'Waiting': [], 'To Do': [], 'Other': [] };
+  tasks.forEach(t => {
+    if (t.section === 'In Progress') groups['In Progress'].push(t);
+    else if (t.section === 'Waiting on Customer' || t.section === 'Waiting on Eng') groups['Waiting'].push(t);
+    else if (t.section === 'To Do') groups['To Do'].push(t);
+    else groups['Other'].push(t);
+  });
+
+  // Compute summary
+  const summary = {
+    total: tasks.length,
+    in_progress: groups['In Progress'].length,
+    waiting: groups['Waiting'].length,
+    todo: groups['To Do'].length,
+    overdue: tasks.filter(t => t.overdue).length,
+    stale: tasks.filter(t => t.stale).length
+  };
+
+  // Build header
+  const scopeLabel = _actionsScope === 'my_tasks' ? 'My Tasks' : 'Team';
+  const otherScopeLabel = _actionsScope === 'my_tasks' ? 'Team' : 'My Tasks';
+
+  let html = `<div class="actions-header">
+    <span class="actions-title">SE Actions</span>
+    <span class="actions-count-badge">${summary.total}</span>
+    <div class="actions-scope-toggle">
+      <button class="pill${_actionsScope === 'my_tasks' ? ' active' : ''}" data-actions-scope="my_tasks">My Tasks</button>
+      <button class="pill${_actionsScope === 'team' ? ' active' : ''}" data-actions-scope="team">Team</button>
+    </div>
+  </div>`;
+
+  // Summary bar
+  html += `<div class="actions-summary-bar">
+    <span class="actions-stat">
+      <span class="actions-stat-dot" style="background:var(--blue)"></span>
+      <span class="actions-stat-count">${summary.in_progress}</span>
+      <span class="actions-stat-label">In Progress</span>
+    </span>
+    <span class="actions-stat">
+      <span class="actions-stat-dot" style="background:var(--orange)"></span>
+      <span class="actions-stat-count">${summary.waiting}</span>
+      <span class="actions-stat-label">Waiting</span>
+    </span>
+    <span class="actions-stat">
+      <span class="actions-stat-dot" style="background:var(--amber)"></span>
+      <span class="actions-stat-count">${summary.todo}</span>
+      <span class="actions-stat-label">To Do</span>
+    </span>`;
+  if (summary.overdue > 0) {
+    html += `<span class="actions-stat">
+      <span class="actions-stat-dot" style="background:var(--red)"></span>
+      <span class="actions-stat-count" style="color:var(--red)">${summary.overdue}</span>
+      <span class="actions-stat-label">Overdue</span>
+    </span>`;
+  }
+  if (summary.stale > 0) {
+    html += `<span class="actions-stat">
+      <span class="actions-stat-dot" style="background:var(--amber)"></span>
+      <span class="actions-stat-count" style="color:var(--amber)">${summary.stale}</span>
+      <span class="actions-stat-label">Stale</span>
+    </span>`;
+  }
+  html += `</div>`;
+
+  // Task list by group
+  const showTeamAssignee = _actionsScope === 'team';
+  const maxVisible = 10;
+  let taskIndex = 0;
+
+  const groupOrder = ['In Progress', 'Waiting', 'To Do', 'Other'];
+  groupOrder.forEach(groupName => {
+    const groupTasks = groups[groupName];
+    if (groupTasks.length === 0) return;
+
+    html += `<div class="actions-group-label">${groupName} (${groupTasks.length})</div>`;
+    html += `<div class="actions-task-list">`;
+
+    groupTasks.forEach(t => {
+      taskIndex++;
+      const hidden = !_actionsExpanded && taskIndex > maxVisible ? ' style="display:none" data-actions-overflow' : '';
+
+      // Priority dot
+      const priClass = t.priority ? t.priority.toLowerCase() : 'none';
+
+      // Section pill
+      const secColor = ACTIONS_SECTION_COLORS[t.section] || { bg: 'var(--gray-dim)', color: 'var(--gray)' };
+
+      // Due date
+      let dueHtml = '';
+      if (t.due_on) {
+        const dueDate = new Date(t.due_on + 'T00:00:00');
+        const dueLabel = dueDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+        if (t.overdue) {
+          dueHtml = `<span class="actions-due overdue">${dueLabel} overdue</span>`;
+        } else {
+          dueHtml = `<span class="actions-due">${dueLabel}</span>`;
+        }
+      }
+
+      // Stale indicator
+      let staleHtml = '';
+      if (t.stale) {
+        staleHtml = `<span class="actions-stale-indicator" title="Stale: ${t.stale_days || '7+'}d since last update"></span>`;
+      }
+
+      // Linked Jira badge
+      let jiraHtml = '';
+      if (t.linked_jira) {
+        jiraHtml = `<a class="actions-jira-badge" href="https://wandb.atlassian.net/browse/${t.linked_jira}" target="_blank" rel="noopener">${t.linked_jira}</a>`;
+      }
+
+      // Assignee (team view only)
+      let assigneeHtml = '';
+      if (showTeamAssignee && t.assignee) {
+        assigneeHtml = `<span class="actions-assignee">${t.assignee.name}</span>`;
+      }
+
+      // Task name (strip Jira reference from display name for cleanliness)
+      let displayName = t.name;
+      if (t.linked_jira) {
+        displayName = displayName.replace(/\s*\(WB-\d+\)\s*$/, '');
+      }
+
+      html += `<div class="actions-task-row"${hidden}>
+        <span class="actions-priority-dot ${priClass}" title="${t.priority || 'No priority'}"></span>
+        <a class="actions-task-name" href="${t.url || '#'}" target="_blank" rel="noopener" title="${t.name}">${displayName}</a>
+        <span class="actions-section-pill" style="background:${secColor.bg};color:${secColor.color}">${t.section}</span>
+        ${dueHtml}
+        ${staleHtml || jiraHtml ? '<span style="display:flex;align-items:center;gap:6px">' + staleHtml + jiraHtml + '</span>' : ''}
+        ${assigneeHtml}
+      </div>`;
+    });
+
+    html += `</div>`;
+  });
+
+  // Show all / collapse link
+  if (tasks.length > maxVisible) {
+    if (_actionsExpanded) {
+      html += `<div class="actions-expand-link" id="actionsExpandLink">Show fewer</div>`;
+    } else {
+      html += `<div class="actions-expand-link" id="actionsExpandLink">Show all ${tasks.length} tasks</div>`;
+    }
+  }
+
+  // Project link
+  if (actions.project_url) {
+    html += `<div style="margin-top:8px;font-family:var(--font-mono);font-size:10px">
+      <a href="${actions.project_url}" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none">Open in Asana &rarr;</a>
+    </div>`;
+  }
+
+  container.innerHTML = html;
+
+  // Wire scope toggle
+  container.querySelectorAll('[data-actions-scope]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      _actionsScope = btn.dataset.actionsScope;
+      _actionsExpanded = false;
+      renderActionsPanel();
+    });
+  });
+
+  // Wire expand/collapse
+  const expandLink = document.getElementById('actionsExpandLink');
+  if (expandLink) {
+    expandLink.addEventListener('click', () => {
+      _actionsExpanded = !_actionsExpanded;
+      renderActionsPanel();
+    });
+  }
+}
+
+// ── ASANA BADGES ON JIRA ISSUES (bidirectional cross-link) ──
+function addAsanaBadgesToJiraIssues() {
+  const actions = INTELLIGENCE_DATA.actions;
+  if (!actions || !actions.available || !actions.tasks) return;
+
+  // Build lookup: Jira key -> Asana task URL
+  const jiraToAsana = {};
+  actions.tasks.forEach(t => {
+    if (t.linked_jira) {
+      jiraToAsana[t.linked_jira] = t.url || '#';
+    }
+  });
+
+  if (Object.keys(jiraToAsana).length === 0) return;
+
+  // Find all Jira issue key links in the issue table
+  document.querySelectorAll('.issue-key').forEach(el => {
+    const key = el.textContent.trim();
+    if (jiraToAsana[key]) {
+      // Add an Asana badge next to the issue key
+      const badge = document.createElement('a');
+      badge.className = 'asana-badge';
+      badge.href = jiraToAsana[key];
+      badge.target = '_blank';
+      badge.rel = 'noopener';
+      badge.textContent = 'A';
+      badge.title = 'View linked Asana task';
+      el.parentElement.appendChild(badge);
+    }
+  });
 }
 
 // ── SENTIMENT PANEL ──
@@ -1918,6 +2612,20 @@ function renderExecSummary() {
     if (veryStaleCount > 0) html += `<div class="exec-metric-inline">
       <span class="exec-metric-label">No update ${VERY_STALE_DAYS}d+:</span>
       <span class="exec-metric-value" style="color:var(--red)">${veryStaleCount}</span>
+    </div>`;
+  }
+
+  // Asana action counts
+  const actionsData = INTELLIGENCE_DATA.actions;
+  if (actionsData && actionsData.available) {
+    const actSummary = actionsData.summary || {};
+    const actTotal = actSummary.total || (actionsData.tasks ? actionsData.tasks.length : 0);
+    const actOverdue = actSummary.overdue || (actionsData.tasks ? actionsData.tasks.filter(t => t.overdue).length : 0);
+    const overdueText = actOverdue > 0 ? ` (${actOverdue} overdue)` : '';
+    const overdueColor = actOverdue > 0 ? 'var(--red)' : 'var(--accent)';
+    html += `<div class="exec-metric-inline">
+      <span class="exec-metric-label">SE Actions:</span>
+      <span class="exec-metric-value" style="color:${overdueColor}">${actTotal} open${overdueText}</span>
     </div>`;
   }
 
@@ -2562,20 +3270,452 @@ document.getElementById('expandCollapseAll').addEventListener('click', function(
   this.textContent = allExpanded ? 'Expand All' : 'Collapse All';
 });
 
+// ── ECHARTS THEME REGISTRATION ──
+const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches ||
+               !window.matchMedia('(prefers-color-scheme: light)').matches;
+echarts.registerTheme('wandb', {
+  color: [
+    isDark ? '#60a5fa' : '#1565a0',  // primary blue
+    isDark ? '#d4a853' : '#b8922e',  // accent gold
+    isDark ? '#4ade80' : '#1a7a4c',  // green
+    isDark ? '#fbbf24' : '#9a6e08',  // amber
+    isDark ? '#f87171' : '#dc2626',  // red
+  ],
+  backgroundColor: 'transparent',
+  textStyle: { fontFamily: "'JetBrains Mono', monospace", fontSize: 11 },
+  title: { textStyle: { fontFamily: "'Outfit', sans-serif" } },
+  tooltip: {
+    backgroundColor: isDark ? '#1a1f2b' : '#ffffff',
+    borderColor: isDark ? '#2a3040' : '#d4d2ce',
+    textStyle: { color: isDark ? '#e8eaed' : '#1a1a1a', fontFamily: "'Outfit', sans-serif", fontSize: 13 }
+  },
+  categoryAxis: {
+    axisLine: { lineStyle: { color: isDark ? '#2a3040' : '#d4d2ce' } },
+    axisLabel: { color: isDark ? '#5c6370' : '#8c8c8c' },
+    splitLine: { lineStyle: { color: isDark ? '#1e2430' : '#e0ded9' } }
+  },
+  valueAxis: {
+    axisLine: { lineStyle: { color: isDark ? '#2a3040' : '#d4d2ce' } },
+    axisLabel: { color: isDark ? '#5c6370' : '#8c8c8c' },
+    splitLine: { lineStyle: { color: isDark ? '#1e2430' : '#e0ded9' } }
+  }
+});
+
+// ── USAGE HELPERS ──
+function classifyZone(percent) {
+  if (percent >= 80) return 'healthy';
+  if (percent >= 50) return 'at_risk';
+  return 'critical';
+}
+function zoneClass(percent) {
+  const z = classifyZone(percent);
+  return z === 'healthy' ? 'zone-green' : z === 'at_risk' ? 'zone-amber' : 'zone-red';
+}
+function zoneColor(percent) {
+  const z = classifyZone(percent);
+  if (z === 'healthy') return isDark ? '#4ade80' : '#1a7a4c';
+  if (z === 'at_risk') return isDark ? '#fbbf24' : '#9a6e08';
+  return isDark ? '#f87171' : '#dc2626';
+}
+function formatTrendHTML(change) {
+  if (change == null) return '';
+  const arrow = change > 0 ? '\u2191' : change < 0 ? '\u2193' : '\u2014';
+  const cls = change > 0 ? 'trend-up' : change < 0 ? 'trend-down' : 'trend-stable';
+  return `<span class="${cls}" style="font-family:var(--font-body);font-size:14px;font-weight:400;margin-left:8px">${arrow} ${Math.abs(change).toFixed(1)}% vs prior period</span>`;
+}
+function formatNumber(n) {
+  return n != null ? n.toLocaleString() : '\u2014';
+}
+
+// ── ECHARTS INSTANCE TRACKING ──
+let seatChartInstance = null;
+let radarChartInstance = null;
+let weaveChartInstance = null;
+let hoursChartInstance = null;
+
+// ── USAGE KPIs (exec summary) ──
+function renderUsageKPIs(container, usage) {
+  if (!usage || !usage.available) return;
+  const t = usage.trends || {};
+  container.innerHTML = `
+    <div class="analysis-label">Usage</div>
+    <div class="kpi-row" style="display:flex;gap:clamp(24px,4vw,48px);flex-wrap:wrap;margin-top:12px">
+      ${usage.seat_utilization ? `<div class="kpi-item">
+        <span style="font-family:var(--font-body);font-size:14px;font-weight:600">
+          ${usage.seat_utilization.active} / ${usage.seat_utilization.contracted} seats
+          (<span class="${zoneClass(usage.seat_utilization.utilization_percent)}">${Math.round(usage.seat_utilization.utilization_percent)}%</span>)
+        </span>
+        ${formatTrendHTML(t.seat_utilization_change)}
+      </div>` : ''}
+      ${usage.weave ? `<div class="kpi-item">
+        <span style="font-family:var(--font-body);font-size:14px;font-weight:600">
+          ${usage.weave.ingestion_gb.toFixed(0)} GB / ${usage.weave.limit_gb.toFixed(0)} GB
+          (<span class="${zoneClass(usage.weave.utilization_percent)}">${Math.round(usage.weave.utilization_percent)}%</span>)
+        </span>
+        ${formatTrendHTML(t.weave_ingestion_change)}
+      </div>` : ''}
+      ${usage.tracked_hours ? `<div class="kpi-item">
+        <span style="font-family:var(--font-body);font-size:14px;font-weight:600">
+          ${formatNumber(usage.tracked_hours.last_30d_run_count)} runs last 30d
+        </span>
+        ${formatTrendHTML(t.run_count_change)}
+      </div>` : ''}
+    </div>
+  `;
+}
+
+// ── ECHARTS USAGE PANEL CHART RENDERERS ──
+function renderSeatChart(usage) {
+  const data = usage.seat_utilization;
+  if (!data || !data.history || data.history.length === 0) return;
+  const el = document.getElementById('seatChart');
+  if (!el) return;
+  seatChartInstance = echarts.init(el, 'wandb');
+  const weeks = data.history.map(h => {
+    const d = new Date(h.week + 'T00:00:00');
+    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  });
+  const activeValues = data.history.map(h => h.active);
+  const blueColor = isDark ? '#60a5fa' : '#1565a0';
+  const accentColor = isDark ? '#d4a853' : '#b8922e';
+  seatChartInstance.setOption({
+    tooltip: {
+      trigger: 'axis',
+      formatter: function(params) {
+        const p = params[0];
+        return `<strong>${p.name}</strong><br/>Active: ${p.value}<br/>Contracted: ${data.contracted}`;
+      }
+    },
+    grid: { left: 48, right: 24, top: 24, bottom: 32 },
+    xAxis: {
+      type: 'category',
+      data: weeks,
+      axisLabel: { fontSize: 11, fontFamily: "'JetBrains Mono', monospace", rotate: weeks.length > 12 ? 45 : 0 }
+    },
+    yAxis: {
+      type: 'value',
+      min: 0,
+      max: Math.max(data.contracted, ...activeValues) + 5,
+      axisLabel: { fontSize: 11, fontFamily: "'JetBrains Mono', monospace" }
+    },
+    series: [{
+      name: 'Active Seats',
+      type: 'line',
+      data: activeValues,
+      smooth: true,
+      symbol: 'circle',
+      symbolSize: 6,
+      lineStyle: { color: blueColor, width: 2 },
+      itemStyle: { color: blueColor },
+      areaStyle: {
+        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+          { offset: 0, color: blueColor + '33' },
+          { offset: 1, color: blueColor + '05' }
+        ])
+      },
+      markLine: {
+        silent: true,
+        symbol: 'none',
+        lineStyle: { color: accentColor, type: 'dashed', width: 2, opacity: 0.6 },
+        label: {
+          formatter: 'Contracted: ' + data.contracted,
+          fontSize: 11,
+          fontFamily: "'JetBrains Mono', monospace",
+          color: isDark ? '#5c6370' : '#8c8c8c'
+        },
+        data: [{ yAxis: data.contracted }]
+      }
+    }]
+  });
+}
+
+function renderRadarChart(usage) {
+  const areas = usage.product_areas;
+  if (!areas || areas.length === 0) return;
+  const section = document.getElementById('radarSection');
+  if (section) section.style.display = '';
+  const el = document.getElementById('radarChart');
+  if (!el) return;
+  radarChartInstance = echarts.init(el, 'wandb');
+  const maxEvents = Math.max(...areas.map(a => a.total_events));
+  const maxUsers = Math.max(...areas.map(a => a.unique_users));
+  const blueColor = isDark ? '#60a5fa' : '#1565a0';
+  const greenColor = isDark ? '#4ade80' : '#1a7a4c';
+  radarChartInstance.setOption({
+    tooltip: {
+      trigger: 'item',
+      formatter: function(params) {
+        const data = params.data;
+        let tip = `<strong>${data.name}</strong><br/>`;
+        areas.forEach((a, i) => {
+          if (data.name === 'Events') tip += `${a.area}: ${a.total_events.toLocaleString()}<br/>`;
+          else tip += `${a.area}: ${a.unique_users}<br/>`;
+        });
+        return tip;
+      }
+    },
+    legend: {
+      bottom: 0,
+      textStyle: { color: isDark ? '#8b92a0' : '#5c5c5c', fontFamily: "'JetBrains Mono', monospace", fontSize: 11 }
+    },
+    radar: {
+      indicator: areas.map(a => ({
+        name: a.area,
+        max: maxEvents
+      })),
+      shape: 'polygon',
+      axisName: {
+        color: isDark ? '#5c6370' : '#8c8c8c',
+        fontFamily: "'JetBrains Mono', monospace",
+        fontSize: 11
+      },
+      splitArea: {
+        areaStyle: { color: ['transparent'] }
+      },
+      splitLine: {
+        lineStyle: { color: isDark ? '#1e2430' : '#e0ded9' }
+      },
+      axisLine: {
+        lineStyle: { color: isDark ? '#2a3040' : '#d4d2ce' }
+      }
+    },
+    series: [{
+      type: 'radar',
+      data: [
+        {
+          name: 'Events',
+          value: areas.map(a => a.total_events),
+          lineStyle: { color: blueColor, width: 2 },
+          itemStyle: { color: blueColor },
+          areaStyle: { color: blueColor + '22' }
+        },
+        {
+          name: 'Users',
+          value: areas.map(a => (a.unique_users / maxUsers) * maxEvents),
+          lineStyle: { color: greenColor, width: 2 },
+          itemStyle: { color: greenColor },
+          areaStyle: { color: greenColor + '22' }
+        }
+      ]
+    }]
+  });
+}
+
+function renderWeaveChart(usage) {
+  const data = usage.weave;
+  if (!data || !data.history || data.history.length === 0) return;
+  const el = document.getElementById('weaveChart');
+  if (!el) return;
+  weaveChartInstance = echarts.init(el, 'wandb');
+  const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const months = data.history.map(h => {
+    const m = parseInt(h.month.slice(5), 10);
+    return monthNames[m - 1] || h.month;
+  });
+  const values = data.history.map(h => h.ingestion_gb);
+  const blueColor = isDark ? '#60a5fa' : '#1565a0';
+  const accentColor = isDark ? '#d4a853' : '#b8922e';
+  weaveChartInstance.setOption({
+    tooltip: {
+      trigger: 'axis',
+      formatter: function(params) {
+        const p = params[0];
+        return `<strong>${p.name}</strong><br/>Ingestion: ${p.value.toFixed(1)} GB${data.limit_gb ? '<br/>Limit: ' + data.limit_gb + ' GB' : ''}`;
+      }
+    },
+    grid: { left: 56, right: 24, top: 24, bottom: 32 },
+    xAxis: {
+      type: 'category',
+      data: months,
+      axisLabel: { fontSize: 11, fontFamily: "'JetBrains Mono', monospace" }
+    },
+    yAxis: {
+      type: 'value',
+      axisLabel: {
+        fontSize: 11,
+        fontFamily: "'JetBrains Mono', monospace",
+        formatter: '{value} GB'
+      }
+    },
+    series: [{
+      name: 'Ingestion',
+      type: 'bar',
+      data: values,
+      barWidth: '60%',
+      itemStyle: {
+        color: blueColor,
+        borderRadius: [3, 3, 0, 0]
+      },
+      markLine: data.limit_gb ? {
+        silent: true,
+        symbol: 'none',
+        lineStyle: { color: accentColor, type: 'dashed', width: 2, opacity: 0.6 },
+        label: {
+          formatter: 'Limit: ' + data.limit_gb + ' GB',
+          fontSize: 11,
+          fontFamily: "'JetBrains Mono', monospace",
+          color: isDark ? '#5c6370' : '#8c8c8c',
+          position: 'insideEndTop'
+        },
+        data: [{ yAxis: data.limit_gb }]
+      } : undefined
+    }]
+  });
+}
+
+function renderHoursChart(usage) {
+  const data = usage.tracked_hours;
+  if (!data || !data.history || data.history.length === 0) return;
+  const el = document.getElementById('hoursChart');
+  if (!el) return;
+  hoursChartInstance = echarts.init(el, 'wandb');
+  const weeks = data.history.map(h => {
+    const d = new Date(h.week + 'T00:00:00');
+    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  });
+  const values = data.history.map(h => h.tracked_hours);
+  const blueColor = isDark ? '#60a5fa' : '#1565a0';
+  hoursChartInstance.setOption({
+    tooltip: {
+      trigger: 'axis',
+      formatter: function(params) {
+        const p = params[0];
+        return `<strong>${p.name}</strong><br/>Hours: ${Math.round(p.value)}h`;
+      }
+    },
+    grid: { left: 56, right: 24, top: 24, bottom: 32 },
+    xAxis: {
+      type: 'category',
+      data: weeks,
+      axisLabel: { fontSize: 11, fontFamily: "'JetBrains Mono', monospace", rotate: weeks.length > 12 ? 45 : 0 }
+    },
+    yAxis: {
+      type: 'value',
+      axisLabel: {
+        fontSize: 11,
+        fontFamily: "'JetBrains Mono', monospace",
+        formatter: '{value}h'
+      }
+    },
+    series: [{
+      name: 'Tracked Hours',
+      type: 'bar',
+      data: values,
+      barWidth: '60%',
+      itemStyle: {
+        color: blueColor,
+        borderRadius: [3, 3, 0, 0]
+      }
+    }]
+  });
+}
+
+function renderAccountHealthGrid(data) {
+  const container = document.getElementById('accountHealthGrid');
+  if (!container || !data) return;
+  container.style.display = '';
+  const healthColors = { Green: 'var(--green)', Yellow: 'var(--amber)', Red: 'var(--red)' };
+  const healthDotColor = healthColors[data.customer_health] || 'var(--text-tertiary)';
+  const churnColor3 = data.churn_probability_3mo != null ? (data.churn_probability_3mo < 0.10 ? 'var(--green)' : data.churn_probability_3mo < 0.25 ? 'var(--amber)' : 'var(--red)') : '';
+  const renewalDate = data.renewal_date ? new Date(data.renewal_date + 'T00:00:00') : null;
+  const renewalFormatted = renewalDate ? renewalDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '\u2014';
+  const arrFormatted = data.arr != null ? '$' + Math.round(data.arr).toLocaleString() : '\u2014';
+  const deployLabel = data.deployment_type ? data.deployment_type.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : '\u2014';
+
+  let html = '<div class="chart-label" style="margin-bottom:12px">ACCOUNT HEALTH</div>';
+  html += '<div class="health-grid">';
+  html += `<div><div class="health-field-label">RENEWAL</div><div class="health-field-value">${renewalFormatted}</div></div>`;
+  html += `<div><div class="health-field-label">CS TIER</div><div class="health-field-value">${data.cs_tier || '\u2014'}</div></div>`;
+  html += `<div><div class="health-field-label">ARR</div><div class="health-field-value">${arrFormatted}</div></div>`;
+  html += `<div><div class="health-field-label">HEALTH</div><div class="health-field-value"><span class="health-dot" style="background:${healthDotColor}"></span>${data.customer_health || '\u2014'}</div></div>`;
+  html += `<div><div class="health-field-label">PLAN</div><div class="health-field-value">${data.subscription_plan || '\u2014'}</div></div>`;
+  html += `<div><div class="health-field-label">DEPLOYMENT</div><div class="health-field-value">${deployLabel}</div></div>`;
+  if (data.churn_probability_3mo != null) {
+    html += `<div><div class="health-field-label">CHURN RISK</div><div class="health-field-value" style="color:${churnColor3}">${(data.churn_probability_3mo * 100).toFixed(0)}% (3mo) / ${data.churn_probability_5mo != null ? (data.churn_probability_5mo * 100).toFixed(0) + '% (5mo)' : '\u2014'}</div></div>`;
+  }
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+// ── USAGE PANEL (main orchestrator) ──
+function renderUsagePanel() {
+  const usage = INTELLIGENCE_DATA.usage;
+  const emptyEl = document.getElementById('usageEmpty');
+  const contentEl = document.getElementById('usageContent');
+  const kpiEl = document.getElementById('usagePanelKPIs');
+
+  if (!usage || !usage.available) {
+    const reason = usage ? usage.reason : 'not_configured';
+    const messages = {
+      'not_configured': 'Not configured \u2014 add sfdc_account_id to templates/customers.yaml',
+      'no_data': 'No usage data available for this customer',
+      'api_error': 'BigQuery data unavailable \u2014 check ADC credentials with /bigquery-setup'
+    };
+    if (emptyEl) {
+      emptyEl.style.display = '';
+      emptyEl.querySelector('.empty-state').textContent = messages[reason] || messages['no_data'];
+    }
+    return;
+  }
+
+  // Show content, hide empty state
+  if (contentEl) contentEl.style.display = '';
+
+  // Render KPIs inside the usage panel
+  if (kpiEl) {
+    const t = usage.trends || {};
+    let kpiHtml = '';
+    if (usage.seat_utilization) {
+      kpiHtml += `<div class="usage-kpi-item"><span class="usage-kpi-value">${usage.seat_utilization.active} / ${usage.seat_utilization.contracted} seats (<span class="${zoneClass(usage.seat_utilization.utilization_percent)}">${Math.round(usage.seat_utilization.utilization_percent)}%</span>)</span>${formatTrendHTML(t.seat_utilization_change)}</div>`;
+    }
+    if (usage.weave) {
+      kpiHtml += `<div class="usage-kpi-item"><span class="usage-kpi-value">${usage.weave.ingestion_gb.toFixed(0)} GB / ${usage.weave.limit_gb.toFixed(0)} GB (<span class="${zoneClass(usage.weave.utilization_percent)}">${Math.round(usage.weave.utilization_percent)}%</span>)</span>${formatTrendHTML(t.weave_ingestion_change)}</div>`;
+    }
+    if (usage.tracked_hours) {
+      kpiHtml += `<div class="usage-kpi-item"><span class="usage-kpi-value">${formatNumber(Math.round(usage.tracked_hours.last_30d_hours))}h compute last 30d</span>${formatTrendHTML(t.tracked_hours_change)}</div>`;
+    }
+    kpiEl.innerHTML = kpiHtml;
+  }
+
+  // Render ECharts charts
+  renderSeatChart(usage);
+  renderRadarChart(usage);
+  renderWeaveChart(usage);
+  renderHoursChart(usage);
+
+  // Render account health grid (DOM-based, internal-only)
+  if (usage.account_health) {
+    renderAccountHealthGrid(usage.account_health);
+  }
+}
+
+// ── ECHARTS RESIZE HANDLER ──
+window.addEventListener('resize', () => {
+  [seatChartInstance, radarChartInstance, weaveChartInstance, hoursChartInstance]
+    .filter(c => c).forEach(c => c.resize());
+});
+
 // ── INIT ──
 document.getElementById('title').textContent = INTELLIGENCE_DATA.customer;
 document.title = INTELLIGENCE_DATA.customer + ' \u2014 Intelligence Dashboard';
 document.getElementById('headerMeta').textContent = 'Generated ' + INTELLIGENCE_DATA.generated;
 initAudienceToggle();
 renderExecSummary();
+renderActionsPanel();
 renderSentimentPanel();
 renderTrendingCharts();
+// Render usage KPIs in exec summary
+const usageKPIContainer = document.getElementById('usageKPIs');
+if (usageKPIContainer) renderUsageKPIs(usageKPIContainer, INTELLIGENCE_DATA.usage);
+// Render usage panel with ECharts
+renderUsagePanel();
 renderHealthBuckets();
 renderAttentionCallouts();
 renderVelocityChart();
 renderCadenceMetrics();
 buildFilters();
 render();
+addAsanaBadgesToJiraIssues();
 </script>
 </body>
 </html>

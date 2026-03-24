@@ -76,9 +76,9 @@ class TestExistingFieldsPreserved:
         assert isinstance(gr["slack_channels"], list)
         assert len(gr["slack_channels"]) >= 1
 
-    def test_gresearch_has_asana_project_gid(self):
+    def test_gresearch_has_action_tracker_id(self):
         gr = _get_gresearch(_load_yaml())
-        assert "asana_project_gid" in gr
+        assert "action_tracker_id" in gr
 
     def test_gresearch_has_deployment_type(self):
         gr = _get_gresearch(_load_yaml())

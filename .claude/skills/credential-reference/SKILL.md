@@ -14,8 +14,9 @@ All API credentials are stored in `~/.tsm-ai/.env` (directory permissions `700`,
 | `SLACK_COOKIE` | Slack (`xoxd-`) | `/slack-setup` or `slack-credential-refresh.sh` |
 | `ATLASSIAN_EMAIL` | Jira/Confluence | `/atlassian-setup` |
 | `ATLASSIAN_TOKEN` | Jira/Confluence | `/atlassian-setup` |
-| `SFDC_SESSION_ID` | Salesforce (session auth) | `/salesforce-setup` |
-| `SFDC_INSTANCE` | Salesforce (session auth) | `/salesforce-setup` |
-| `SFDC_USERNAME` | Salesforce (password auth) | `/salesforce-setup` |
-| `SFDC_PASSWORD` | Salesforce (password auth) | `/salesforce-setup` |
-| `SFDC_SECURITY_TOKEN` | Salesforce (password auth) | `/salesforce-setup` |
+| `ASANA_TOKEN` | Asana | `/asana-setup` |
+| `SFDC_SESSION_ID` | Salesforce (SSO auth -- primary) | `/salesforce-setup` via `sf org login web` |
+| `SFDC_INSTANCE` | Salesforce (SSO auth -- primary) | `/salesforce-setup` (`wandb.my.salesforce.com`) |
+| `SFDC_USERNAME` | Salesforce (password auth -- alternative) | `/salesforce-setup` |
+| `SFDC_PASSWORD` | Salesforce (password auth -- alternative) | `/salesforce-setup` |
+| `SFDC_SECURITY_TOKEN` | Salesforce (password auth -- alternative) | `/salesforce-setup` |

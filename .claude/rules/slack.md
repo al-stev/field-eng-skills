@@ -4,7 +4,7 @@
 
 - User is a Solutions Engineer at W&B (Weights & Biases), which is by CoreWeave
 - The Slack workspace is the CoreWeave Slack workspace (coreweave.slack.com)
-- Channel naming conventions: #ext-* (external/customer), #supp-* (support), #tsm-* (TSM team)
+- Channel naming varies — common prefixes include wandb-*, ext-*, internal-*, supp-* but there is NO universal convention. Always look up actual channel names from customers.yaml or Slack API. Never assume a channel name based on a prefix pattern.
 
 ## Conventions
 
