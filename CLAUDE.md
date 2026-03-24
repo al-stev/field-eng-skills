@@ -44,6 +44,14 @@ Claude Code skills for W&B Solutions Engineers. Integrates with W&B Jira (wandb.
     slack/                  -- CoreWeave Slack channel history, search, threads
     slack-setup/            -- One-time Slack credential setup
     usage-report/           -- Standalone usage visualization (external QBR-ready + internal SE prep reports with ECharts)
+    gcalendar/              -- Google Calendar via Apps Script + Chrome CDP (Okta SSO)
+    gcalendar-setup/        -- One-time Google Calendar Apps Script setup
+    gdocs/                  -- Google Docs via Apps Script + Chrome CDP (Okta SSO)
+    gdocs-setup/            -- One-time Google Docs Apps Script setup
+    gmail/                  -- Gmail via Apps Script + Chrome CDP (Okta SSO, read-only)
+    gmail-setup/            -- One-time Gmail Apps Script setup
+    gong/                   -- Gong call recordings, transcripts, AI summaries (cookie-based + CDP)
+    gong-setup/             -- One-time Gong credential setup
   rules/                    -- Auto-loaded project rules
     asana.md                -- Asana workspace conventions (sections, custom fields, RAID, portfolio, staleness rules)
     atlassian.md            -- Atlassian workspace conventions
@@ -69,6 +77,13 @@ All API credentials stored in `~/.tsm-ai/.env`. Run `/credential-status` to chec
 | `ASANA_TOKEN` | Asana | app.asana.com |
 | `SFDC_SESSION_ID` | W&B Salesforce (session auth) | wandb.my.salesforce.com |
 | `SFDC_INSTANCE` | W&B Salesforce (session auth) | wandb.my.salesforce.com |
+| `GCALENDAR_APPSCRIPT_URL` | Google Calendar | script.google.com |
+| `GCALENDAR_APPSCRIPT_KEY` | Google Calendar | script.google.com |
+| `GDOCS_APPSCRIPT_URL` | Google Docs | script.google.com |
+| `GDOCS_APPSCRIPT_KEY` | Google Docs | script.google.com |
+| `GMAIL_APPSCRIPT_URL` | Gmail | script.google.com |
+| `GMAIL_APPSCRIPT_KEY` | Gmail | script.google.com |
+| `GONG_COOKIE` | Gong | us-54638.app.gong.io |
 
 BigQuery uses Application Default Credentials (ADC) -- no token in ~/.tsm-ai/.env. Run `gcloud auth application-default login` to configure. Verify with `/bigquery-setup`.
 

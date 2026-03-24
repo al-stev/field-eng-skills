@@ -38,6 +38,9 @@ Prepare for a customer meeting or email update by gathering current context.
 2. **jira** — Check the customer's open issues for status updates to report. Note any blocked or overdue items. Review recent FE-UPDATE comments.
 3. **confluence** — Check for relevant documentation or meeting notes.
 4. **bigquery** — Optionally pull usage stats for data-driven talking points (seat adoption trends, Weave ingestion).
+5. **gcalendar** — Check upcoming calendar events for the customer (meeting times, attendees, recurrence).
+6. **gmail** — Search for recent email threads with the customer for additional context.
+7. **gong** — Review recent call recordings and AI summaries for conversation continuity.
 
 ## FE-UPDATE Workflow
 

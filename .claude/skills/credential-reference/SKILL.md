@@ -20,3 +20,10 @@ All API credentials are stored in `~/.tsm-ai/.env` (directory permissions `700`,
 | `SFDC_USERNAME` | Salesforce (password auth -- alternative) | `/salesforce-setup` |
 | `SFDC_PASSWORD` | Salesforce (password auth -- alternative) | `/salesforce-setup` |
 | `SFDC_SECURITY_TOKEN` | Salesforce (password auth -- alternative) | `/salesforce-setup` |
+| `GCALENDAR_APPSCRIPT_URL` | Google Calendar | `/gcalendar-setup` |
+| `GCALENDAR_APPSCRIPT_KEY` | Google Calendar | `/gcalendar-setup` |
+| `GDOCS_APPSCRIPT_URL` | Google Docs | `/gdocs-setup` |
+| `GDOCS_APPSCRIPT_KEY` | Google Docs | `/gdocs-setup` |
+| `GMAIL_APPSCRIPT_URL` | Gmail | `/gmail-setup` |
+| `GMAIL_APPSCRIPT_KEY` | Gmail | `/gmail-setup` |
+| `GONG_COOKIE` | Gong | `/gong-setup` |

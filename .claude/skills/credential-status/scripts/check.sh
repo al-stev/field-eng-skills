@@ -105,5 +105,33 @@ else
   missing "Salesforce (SFDC_SESSION_ID + SFDC_INSTANCE or SFDC_USERNAME + SFDC_PASSWORD + SFDC_SECURITY_TOKEN)"
 fi
 
+# Google Calendar (Apps Script)
+if [ -n "${GCALENDAR_APPSCRIPT_URL:-}" ] && [ -n "${GCALENDAR_APPSCRIPT_KEY:-}" ]; then
+  ok "Google Calendar (Apps Script URL + key configured)"
+else
+  missing "Google Calendar (GCALENDAR_APPSCRIPT_URL / GCALENDAR_APPSCRIPT_KEY)"
+fi
+
+# Google Docs (Apps Script)
+if [ -n "${GDOCS_APPSCRIPT_URL:-}" ] && [ -n "${GDOCS_APPSCRIPT_KEY:-}" ]; then
+  ok "Google Docs (Apps Script URL + key configured)"
+else
+  missing "Google Docs (GDOCS_APPSCRIPT_URL / GDOCS_APPSCRIPT_KEY)"
+fi
+
+# Gmail (Apps Script)
+if [ -n "${GMAIL_APPSCRIPT_URL:-}" ] && [ -n "${GMAIL_APPSCRIPT_KEY:-}" ]; then
+  ok "Gmail (Apps Script URL + key configured)"
+else
+  missing "Gmail (GMAIL_APPSCRIPT_URL / GMAIL_APPSCRIPT_KEY)"
+fi
+
+# Gong
+if [ -n "${GONG_COOKIE:-}" ]; then
+  ok "Gong (cookie configured)"
+else
+  missing "Gong (GONG_COOKIE)"
+fi
+
 echo ""
 echo "Done."

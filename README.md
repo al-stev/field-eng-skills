@@ -31,8 +31,23 @@ Claude Code skills for W&B Solutions Engineers. Integrates with W&B Jira, CoreWe
    # W&B Salesforce (session auth via sf CLI OAuth)
    SFDC_SESSION_ID=your-access-token
    SFDC_INSTANCE=wandb.my.salesforce.com
+
+   # Google Calendar (Apps Script)
+   GCALENDAR_APPSCRIPT_URL=https://script.google.com/macros/s/.../exec
+   GCALENDAR_APPSCRIPT_KEY=your-secret-key
+
+   # Google Docs (Apps Script)
+   GDOCS_APPSCRIPT_URL=https://script.google.com/macros/s/.../exec
+   GDOCS_APPSCRIPT_KEY=your-secret-key
+
+   # Gmail (Apps Script)
+   GMAIL_APPSCRIPT_URL=https://script.google.com/macros/s/.../exec
+   GMAIL_APPSCRIPT_KEY=your-secret-key
+
+   # Gong
+   GONG_COOKIE=g-session=...; cell=...; AWSALB=...
    ```
-   Run `/credential-status` to verify. Run `/atlassian-setup`, `/slack-setup`, `/asana-setup`, or `/salesforce-setup` for guided configuration.
+   Run `/credential-status` to verify. Run `/atlassian-setup`, `/slack-setup`, `/asana-setup`, `/salesforce-setup`, `/gcalendar-setup`, `/gdocs-setup`, `/gmail-setup`, or `/gong-setup` for guided configuration.
 
 3. **Install Python dependencies** (per-skill, using uv):
    ```bash
@@ -41,6 +56,10 @@ Claude Code skills for W&B Solutions Engineers. Integrates with W&B Jira, CoreWe
    cd .claude/skills/confluence && uv sync
    cd .claude/skills/asana && uv sync
    cd .claude/skills/salesforce && uv sync
+   cd .claude/skills/gcalendar && uv sync
+   cd .claude/skills/gdocs && uv sync
+   cd .claude/skills/gmail && uv sync
+   cd .claude/skills/gong && uv sync
    ```
 
 4. **Install globally** (available in any project):
@@ -81,6 +100,10 @@ Claude Code skills for W&B Solutions Engineers. Integrates with W&B Jira, CoreWe
 | **slack** | `/slack search "keyword"` | Search messages, read channel history, fetch threads, and look up users in the CoreWeave Slack workspace. |
 | **confluence** | `/confluence search --title "Meeting Notes"` | Read, create, and update pages in CoreWeave Confluence (coreweave.atlassian.net). Supports CQL search, folders, attachments, and labels. |
 | **salesforce** | `/salesforce account-detail --account-id ID` | Read-only Salesforce queries for account data (ARR, contract dates, team members, field discovery). Supports SSO/session auth for W&B's org. |
+| **gcalendar** | `/gcalendar events today` | Google Calendar via Apps Script + Chrome CDP. List calendars, get events, check availability. Handles Okta SSO transparently. |
+| **gdocs** | `/gdocs get --id DOC_ID` | Google Docs via Apps Script + Chrome CDP. Read and write documents. Handles Okta SSO transparently. |
+| **gmail** | `/gmail search --query "is:unread"` | Gmail via Apps Script + Chrome CDP. Search messages, read threads, list labels. Read-only. Handles Okta SSO transparently. |
+| **gong** | `/gong calls list --limit 10` | Gong call recordings, transcripts, and AI summaries. Cookie-based auth with automatic CDP fallback and credential refresh. |
 
 ### Setup & Diagnostics
 
@@ -93,6 +116,11 @@ Claude Code skills for W&B Solutions Engineers. Integrates with W&B Jira, CoreWe
 | **customer-setup** | Interactive customer registry onboarding from Salesforce data with SE overlays |
 | **credential-status** | Health check for all configured credentials |
 | **credential-reference** | Reference table of all API credential keys and where they're used |
+| **gcalendar-setup** | Guided setup for Google Calendar Apps Script deployment |
+| **gdocs-setup** | Guided setup for Google Docs Apps Script deployment |
+| **gmail-setup** | Guided setup for Gmail Apps Script deployment |
+| **gong-setup** | Guided setup for Gong session cookie credentials |
+| **bigquery-setup** | One-time BigQuery ADC connectivity verification |
 
 ## Workflow Patterns
 
@@ -102,7 +130,7 @@ Skills are designed to compose. Common patterns are documented in `.claude/rules
 - **Customer Lookup** — salesforce + jira + slack + confluence to build a customer picture
 - **Customer Snapshot** — jira + slack + asana + customer-snapshot for an intelligence dashboard
 - **FE-UPDATE Workflow** — jira-check identifies stale issues, slack gathers context, jira posts updates
-- **Communication Prep** — slack + jira + confluence to prepare for meetings
+- **Communication Prep** — slack + jira + confluence + gcalendar + gmail + gong to prepare for meetings
 - **RAID Management** — raid + asana + jira + slack for risk register maintenance
 - **Action Tracking** — slack + jira + asana to capture and track SE actions
 - **Meeting Follow-Up** — maction + asana + raid to turn meeting notes into tracked work
@@ -132,7 +160,7 @@ Run `/asana setup-customer --name "CustomerName" --master-portfolio-gid GID` to 
 
 ```
 .claude/
-  skills/           -- 21 Claude Code skills (invoked via /skill-name)
+  skills/           -- 29 Claude Code skills (invoked via /skill-name)
   rules/            -- Auto-loaded project rules
     atlassian.md    -- Jira/Confluence workspace conventions, FE-UPDATE format
     asana.md        -- Asana workspace conventions, RAID model, staleness rules
@@ -153,6 +181,11 @@ Two separate Atlassian instances require separate credentials:
 | coreweave.atlassian.net | CoreWeave Confluence (team wiki, cadence docs) | `CONFLUENCE_EMAIL` / `CONFLUENCE_TOKEN` |
 | app.asana.com | Asana (SE action tracking, RAID logs, portfolios) | `ASANA_TOKEN` |
 | wandb.my.salesforce.com | W&B Salesforce (account data, team members) | `SFDC_SESSION_ID` / `SFDC_INSTANCE` |
+
+| script.google.com | Google Calendar Apps Script | `GCALENDAR_APPSCRIPT_URL` / `GCALENDAR_APPSCRIPT_KEY` |
+| script.google.com | Google Docs Apps Script | `GDOCS_APPSCRIPT_URL` / `GDOCS_APPSCRIPT_KEY` |
+| script.google.com | Gmail Apps Script | `GMAIL_APPSCRIPT_URL` / `GMAIL_APPSCRIPT_KEY` |
+| us-54638.app.gong.io | Gong (call recordings, transcripts) | `GONG_COOKIE` |
 
 Slack uses the CoreWeave workspace: `SLACK_TOKEN` / `SLACK_COOKIE`.
 
