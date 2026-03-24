@@ -27,8 +27,12 @@ Claude Code skills for W&B Solutions Engineers. Integrates with W&B Jira, CoreWe
 
    # Asana (SE action tracking)
    ASANA_TOKEN=your-personal-access-token
+
+   # W&B Salesforce (session auth via sf CLI OAuth)
+   SFDC_SESSION_ID=your-access-token
+   SFDC_INSTANCE=wandb.my.salesforce.com
    ```
-   Run `/credential-status` to verify. Run `/atlassian-setup`, `/slack-setup`, or `/asana-setup` for guided configuration.
+   Run `/credential-status` to verify. Run `/atlassian-setup`, `/slack-setup`, `/asana-setup`, or `/salesforce-setup` for guided configuration.
 
 3. **Install Python dependencies** (per-skill, using uv):
    ```bash
@@ -36,6 +40,7 @@ Claude Code skills for W&B Solutions Engineers. Integrates with W&B Jira, CoreWe
    cd .claude/skills/slack && uv sync
    cd .claude/skills/confluence && uv sync
    cd .claude/skills/asana && uv sync
+   cd .claude/skills/salesforce && uv sync
    ```
 
 4. **Install globally** (available in any project):
@@ -75,6 +80,7 @@ Claude Code skills for W&B Solutions Engineers. Integrates with W&B Jira, CoreWe
 | **jira** | `/jira list --customer GResearch` | Query, create, edit, and transition issues in W&B Jira (wandb.atlassian.net). Supports FE-UPDATE comments, customer filtering, and JQL search. |
 | **slack** | `/slack search "keyword"` | Search messages, read channel history, fetch threads, and look up users in the CoreWeave Slack workspace. |
 | **confluence** | `/confluence search --title "Meeting Notes"` | Read, create, and update pages in CoreWeave Confluence (coreweave.atlassian.net). Supports CQL search, folders, attachments, and labels. |
+| **salesforce** | `/salesforce account-detail --account-id ID` | Read-only Salesforce queries for account data (ARR, contract dates, team members, field discovery). Supports SSO/session auth for W&B's org. |
 
 ### Setup & Diagnostics
 
@@ -83,6 +89,8 @@ Claude Code skills for W&B Solutions Engineers. Integrates with W&B Jira, CoreWe
 | **atlassian-setup** | Guided setup for Jira and Confluence API tokens |
 | **slack-setup** | Guided setup for Slack credentials (token + cookie) |
 | **asana-setup** | Guided setup for Asana Personal Access Token (PAT) |
+| **salesforce-setup** | Guided setup for Salesforce credentials (sf CLI OAuth for SSO/2FA) |
+| **customer-setup** | Interactive customer registry onboarding from Salesforce data with SE overlays |
 | **credential-status** | Health check for all configured credentials |
 | **credential-reference** | Reference table of all API credential keys and where they're used |
 
@@ -91,7 +99,7 @@ Claude Code skills for W&B Solutions Engineers. Integrates with W&B Jira, CoreWe
 Skills are designed to compose. Common patterns are documented in `.claude/rules/skill-composition.md`:
 
 - **Cadence Prep** — cadence-prep orchestrates jira + slack + asana + confluence in sequence
-- **Customer Lookup** — jira + slack + confluence to build a customer picture
+- **Customer Lookup** — salesforce + jira + slack + confluence to build a customer picture
 - **Customer Snapshot** — jira + slack + asana + customer-snapshot for an intelligence dashboard
 - **FE-UPDATE Workflow** — jira-check identifies stale issues, slack gathers context, jira posts updates
 - **Communication Prep** — slack + jira + confluence to prepare for meetings
@@ -124,7 +132,7 @@ Run `/asana setup-customer --name "CustomerName" --master-portfolio-gid GID` to 
 
 ```
 .claude/
-  skills/           -- 18 Claude Code skills (invoked via /skill-name)
+  skills/           -- 21 Claude Code skills (invoked via /skill-name)
   rules/            -- Auto-loaded project rules
     atlassian.md    -- Jira/Confluence workspace conventions, FE-UPDATE format
     asana.md        -- Asana workspace conventions, RAID model, staleness rules
@@ -144,10 +152,13 @@ Two separate Atlassian instances require separate credentials:
 | wandb.atlassian.net | W&B Jira (customer bugs, feature requests) | `ATLASSIAN_EMAIL` / `ATLASSIAN_TOKEN` |
 | coreweave.atlassian.net | CoreWeave Confluence (team wiki, cadence docs) | `CONFLUENCE_EMAIL` / `CONFLUENCE_TOKEN` |
 | app.asana.com | Asana (SE action tracking, RAID logs, portfolios) | `ASANA_TOKEN` |
+| wandb.my.salesforce.com | W&B Salesforce (account data, team members) | `SFDC_SESSION_ID` / `SFDC_INSTANCE` |
 
 Slack uses the CoreWeave workspace: `SLACK_TOKEN` / `SLACK_COOKIE`.
 
 Asana uses a Personal Access Token (PAT) generated at [app.asana.com/0/my-apps](https://app.asana.com/0/my-apps). PATs do not expire. Run `/asana-setup` for guided configuration.
+
+Salesforce uses session-based auth via `sf` CLI OAuth (W&B uses SSO, so password auth doesn't work). Run `/salesforce-setup` for guided configuration. Tokens expire periodically and need re-auth via `sf org login web`.
 
 All stored in `~/.tsm-ai/.env`. API tokens are generated at [id.atlassian.com](https://id.atlassian.com/manage-profile/security/api-tokens) — make sure you're logged in as the correct account for each instance.
 
@@ -162,6 +173,9 @@ All stored in `~/.tsm-ai/.env`. API tokens are generated at [id.atlassian.com](h
 - `asana_project_gid` — Asana Actions project (from `/asana setup-project`)
 - `asana_raid_project_gid` — Asana RAID Log project (from `/asana setup-raid-project`)
 - `asana_portfolio_gid` — Asana customer portfolio (from `/asana setup-customer`)
+- `sfdc_account_id` — Salesforce Account ID (also used as BigQuery account ID)
+- `arr` / `contract_end` / `renewal_date` / `cs_tier` / `subscription_plan` — SFDC-sourced account data
+- `account_team` — account team members with roles (from SFDC reference fields)
 - `contacts` — key contacts with org and role
 
 ## Python Skills
