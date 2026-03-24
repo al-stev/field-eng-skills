@@ -1,0 +1,168 @@
+---
+name: maction
+description: "Extract action items and RAID items from meeting notes or transcripts. Use when the
+  user shares meeting notes, Granola output, call transcript, or asks to create actions from a
+  meeting. Trigger for /maction, 'create actions from this meeting', 'extract actions from notes',
+  'meeting to tasks'."
+argument-hint: "<customer-name> <meeting-notes or paste>"
+requires-credentials: ASANA_TOKEN
+---
+
+# Meeting Notes to Actions + RAID Pipeline
+
+Turns meeting notes into tracked work. Extracts two types of items:
+
+- **Action items** -> Asana tasks in the customer's Actions project
+- **RAID items** (risks, assumptions, dependencies mentioned in the meeting) -> Asana tasks in the RAID project
+
+Input is typically Granola summary format but can be a full transcript, pasted text, or a file path.
+
+## Pipeline
+
+### Step 1: Parse input
+
+- **Customer name** (required): fuzzy-match against `templates/customers.yaml` names
+- **Meeting notes**: the rest of the input. Can be:
+  - Pasted text (Granola summary, transcript, bullet points)
+  - File path to a `.md` or `.txt` file
+  - If notes are very short (< 50 words), ask user if they want to paste more
+
+### Step 2: Extract action items
+
+Analyze the meeting notes and extract action items. For each action item, determine:
+
+| Field | How to Infer |
+|-------|-------------|
+| **Task name** | Concise, action-oriented (e.g., "Send SDK migration guide to customer") |
+| **Owner** | "Allan will..." = me, "Customer will..." = customer, "Eng team will..." = eng |
+| **Due date** | "by next week" = 7 days, "before the QBR" = QBR date from customers.yaml. Default: 7 days if no signal. |
+| **Priority** | P0-P3 based on urgency signals in the notes (escalation = P1+, routine = P2-P3) |
+| **Section** | Default "To Do". "Waiting on Customer" if action is on the customer. "Waiting on Eng" if waiting on eng. |
+| **Jira reference** | Detect `WB-XXXX` patterns in the notes context around this action |
+
+### Step 3: Extract RAID items
+
+Analyze the meeting notes for RAID signals:
+
+- **Risks**: mention of churn, competitor, champion leaving, declining usage, renewal concern, "worried about", "risk of"
+- **Assumptions**: implicit assumptions ("assuming they'll renew", "expecting migration by Q3", "plan is to...")
+- **Dependencies**: "blocked on", "waiting for eng to", "need product to ship", "depends on"
+- **Issues**: typically already tracked in Jira -- only flag explicit new issues not yet in Jira
+
+For each RAID item, determine:
+
+| Field | How to Infer |
+|-------|-------------|
+| **Category** | Risk, Assumption, Issue, or Dependency |
+| **Description** | Concise statement of the item |
+| **Impact** | High / Medium / Low (infer from context) |
+| **Likelihood** | High / Medium / Low (infer from context) |
+| **Source** | "Cadence call [date]" or "Meeting notes [date]" |
+| **Visibility** | Default Internal (Risks/Assumptions always internal; Dependencies may be Shared) |
+
+### Step 4: Present proposals to user
+
+Show all extracted items in a clear format before creation:
+
+```
+Actions from [Customer] meeting ([date]):
+
+PROPOSED ACTIONS (for [Customer] Actions project):
+1. [P1] Send SDK migration guide to customer -- Due: 2026-04-01 -- Owner: me -- Section: To Do
+2. [P2] Follow up on WB-1234 fix status (WB-1234) -- Due: 2026-03-28 -- Owner: me -- Section: Waiting on Eng
+3. [P3] Customer to provide access credentials -- Due: 2026-04-05 -- Owner: customer -- Section: Waiting on Customer
+
+PROPOSED RAID ITEMS (for [Customer] RAID Log):
+R1. [Risk] Champion VP Eng may be leaving -- Impact: High, Likelihood: Medium -- Source: Cadence call 2026-03-24
+D1. [Dependency] Blocked on eng shipping SDK v2.1 hotfix -- Impact: High, Likelihood: High -- Source: Cadence call 2026-03-24
+
+Confirm: create all (y), select items (s), or cancel (n)?
+```
+
+### Step 5: Create confirmed items
+
+For user-confirmed **action items**:
+
+```bash
+uv run --project .claude/skills/asana python .claude/skills/asana/scripts/mutate.py create \
+  --project-gid <asana_project_gid> --name "<task name>" \
+  --section "<section>" --assignee me --due <YYYY-MM-DD> --priority <P0-P3> \
+  --notes "Source: Meeting notes [date]\n\nContext: <relevant excerpt from notes>" \
+  --pretty
+```
+
+For user-confirmed **RAID items**:
+
+```bash
+uv run --project .claude/skills/asana python .claude/skills/asana/scripts/mutate.py create \
+  --project-gid <asana_raid_project_gid> --name "<description>" \
+  --section "<Risks|Assumptions|Issues|Dependencies>" --assignee me \
+  --notes "Source: <source>\n\nContext: <relevant excerpt from notes>" \
+  --pretty
+```
+
+After creation, set custom fields on RAID items (Category, Impact, Likelihood, Status=Open, Source, Visibility) via `mutate.py update` with `--custom-fields` or through the Asana API directly.
+
+### Step 6: Summary
+
+After all items are created, output a summary:
+
+```
+Created:
+- 3 action items in [Customer] Actions project
+- 2 RAID items in [Customer] RAID Log
+Links: [task URLs]
+```
+
+## Granola Format Notes
+
+Granola summaries typically have these sections:
+- Summary / Key Points
+- Action Items (often pre-extracted but may be incomplete)
+- Decisions Made
+- Discussion Topics
+
+When processing Granola output, use the pre-extracted action items as a starting point but also scan the full summary for missed actions and RAID signals. Granola often misses RAID-type items since it focuses on explicit action items.
+
+## RAID Detection Heuristics
+
+| Category | Keywords / Patterns |
+|----------|-------------------|
+| **Risk** | "risk", "churn", "competitor", "leaving", "declining", "renewal", "worried", "concerned", "threat" |
+| **Assumption** | "assuming", "expecting", "plan is", "should be", "will be", "by Q[1-4]" |
+| **Dependency** | "blocked", "waiting for", "depends on", "need [team] to", "can't proceed until" |
+| **Issue** | "bug", "broken", "not working", "outage", "escalation" (cross-check with Jira first) |
+
+Context matters: "risk mitigation" is different from "there's a risk of churn". Use surrounding sentences to disambiguate.
+
+## Edge Cases
+
+- **RAID project not configured** (`asana_raid_project_gid` is `PLACEHOLDER`): extract RAID items and display them but warn that they can't be created in Asana. Suggest running `/asana setup-raid-project` first.
+- **Customer Actions project not configured** (`asana_project_gid` is `PLACEHOLDER`): same warning, suggest `/asana setup-project`.
+- **Meeting notes are very short** (< 50 words): ask user if they have more context to share before extracting.
+- **No action items or RAID items found**: "No actionable items or RAID signals detected in these notes. If you expected items, try providing more context."
+- **Ambiguous customer**: if customer name matches multiple entries, ask user to clarify.
+
+## Safety Rules
+
+- **User confirms ALL items before creation.** Never auto-create.
+- Show exactly what will be created (name, project, section, fields) before confirmation.
+- Never modify existing tasks -- only create new ones.
+- RAID items default to Internal visibility.
+
+## Troubleshooting
+
+| Problem | Fix |
+|---------|-----|
+| No actions extracted | Notes may be too vague. Ask user to highlight specific commitments. |
+| Wrong customer matched | Specify exact customer name from `templates/customers.yaml` |
+| RAID items can't be created | `asana_raid_project_gid` is `PLACEHOLDER` -- run `/asana setup-raid-project` first |
+| Custom fields not set on RAID items | Custom fields must be created first via `setup-raid-project` |
+| Due date inference wrong | User can adjust dates during the confirmation step |
+
+## Related Skills
+
+- `/asana` -- base skill for task creation
+- `/raid` -- RAID items created here appear in `/raid` view
+- `/ghosted` -- tasks created in "Waiting on Customer" are tracked by `/ghosted`
+- `/cadence-prep` -- actions and RAID items created here feed into cadence-prep agendas
