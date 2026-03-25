@@ -7,10 +7,10 @@
 
 ### Foundation
 
-- [ ] **FOUND-01**: New `deep-analytics` skill directory with uv project, orchestrator (generate.py), and CLI entry point
+- [x] **FOUND-01**: New `deep-analytics` skill directory with uv project, orchestrator (generate.py), and CLI entry point
 - [x] **FOUND-02**: Shared identity resolution CTE utility for dim_users JOIN (server deployment support)
 - [x] **FOUND-03**: BQ cost guardrails: maximum_bytes_billed on every new query, bytes-processed logging
-- [ ] **FOUND-04**: Schema validation utility that checks table existence and required columns before querying
+- [x] **FOUND-04**: Schema validation utility that checks table existence and required columns before querying
 - [ ] **FOUND-05**: Shared W&B design system (CSS tokens, ECharts wandb theme, fonts, dark/light mode) documented and extractable from existing templates
 
 ### Cross-Cutting (Every Page)
@@ -146,10 +146,10 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| FOUND-01 | Phase 1 | Pending |
+| FOUND-01 | Phase 1 | Complete |
 | FOUND-02 | Phase 1 | Complete |
 | FOUND-03 | Phase 1 | Complete |
-| FOUND-04 | Phase 1 | Pending |
+| FOUND-04 | Phase 1 | Complete |
 | FOUND-05 | Phase 1 | Pending |
 | XCUT-01 | Phase 1 | Pending |
 | XCUT-02 | Phase 1 | Pending |
