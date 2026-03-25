@@ -318,9 +318,10 @@ body::before {
     <div class="narrative-container" id="narrativeContent"></div>
   </div>
 
-  <!-- Chart Section (sample chart for Phase 1) -->
+  <!-- Chart Section -->
   <div class="chart-section" id="chartSection">
     <div class="chart-container" id="sampleChart"></div>
+    <div id="sparklineGrid" style="display:none;"></div>
   </div>
 
   <!-- Empty State Section (shown when PAGE_DATA.available === false) -->
@@ -539,40 +540,332 @@ function renderNarrative() {
 }
 
 /* ════════════════════════════════════════════════════════
-   SAMPLE CHART -- XCUT-08 (tooltips) + XCUT-09 (saveAsImage)
+   CHART RENDERING -- dispatches by PAGE_DATA.page_type
    ════════════════════════════════════════════════════════ */
 
-function renderSampleChart() {
-  var container = document.getElementById('sampleChart');
+function renderCharts() {
   if (!PAGE_DATA.available) {
-    container.parentElement.style.display = 'none';
+    document.getElementById('chartSection').style.display = 'none';
     document.getElementById('emptyStateSection').innerHTML =
       renderEmptyState('chart', PAGE_DATA.reason);
     return;
   }
+
+  var renderer = PAGE_RENDERERS[PAGE_DATA.page_type];
+  if (renderer) {
+    document.getElementById('sampleChart').style.display = 'none';
+    renderer();
+  } else {
+    renderFallbackChart();
+  }
+}
+
+function renderFallbackChart() {
+  var container = document.getElementById('sampleChart');
   var chart = echarts.init(container, 'wandb');
   var c = getThemeColors();
   chart.setOption({
-    title: { text: 'Sample Chart', subtext: 'Foundation template demonstration' },
+    title: { text: 'Page Type: ' + PAGE_DATA.page_type, subtext: 'Chart renderer not yet implemented' },
     tooltip: { trigger: 'axis' },
-    toolbox: {
-      feature: {
-        saveAsImage: {
-          title: 'Save as PNG',
-          pixelRatio: 2,
-          backgroundColor: c.bgElevated
-        }
-      },
-      right: 16,
-      top: 8,
-      iconStyle: { borderColor: c.textTertiary }
-    },
-    xAxis: { type: 'category', data: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'] },
+    toolbox: { feature: { saveAsImage: { title: 'Save as PNG', pixelRatio: 2, backgroundColor: c.bgElevated } }, right: 16, top: 8, iconStyle: { borderColor: c.textTertiary } },
+    xAxis: { type: 'category', data: ['No', 'Chart', 'Yet'] },
     yAxis: { type: 'value' },
-    series: [{ name: 'Sample Data', type: 'bar', data: [120, 200, 150, 80, 70, 110] }]
+    series: [{ name: 'Placeholder', type: 'bar', data: [0, 0, 0] }]
   });
   window.addEventListener('resize', function() { chart.resize(); });
 }
+
+/* ── Feature Velocity sparkline grid ── */
+
+function renderFeatureVelocity() {
+  var grid = document.getElementById('sparklineGrid');
+  grid.style.display = 'block';
+  var areas = PAGE_DATA.areas || [];
+  var c = getThemeColors();
+  var charts = [];
+
+  // Legend — once at the top
+  var legendDiv = document.createElement('div');
+  legendDiv.style.cssText = 'display:flex; gap:24px; padding:0 0 16px 184px; font-family:JetBrains Mono,monospace; font-size:11px; color:' + c.textTertiary + ';';
+  legendDiv.innerHTML = '<span><span style="display:inline-block;width:12px;height:12px;background:' + c.accent + ';border-radius:2px;vertical-align:middle;margin-right:4px;"></span> Events</span>' +
+    '<span><span style="display:inline-block;width:12px;height:2px;background:' + c.green + ';vertical-align:middle;margin-right:4px;"></span> Monthly Active Users</span>';
+  grid.appendChild(legendDiv);
+
+  areas.forEach(function(area, idx) {
+    // Container for each area
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex; align-items:center; gap:24px; padding:16px 0; border-bottom:1px solid ' + c.border + ';';
+
+    // Label + momentum
+    var label = document.createElement('div');
+    label.style.cssText = 'min-width:160px; flex-shrink:0;';
+    var arrow = area.momentum === 'up' ? '↑' : area.momentum === 'down' ? '↓' : '→';
+    var arrowColor = area.momentum === 'up' ? c.green : area.momentum === 'down' ? c.red : c.textTertiary;
+    label.innerHTML = '<div style="font-family:Outfit,sans-serif; font-size:14px; font-weight:600; color:' + c.textPrimary + ';">' + area.area + '</div>' +
+      '<div style="font-family:JetBrains Mono,monospace; font-size:11px; color:' + arrowColor + ';">' +
+      arrow + ' ' + (area.momentum_pct > 0 ? '+' : '') + area.momentum_pct + '% <span style="color:' + c.textTertiary + '">vs prior 3mo</span></div>' +
+      '<div style="font-family:JetBrains Mono,monospace; font-size:11px; color:' + c.textTertiary + ';">' +
+      area.total_events.toLocaleString() + ' events · ' + area.avg_recent_users + ' active users/mo</div>';
+
+    // Chart container
+    var chartDiv = document.createElement('div');
+    chartDiv.style.cssText = 'flex:1; height:80px; min-width:300px;';
+    chartDiv.id = 'spark-' + idx;
+
+    row.appendChild(label);
+    row.appendChild(chartDiv);
+    grid.appendChild(row);
+
+    // Render sparkline after DOM insertion
+    setTimeout(function() {
+      var spark = echarts.init(chartDiv, 'wandb');
+      spark.setOption({
+        tooltip: { trigger: 'axis', formatter: function(p) { return p[0].axisValue + '<br/>' + p[0].seriesName + ': ' + p[0].value.toLocaleString() + (p[1] ? '<br/>' + p[1].seriesName + ': ' + p[1].value : ''); } },
+        toolbox: { feature: { saveAsImage: { title: 'Save as PNG', pixelRatio: 2, backgroundColor: c.bgElevated } }, right: 4, top: 0, iconStyle: { borderColor: c.textTertiary }, itemSize: 12 },
+        grid: { left: 0, right: 40, top: 8, bottom: 20 },
+        xAxis: { type: 'category', data: area.months, axisLabel: { fontSize: 10, color: c.textTertiary, interval: 2 }, axisLine: { show: false }, axisTick: { show: false } },
+        yAxis: [
+          { type: 'value', show: false },
+          { type: 'value', show: false }
+        ],
+        series: [
+          { name: 'Events', type: 'bar', data: area.events, itemStyle: { color: c.accent, borderRadius: [2, 2, 0, 0] }, barMaxWidth: 20 },
+          { name: 'Monthly Active Users', type: 'line', yAxisIndex: 1, data: area.users, lineStyle: { color: c.green, width: 2 }, symbol: 'none', smooth: true }
+        ]
+      });
+      charts.push(spark);
+    }, 10 * idx);
+  });
+
+  window.addEventListener('resize', function() { charts.forEach(function(ch) { ch.resize(); }); });
+}
+
+/* ── Feature Velocity Option 2: Color-intensity bars ── */
+
+function renderFeatureVelocityV2() {
+  var grid = document.getElementById('sparklineGrid');
+  grid.style.display = 'block';
+  var areas = PAGE_DATA.areas || [];
+  var c = getThemeColors();
+  var charts = [];
+
+  // Find global max users for color scaling
+  var maxUsers = 1;
+  areas.forEach(function(a) { a.users.forEach(function(u) { if (u > maxUsers) maxUsers = u; }); });
+
+  // Legend
+  var legendDiv = document.createElement('div');
+  legendDiv.style.cssText = 'display:flex; gap:24px; padding:0 0 16px 184px; font-family:JetBrains Mono,monospace; font-size:11px; color:' + c.textTertiary + '; align-items:center;';
+  legendDiv.innerHTML = '<span>Bar height = events · Bar color = users/mo:</span>' +
+    '<span style="display:inline-block;width:16px;height:12px;background:rgba(212,168,83,0.25);border-radius:2px;"></span><span>few</span>' +
+    '<span style="display:inline-block;width:16px;height:12px;background:rgba(212,168,83,0.6);border-radius:2px;"></span><span>some</span>' +
+    '<span style="display:inline-block;width:16px;height:12px;background:rgba(212,168,83,1.0);border-radius:2px;"></span><span>many</span>';
+  grid.appendChild(legendDiv);
+
+  areas.forEach(function(area, idx) {
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex; align-items:center; gap:24px; padding:16px 0; border-bottom:1px solid ' + c.border + ';';
+
+    var label = document.createElement('div');
+    label.style.cssText = 'min-width:160px; flex-shrink:0;';
+    var arrow = area.momentum === 'up' ? '↑' : area.momentum === 'down' ? '↓' : '→';
+    var arrowColor = area.momentum === 'up' ? c.green : area.momentum === 'down' ? c.red : c.textTertiary;
+    label.innerHTML = '<div style="font-family:Outfit,sans-serif; font-size:14px; font-weight:600; color:' + c.textPrimary + ';">' + area.area + '</div>' +
+      '<div style="font-family:JetBrains Mono,monospace; font-size:11px; color:' + arrowColor + ';">' +
+      arrow + ' ' + (area.momentum_pct > 0 ? '+' : '') + area.momentum_pct + '% <span style="color:' + c.textTertiary + '">vs prior 3mo</span></div>' +
+      '<div style="font-family:JetBrains Mono,monospace; font-size:11px; color:' + c.textTertiary + ';">' +
+      area.total_events.toLocaleString() + ' events · ' + area.avg_recent_users + ' users/mo (recent)</div>';
+
+    var chartDiv = document.createElement('div');
+    chartDiv.style.cssText = 'flex:1; height:80px; min-width:300px;';
+
+    row.appendChild(label);
+    row.appendChild(chartDiv);
+    grid.appendChild(row);
+
+    setTimeout(function() {
+      var spark = echarts.init(chartDiv, 'wandb');
+      // Color each bar by its user count
+      var barData = area.events.map(function(ev, i) {
+        var userRatio = Math.min(area.users[i] / maxUsers, 1);
+        var alpha = 0.2 + (userRatio * 0.8); // 0.2 to 1.0
+        return { value: ev, itemStyle: { color: 'rgba(212,168,83,' + alpha.toFixed(2) + ')' } };
+      });
+      spark.setOption({
+        tooltip: { trigger: 'axis', formatter: function(p) { var i = p[0].dataIndex; return area.months[i] + '<br/>Events: ' + area.events[i].toLocaleString() + '<br/>Users: ' + area.users[i]; } },
+        toolbox: { feature: { saveAsImage: { title: 'Save as PNG', pixelRatio: 2, backgroundColor: c.bgElevated } }, right: 4, top: 0, iconStyle: { borderColor: c.textTertiary }, itemSize: 12 },
+        grid: { left: 0, right: 40, top: 8, bottom: 20 },
+        xAxis: { type: 'category', data: area.months, axisLabel: { fontSize: 10, color: c.textTertiary, interval: 2 }, axisLine: { show: false }, axisTick: { show: false } },
+        yAxis: { type: 'value', show: false },
+        series: [{ name: 'Events', type: 'bar', data: barData, barMaxWidth: 20, borderRadius: [2, 2, 0, 0] }]
+      });
+      charts.push(spark);
+    }, 10 * idx);
+  });
+  window.addEventListener('resize', function() { charts.forEach(function(ch) { ch.resize(); }); });
+}
+
+/* ── Feature Velocity Option 3: Events bars + user dots ── */
+
+function renderFeatureVelocityV3() {
+  var grid = document.getElementById('sparklineGrid');
+  grid.style.display = 'block';
+  var areas = PAGE_DATA.areas || [];
+  var c = getThemeColors();
+  var charts = [];
+
+  // Find global max users for dot scaling
+  var maxUsersGlobal = 1;
+  areas.forEach(function(a) { a.users.forEach(function(u) { if (u > maxUsersGlobal) maxUsersGlobal = u; }); });
+
+  // Legend
+  var legendDiv = document.createElement('div');
+  legendDiv.style.cssText = 'display:flex; gap:24px; padding:0 0 16px 184px; font-family:JetBrains Mono,monospace; font-size:11px; color:' + c.textTertiary + '; align-items:center;';
+  legendDiv.innerHTML = '<span><span style="display:inline-block;width:12px;height:12px;background:' + c.accent + ';border-radius:2px;vertical-align:middle;margin-right:4px;"></span> Events</span>' +
+    '<span><span style="display:inline-block;width:5px;height:5px;background:' + c.green + ';border-radius:50%;vertical-align:middle;margin-right:2px;"></span><span style="display:inline-block;width:10px;height:10px;background:' + c.green + ';border-radius:50%;vertical-align:middle;margin-right:2px;"></span><span style="display:inline-block;width:16px;height:16px;background:' + c.green + ';border-radius:50%;vertical-align:middle;margin-right:4px;"></span> Users active that month (dot size = count)</span>';
+  grid.appendChild(legendDiv);
+
+  areas.forEach(function(area, idx) {
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex; align-items:center; gap:24px; padding:16px 0; border-bottom:1px solid ' + c.border + ';';
+
+    var label = document.createElement('div');
+    label.style.cssText = 'min-width:160px; flex-shrink:0;';
+    var arrow = area.momentum === 'up' ? '↑' : area.momentum === 'down' ? '↓' : '→';
+    var arrowColor = area.momentum === 'up' ? c.green : area.momentum === 'down' ? c.red : c.textTertiary;
+    label.innerHTML = '<div style="font-family:Outfit,sans-serif; font-size:14px; font-weight:600; color:' + c.textPrimary + ';">' + area.area + '</div>' +
+      '<div style="font-family:JetBrains Mono,monospace; font-size:11px; color:' + arrowColor + ';">' +
+      arrow + ' ' + (area.momentum_pct > 0 ? '+' : '') + area.momentum_pct + '% <span style="color:' + c.textTertiary + '">vs prior 3mo</span></div>' +
+      '<div style="font-family:JetBrains Mono,monospace; font-size:11px; color:' + c.textTertiary + ';">' +
+      area.total_events.toLocaleString() + ' events · ' + area.avg_recent_users + ' users/mo (recent)</div>';
+
+    var chartDiv = document.createElement('div');
+    chartDiv.style.cssText = 'flex:1; height:80px; min-width:300px;';
+
+    row.appendChild(label);
+    row.appendChild(chartDiv);
+    grid.appendChild(row);
+
+    setTimeout(function() {
+      var spark = echarts.init(chartDiv, 'wandb');
+      spark.setOption({
+        tooltip: { trigger: 'axis', formatter: function(p) { var i = p[0].dataIndex; return area.months[i] + '<br/>Events: ' + area.events[i].toLocaleString() + '<br/>Users: ' + area.users[i]; } },
+        toolbox: { feature: { saveAsImage: { title: 'Save as PNG', pixelRatio: 2, backgroundColor: c.bgElevated } }, right: 4, top: 0, iconStyle: { borderColor: c.textTertiary }, itemSize: 12 },
+        grid: { left: 0, right: 40, top: 8, bottom: 20 },
+        xAxis: { type: 'category', data: area.months, axisLabel: { fontSize: 10, color: c.textTertiary, interval: 2 }, axisLine: { show: false }, axisTick: { show: false } },
+        yAxis: [
+          { type: 'value', show: false },
+          { type: 'value', show: false }
+        ],
+        series: [
+          { name: 'Events', type: 'bar', data: area.events, itemStyle: { color: c.accent, borderRadius: [2, 2, 0, 0] }, barMaxWidth: 20 },
+          { name: 'Users', type: 'scatter', yAxisIndex: 1, data: area.users, symbolSize: function(val) { if (val === 0) return 0; return Math.max(4, Math.min(22, 4 + (val / maxUsersGlobal) * 18)); }, itemStyle: { color: c.green, borderColor: c.bgElevated, borderWidth: 1 } }
+        ]
+      });
+      charts.push(spark);
+    }, 10 * idx);
+  });
+  window.addEventListener('resize', function() { charts.forEach(function(ch) { ch.resize(); }); });
+}
+
+/* ── Feature Velocity V4: Events bars + user count numbers below ── */
+
+function renderFeatureVelocityV4() {
+  var grid = document.getElementById('sparklineGrid');
+  grid.style.display = 'block';
+  var areas = PAGE_DATA.areas || [];
+  var c = getThemeColors();
+  var charts = [];
+
+  // Legend
+  var legendDiv = document.createElement('div');
+  legendDiv.style.cssText = 'display:flex; gap:24px; padding:0 0 16px 184px; font-family:JetBrains Mono,monospace; font-size:11px; color:' + c.textTertiary + '; align-items:center;';
+  legendDiv.innerHTML = '<span><span style="display:inline-block;width:12px;height:12px;background:' + c.accent + ';border-radius:2px;vertical-align:middle;margin-right:4px;"></span> Events</span>' +
+    '<span style="color:' + c.green + ';">123</span><span> = active users that month</span>';
+  grid.appendChild(legendDiv);
+
+  areas.forEach(function(area, idx) {
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex; align-items:center; gap:24px; padding:16px 0; border-bottom:1px solid ' + c.border + ';';
+
+    var label = document.createElement('div');
+    label.style.cssText = 'min-width:160px; flex-shrink:0;';
+    var arrow = area.momentum === 'up' ? '↑' : area.momentum === 'down' ? '↓' : '→';
+    var arrowColor = area.momentum === 'up' ? c.green : area.momentum === 'down' ? c.red : c.textTertiary;
+    label.innerHTML = '<div style="font-family:Outfit,sans-serif; font-size:14px; font-weight:600; color:' + c.textPrimary + ';">' + area.area + '</div>' +
+      '<div style="font-family:JetBrains Mono,monospace; font-size:11px; color:' + arrowColor + ';">' +
+      arrow + ' ' + (area.momentum_pct > 0 ? '+' : '') + area.momentum_pct + '% <span style="color:' + c.textTertiary + '">vs prior 3mo</span></div>' +
+      '<div style="font-family:JetBrains Mono,monospace; font-size:11px; color:' + c.textTertiary + ';">' +
+      area.total_events.toLocaleString() + ' events · ' + area.avg_recent_users + ' users/mo (recent)</div>';
+
+    var chartDiv = document.createElement('div');
+    chartDiv.style.cssText = 'flex:1; height:110px; min-width:300px;';
+
+    row.appendChild(label);
+    row.appendChild(chartDiv);
+    grid.appendChild(row);
+
+    setTimeout(function() {
+      var spark = echarts.init(chartDiv, 'wandb');
+
+      // Build rich labels for x-axis: month on top, user count below in green
+      var xLabels = area.months.map(function(m, i) {
+        var users = area.users[i];
+        if (users > 0) {
+          return m + '\n{users|' + users + '}';
+        }
+        return m;
+      });
+
+      spark.setOption({
+        tooltip: { trigger: 'axis', formatter: function(p) { var i = p[0].dataIndex; return area.months[i] + '<br/>Events: ' + area.events[i].toLocaleString() + '<br/>Active users: ' + area.users[i]; } },
+        toolbox: { feature: { saveAsImage: { title: 'Save as PNG', pixelRatio: 2, backgroundColor: c.bgElevated } }, right: 4, top: 0, iconStyle: { borderColor: c.textTertiary }, itemSize: 12 },
+        grid: { left: 0, right: 40, top: 18, bottom: 36 },
+        xAxis: {
+          type: 'category',
+          data: xLabels,
+          axisLabel: {
+            fontSize: 10,
+            color: c.textTertiary,
+            interval: 0,
+            rich: {
+              users: { fontSize: 9, color: c.green, fontFamily: 'JetBrains Mono, monospace', lineHeight: 14 }
+            }
+          },
+          axisLine: { show: false },
+          axisTick: { show: false }
+        },
+        yAxis: { type: 'value', show: false },
+        series: [{
+          name: 'Events',
+          type: 'bar',
+          data: area.events,
+          itemStyle: { color: c.accent, borderRadius: [2, 2, 0, 0] },
+          barMaxWidth: 20,
+          label: {
+            show: true,
+            position: 'top',
+            fontSize: 8,
+            fontFamily: 'JetBrains Mono, monospace',
+            color: c.textTertiary,
+            formatter: function(p) {
+              if (p.value === 0) return '';
+              if (p.value >= 1000000) return (p.value / 1000000).toFixed(1) + 'M';
+              if (p.value >= 1000) return (p.value / 1000).toFixed(0) + 'K';
+              return p.value;
+            }
+          }
+        }]
+      });
+      charts.push(spark);
+    }, 10 * idx);
+  });
+  window.addEventListener('resize', function() { charts.forEach(function(ch) { ch.resize(); }); });
+}
+
+var PAGE_RENDERERS = {
+  'feature-velocity': renderFeatureVelocityV4
+};
 
 /* ════════════════════════════════════════════════════════
    INITIALIZATION
@@ -584,7 +877,7 @@ document.addEventListener('DOMContentLoaded', function() {
   renderHeader();
   renderKPIs();
   renderNarrative();
-  renderSampleChart();
+  renderCharts();
 });
 </script>
 </body>

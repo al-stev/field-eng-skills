@@ -53,11 +53,30 @@ def _placeholder_handler(client, account_id, customer_name):
     }
 
 
+def _feature_velocity_handler(client, account_id, customer_name):
+    """Feature Velocity — real BQ data via product_areas_query()."""
+    from queries import product_areas_query, account_health_query
+    from bq_client import run_query
+    from transforms.feature_velocity import FeatureVelocityTransform
+
+    sql = product_areas_query()
+    df = run_query(client, sql, account_id=account_id, maximum_bytes_billed=50_000_000_000)
+
+    # Check if customer has Weave contracted
+    health_df = run_query(client, account_health_query(), account_id=account_id, maximum_bytes_billed=50_000_000_000)
+    weave_customer = False
+    if not health_df.empty and "weave_customer" in health_df.columns:
+        weave_customer = bool(health_df.iloc[0].get("weave_customer", False))
+
+    transform = FeatureVelocityTransform()
+    return transform.transform(product_areas=df, customer_name=customer_name, weave_customer=weave_customer)
+
+
 PAGE_REGISTRY = {
     "user-journey": _placeholder_handler,
     "cohort-analysis": _placeholder_handler,
     "engagement-decay": _placeholder_handler,
-    "feature-velocity": _placeholder_handler,
+    "feature-velocity": _feature_velocity_handler,
     "team-detection": _placeholder_handler,
     "risk-scoring": _placeholder_handler,
     "usage-correlation": _placeholder_handler,
@@ -210,12 +229,15 @@ def main():
     page_func = PAGE_REGISTRY[args.page]
     result = page_func(client, account_id, args.customer)
 
-    # 3. Write output
+    # 3. Extract narrative if present
+    narrative = result.pop("narrative", None)
+
+    # 4. Write output
     if args.dry_run:
-        print(json.dumps({"success": True, "dry_run": True, "data": result}, indent=2))
+        print(json.dumps({"success": True, "dry_run": True, "data": result, "narrative": narrative}, indent=2))
     else:
         try:
-            output_path = write_output(args.customer, args.page, result, output_dir=args.output_dir)
+            output_path = write_output(args.customer, args.page, result, ai_narrative=narrative, output_dir=args.output_dir)
             print(json.dumps({"success": True, "path": str(output_path)}, indent=2))
         except FileNotFoundError:
             print(json.dumps({

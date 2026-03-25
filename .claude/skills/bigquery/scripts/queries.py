@@ -225,6 +225,7 @@ def product_areas_query() -> str:
         FROM {daily_usage}
         WHERE account_id = @account_id
             AND date_day >= DATE_SUB(CURRENT_DATE(), INTERVAL 12 MONTH)
+            AND event_count > 0
     )
     SELECT
         product_area,
