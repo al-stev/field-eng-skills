@@ -863,8 +863,413 @@ function renderFeatureVelocityV4() {
   window.addEventListener('resize', function() { charts.forEach(function(ch) { ch.resize(); }); });
 }
 
+/* ── SDK Versions: donut + stacked timeline + version table ── */
+
+function renderSdkVersions() {
+  var grid = document.getElementById('sparklineGrid');
+  grid.style.display = 'block';
+  var c = getThemeColors();
+  var charts = [];
+
+  var freshnessColors = {
+    current: c.green,
+    recent: c.blue,
+    stale: c.amber,
+    ancient: c.red
+  };
+
+  // --- Section 1: Donut + Freshness Summary (side by side) ---
+  var topRow = document.createElement('div');
+  topRow.style.cssText = 'display:flex; gap:32px; margin-bottom:32px; flex-wrap:wrap;';
+
+  // Donut chart container
+  var donutWrap = document.createElement('div');
+  donutWrap.style.cssText = 'flex:1; min-width:320px;';
+  var donutLabel = document.createElement('div');
+  donutLabel.style.cssText = 'font-family:JetBrains Mono,monospace; font-size:11px; color:' + c.textTertiary + '; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:8px;';
+  donutLabel.textContent = 'Version Distribution (' + PAGE_DATA.snapshot_month + ')';
+  var donutDiv = document.createElement('div');
+  donutDiv.style.cssText = 'width:100%; height:320px;';
+  donutWrap.appendChild(donutLabel);
+  donutWrap.appendChild(donutDiv);
+
+  // Version table container
+  var tableWrap = document.createElement('div');
+  tableWrap.style.cssText = 'flex:1; min-width:360px;';
+  var tableLabel = document.createElement('div');
+  tableLabel.style.cssText = 'font-family:JetBrains Mono,monospace; font-size:11px; color:' + c.textTertiary + '; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:8px;';
+  tableLabel.textContent = 'Version Details';
+  var tableDiv = document.createElement('div');
+  tableDiv.style.cssText = 'max-height:320px; overflow-y:auto;';
+
+  // Build version table HTML
+  var tableHtml = '<table style="width:100%; border-collapse:collapse; font-family:Outfit,sans-serif; font-size:13px;">';
+  tableHtml += '<thead><tr style="border-bottom:1px solid ' + c.borderSubtle + ';">';
+  tableHtml += '<th style="text-align:left; padding:8px 12px; color:' + c.textTertiary + '; font-family:JetBrains Mono,monospace; font-size:11px; font-weight:400;">VERSION</th>';
+  tableHtml += '<th style="text-align:center; padding:8px 12px; color:' + c.textTertiary + '; font-family:JetBrains Mono,monospace; font-size:11px; font-weight:400;">STATUS</th>';
+  tableHtml += '<th style="text-align:right; padding:8px 12px; color:' + c.textTertiary + '; font-family:JetBrains Mono,monospace; font-size:11px; font-weight:400;">USERS</th>';
+  tableHtml += '<th style="text-align:right; padding:8px 12px; color:' + c.textTertiary + '; font-family:JetBrains Mono,monospace; font-size:11px; font-weight:400;">FIRST SEEN</th>';
+  tableHtml += '</tr></thead><tbody>';
+
+  (PAGE_DATA.version_table || []).forEach(function(v) {
+    var fc = freshnessColors[v.freshness] || c.textTertiary;
+    var badge = '<span style="display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; font-family:JetBrains Mono,monospace; background:' + fc + '22; color:' + fc + '; border:1px solid ' + fc + '44;">' + v.freshness + '</span>';
+    tableHtml += '<tr style="border-bottom:1px solid ' + c.borderSubtle + ';">';
+    tableHtml += '<td style="padding:8px 12px; font-family:JetBrains Mono,monospace; font-weight:600; color:' + c.textPrimary + ';">' + v.version + '</td>';
+    tableHtml += '<td style="padding:8px 12px; text-align:center;">' + badge + '</td>';
+    tableHtml += '<td style="padding:8px 12px; text-align:right; color:' + c.textPrimary + ';">' + v.current_users + '</td>';
+    tableHtml += '<td style="padding:8px 12px; text-align:right; color:' + c.textSecondary + ';">' + v.first_seen + '</td>';
+    tableHtml += '</tr>';
+  });
+  tableHtml += '</tbody></table>';
+  tableDiv.innerHTML = tableHtml;
+
+  tableWrap.appendChild(tableLabel);
+  tableWrap.appendChild(tableDiv);
+  topRow.appendChild(donutWrap);
+  topRow.appendChild(tableWrap);
+  grid.appendChild(topRow);
+
+  // Render donut chart
+  setTimeout(function() {
+    var donutChart = echarts.init(donutDiv, 'wandb');
+    var donutData = (PAGE_DATA.donut || []).map(function(d) {
+      return {
+        name: d.version + ' (' + d.pct + '%)',
+        value: d.users,
+        itemStyle: { color: freshnessColors[d.freshness] || c.textTertiary }
+      };
+    });
+    donutChart.setOption({
+      tooltip: {
+        trigger: 'item',
+        formatter: function(p) {
+          return '<strong>' + p.name + '</strong><br/>' + p.value + ' users';
+        }
+      },
+      toolbox: { feature: { saveAsImage: { title: 'Save as PNG', pixelRatio: 2, backgroundColor: c.bgElevated } }, right: 8, top: 0, iconStyle: { borderColor: c.textTertiary }, itemSize: 12 },
+      legend: {
+        orient: 'vertical',
+        right: 8,
+        top: 'center',
+        textStyle: { color: c.textSecondary, fontSize: 12, fontFamily: 'JetBrains Mono, monospace' },
+        itemWidth: 12,
+        itemHeight: 12,
+        itemGap: 6
+      },
+      series: [{
+        type: 'pie',
+        radius: ['45%', '72%'],
+        center: ['35%', '50%'],
+        avoidLabelOverlap: true,
+        label: { show: false },
+        emphasis: {
+          label: { show: true, fontSize: 14, fontWeight: 600, fontFamily: 'Outfit, sans-serif', color: c.textPrimary },
+          itemStyle: { shadowBlur: 10, shadowOffsetX: 0, shadowColor: 'rgba(0, 0, 0, 0.3)' }
+        },
+        data: donutData
+      }]
+    });
+    charts.push(donutChart);
+  }, 10);
+
+  // --- Section 2: Timeline (stacked area) ---
+  var timelineLabel = document.createElement('div');
+  timelineLabel.style.cssText = 'font-family:JetBrains Mono,monospace; font-size:11px; color:' + c.textTertiary + '; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:8px;';
+  timelineLabel.textContent = 'Version Migration Over Time';
+  var timelineDiv = document.createElement('div');
+  timelineDiv.style.cssText = 'width:100%; height:300px; background:' + c.bgSurface + '; border-radius:6px;';
+  grid.appendChild(timelineLabel);
+  grid.appendChild(timelineDiv);
+
+  setTimeout(function() {
+    var timelineChart = echarts.init(timelineDiv, 'wandb');
+    var timeline = PAGE_DATA.timeline || [];
+    var versions = PAGE_DATA.versions || [];
+    var months = timeline.map(function(t) { return t.month; });
+
+    // Assign colors: latest versions get green/blue, older get amber/red
+    var versionColors = [c.green, c.blue, c.accent, c.amber, c.red, '#9333ea', '#06b6d4', '#ec4899', '#84cc16'];
+    var series = versions.map(function(v, i) {
+      return {
+        name: v,
+        type: 'bar',
+        stack: 'total',
+        emphasis: { focus: 'series' },
+        data: timeline.map(function(t) { return t[v] || 0; }),
+        itemStyle: {
+          color: versionColors[versions.length - 1 - i] || c.textTertiary,
+          borderRadius: i === versions.length - 1 ? [2, 2, 0, 0] : 0
+        },
+        barMaxWidth: 28
+      };
+    });
+
+    timelineChart.setOption({
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: { type: 'shadow' },
+        formatter: function(params) {
+          var html = '<strong>' + params[0].axisValue + '</strong>';
+          params.slice().reverse().forEach(function(p) {
+            if (p.value > 0) {
+              html += '<br/>' + p.marker + ' ' + p.seriesName + ': ' + p.value + ' users';
+            }
+          });
+          return html;
+        }
+      },
+      toolbox: { feature: { saveAsImage: { title: 'Save as PNG', pixelRatio: 2, backgroundColor: c.bgElevated } }, right: 16, top: 8, iconStyle: { borderColor: c.textTertiary } },
+      legend: {
+        data: versions.slice().reverse(),
+        bottom: 0,
+        textStyle: { color: c.textSecondary, fontSize: 11, fontFamily: 'JetBrains Mono, monospace' },
+        itemWidth: 12,
+        itemHeight: 12
+      },
+      grid: { left: 48, right: 16, top: 16, bottom: 40 },
+      xAxis: {
+        type: 'category',
+        data: months,
+        axisLabel: { fontSize: 11, color: c.textTertiary, interval: 1 },
+        axisLine: { lineStyle: { color: c.borderSubtle } },
+        axisTick: { show: false }
+      },
+      yAxis: {
+        type: 'value',
+        name: 'Users',
+        nameTextStyle: { color: c.textTertiary, fontSize: 11 },
+        axisLabel: { color: c.textTertiary, fontSize: 11 },
+        splitLine: { lineStyle: { color: c.borderSubtle, type: 'dashed' } }
+      },
+      series: series
+    });
+    charts.push(timelineChart);
+  }, 20);
+
+  window.addEventListener('resize', function() { charts.forEach(function(ch) { ch.resize(); }); });
+}
+
+/* ── Engagement Decay: ranked user table with sparklines ── */
+
+function renderEngagementDecay() {
+  var grid = document.getElementById('sparklineGrid');
+  grid.style.display = 'block';
+  var c = getThemeColors();
+  var charts = [];
+  var users = PAGE_DATA.users || [];
+
+  var statusColors = {
+    hot: c.green,
+    warm: c.blue,
+    cooling: c.amber,
+    cold: c.red
+  };
+
+  // Status filter bar (clickable)
+  var counts = PAGE_DATA.status_counts || {};
+  var activeFilters = { hot: true, warm: true, cooling: true, cold: true };
+  var summaryDiv = document.createElement('div');
+  summaryDiv.style.cssText = 'display:flex; gap:12px; padding:0 0 20px 0; font-family:JetBrains Mono,monospace; font-size:12px; align-items:center; flex-wrap:wrap;';
+
+  // Licensed is default ON if seat data available, ALL is the alternative
+  var licensedOnly = !!PAGE_DATA.contracted_seats;
+
+  function updateScopeButtons() {
+    var licB = document.getElementById('filter-licensed');
+    var allB = document.getElementById('filter-all');
+    if (licB) {
+      licB.style.background = licensedOnly ? c.accent + '22' : 'transparent';
+      licB.style.color = licensedOnly ? c.accent : c.textSecondary;
+      licB.style.borderColor = licensedOnly ? c.accent + '44' : c.borderSubtle;
+    }
+    if (allB) {
+      allB.style.background = !licensedOnly ? c.accent + '22' : 'transparent';
+      allB.style.color = !licensedOnly ? c.accent : c.textSecondary;
+      allB.style.borderColor = !licensedOnly ? c.accent + '44' : c.borderSubtle;
+    }
+  }
+
+  // "Licensed" button (default active)
+  if (PAGE_DATA.contracted_seats) {
+    var licBtn = document.createElement('button');
+    licBtn.style.cssText = 'display:flex; align-items:center; gap:6px; padding:4px 12px; border-radius:14px; border:1px solid ' + c.accent + '44; background:' + c.accent + '22; color:' + c.accent + '; cursor:pointer; font-family:JetBrains Mono,monospace; font-size:11px;';
+    licBtn.textContent = 'LICENSED (' + PAGE_DATA.contracted_seats + ')';
+    licBtn.id = 'filter-licensed';
+    licBtn.onclick = function() {
+      licensedOnly = true;
+      activeFilters = { hot: true, warm: true, cooling: true, cold: true };
+      updateScopeButtons();
+      applyFilters();
+    };
+    summaryDiv.appendChild(licBtn);
+  }
+
+  // "All" button
+  var allBtn = document.createElement('button');
+  allBtn.style.cssText = 'display:flex; align-items:center; gap:6px; padding:4px 12px; border-radius:14px; border:1px solid ' + c.borderSubtle + '; background:transparent; color:' + c.textSecondary + '; cursor:pointer; font-family:JetBrains Mono,monospace; font-size:11px;';
+  allBtn.textContent = 'ALL (' + users.length + ')';
+  allBtn.id = 'filter-all';
+  allBtn.onclick = function() {
+    licensedOnly = false;
+    activeFilters = { hot: true, warm: true, cooling: true, cold: true };
+    updateScopeButtons();
+    applyFilters();
+  };
+  summaryDiv.appendChild(allBtn);
+
+  // Separator
+  var sepSpan = document.createElement('span');
+  sepSpan.style.cssText = 'width:1px; height:20px; background:' + c.borderSubtle + '; margin:0 4px;';
+  summaryDiv.appendChild(sepSpan);
+
+  ['hot', 'warm', 'cooling', 'cold'].forEach(function(s) {
+    var count = counts[s] || 0;
+    if (count === 0) return;
+    var sc = statusColors[s];
+    var btn = document.createElement('button');
+    btn.style.cssText = 'display:flex; align-items:center; gap:6px; padding:4px 12px; border-radius:14px; border:1px solid ' + sc + '44; background:' + sc + '22; color:' + sc + '; cursor:pointer; font-family:JetBrains Mono,monospace; font-size:11px;';
+    btn.innerHTML = '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + sc + ';"></span> ' + count + ' ' + s;
+    btn.dataset.status = s;
+    btn.onclick = function() {
+      var allOn = Object.values(activeFilters).every(function(v) { return v; });
+      if (allOn) {
+        activeFilters = { hot: false, warm: false, cooling: false, cold: false };
+        activeFilters[s] = true;
+      } else if (activeFilters[s] && Object.values(activeFilters).filter(function(v){return v;}).length === 1) {
+        activeFilters = { hot: true, warm: true, cooling: true, cold: true };
+      } else {
+        activeFilters[s] = !activeFilters[s];
+      }
+      applyFilters();
+    };
+    summaryDiv.appendChild(btn);
+  });
+
+  grid.appendChild(summaryDiv);
+
+  function applyFilters() {
+    var rows = grid.querySelectorAll('[data-user-status]');
+    var visibleCounts = { hot: 0, warm: 0, cooling: 0, cold: 0 };
+    rows.forEach(function(row) {
+      var status = row.dataset.userStatus;
+      var isLicensed = row.dataset.licensed === 'true';
+      var statusVisible = activeFilters[status];
+      var licenseVisible = !licensedOnly || isLicensed;
+      var visible = statusVisible && licenseVisible;
+      row.style.display = visible ? 'flex' : 'none';
+      if (licenseVisible) visibleCounts[status] = (visibleCounts[status] || 0) + 1;
+    });
+    // Update status button counts
+    grid.querySelectorAll('button[data-status]').forEach(function(btn) {
+      var s = btn.dataset.status;
+      var sc = statusColors[s];
+      var count = visibleCounts[s] || 0;
+      btn.innerHTML = '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + sc + ';"></span> ' + count + ' ' + s;
+      btn.style.opacity = activeFilters[s] ? '1' : '0.4';
+    });
+  }
+
+  // Note: initial applyFilters() called after rows are built (see below)
+
+  // Table header
+  var headerDiv = document.createElement('div');
+  headerDiv.style.cssText = 'display:flex; align-items:center; gap:12px; padding:8px 0; border-bottom:2px solid ' + c.borderSubtle + '; font-family:JetBrains Mono,monospace; font-size:10px; color:' + c.textTertiary + '; text-transform:uppercase; letter-spacing:1px;';
+  headerDiv.innerHTML =
+    '<div style="width:60px;">STATUS</div>' +
+    '<div style="width:140px;">USER</div>' +
+    '<div style="flex:1; min-width:200px;">ACTIVITY (52 WEEKS)</div>' +
+    '<div style="width:80px; text-align:right;">PEAK/WK</div>' +
+    '<div style="width:80px; text-align:right;">NOW/WK</div>' +
+    '<div style="width:70px; text-align:right;">TREND</div>' +
+    '<div style="width:90px; text-align:right;">LAST ACTIVE</div>';
+  grid.appendChild(headerDiv);
+
+  users.forEach(function(user, idx) {
+    var sc = statusColors[user.status] || c.textTertiary;
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid ' + c.borderSubtle + ';';
+    row.dataset.userStatus = user.status;
+    row.dataset.licensed = user.licensed ? 'true' : 'false';
+
+    // Status badge
+    var badge = '<div style="width:60px;"><span style="display:inline-block; padding:2px 8px; border-radius:10px; font-size:10px; font-family:JetBrains Mono,monospace; background:' + sc + '22; color:' + sc + '; border:1px solid ' + sc + '44;">' + user.status + '</span></div>';
+
+    // Username
+    var nameDiv = '<div style="width:140px; font-family:Outfit,sans-serif; font-size:13px; font-weight:500; color:' + c.textPrimary + '; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="' + (user.email || user.username) + '">' + user.username + '</div>';
+
+    // Sparkline container
+    var sparkId = 'decay-spark-' + idx;
+    var sparkDiv = '<div id="' + sparkId + '" style="flex:1; height:36px; min-width:200px;"></div>';
+
+    // Peak
+    var peak = '<div style="width:80px; text-align:right; font-family:JetBrains Mono,monospace; font-size:12px; color:' + c.textSecondary + ';">' + Math.round(user.peak_weekly_avg).toLocaleString() + '</div>';
+
+    // Recent
+    var recent = '<div style="width:80px; text-align:right; font-family:JetBrains Mono,monospace; font-size:12px; color:' + (user.recent_weekly_avg > 0 ? c.textPrimary : c.textTertiary) + ';">' + Math.round(user.recent_weekly_avg).toLocaleString() + '</div>';
+
+    // Trend
+    var trendColor = user.trend_pct > 10 ? c.green : user.trend_pct < -10 ? c.red : c.textTertiary;
+    var trendArrow = user.trend_pct > 10 ? '\u2191' : user.trend_pct < -10 ? '\u2193' : '\u2192';
+    var trend = '<div style="width:70px; text-align:right; font-family:JetBrains Mono,monospace; font-size:11px; color:' + trendColor + ';">' + trendArrow + ' ' + (user.trend_pct > 0 ? '+' : '') + user.trend_pct + '%</div>';
+
+    // Last active
+    var lastActive = user.last_active ? user.last_active.slice(5) : '--';
+    var lastColor = user.weeks_inactive > 8 ? c.red : user.weeks_inactive > 4 ? c.amber : c.textSecondary;
+    var lastDiv = '<div style="width:90px; text-align:right; font-family:JetBrains Mono,monospace; font-size:11px; color:' + lastColor + ';">' + lastActive + '</div>';
+
+    row.innerHTML = badge + nameDiv + sparkDiv + peak + recent + trend + lastDiv;
+    grid.appendChild(row);
+
+    // Render sparkline after DOM insertion
+    setTimeout(function() {
+      var container = document.getElementById(sparkId);
+      if (!container) return;
+      var spark = echarts.init(container, 'wandb');
+      var sparkData = user.sparkline || [];
+
+      // Color bars by status zones
+      var barData = sparkData.map(function(val, i) {
+        var isRecent = i >= sparkData.length - 4;
+        var barColor = isRecent ? sc : (val > 0 ? c.textTertiary + '66' : 'transparent');
+        return { value: val, itemStyle: { color: barColor } };
+      });
+
+      spark.setOption({
+        tooltip: {
+          trigger: 'axis',
+          formatter: function(p) {
+            var weekIdx = p[0].dataIndex;
+            var weeks = PAGE_DATA.weeks || [];
+            return (weeks[weekIdx] || 'Week ' + weekIdx) + '<br/>Events: ' + p[0].value.toLocaleString();
+          }
+        },
+        grid: { left: 0, right: 0, top: 2, bottom: 2 },
+        xAxis: { type: 'category', show: false, data: sparkData.map(function(_, i) { return i; }) },
+        yAxis: { type: 'value', show: false },
+        series: [{
+          type: 'bar',
+          data: barData,
+          barMaxWidth: 4,
+          barMinWidth: 1,
+          barGap: '20%',
+          silent: false
+        }]
+      });
+      charts.push(spark);
+    }, 5 * idx);
+  });
+
+  // Apply initial filter after rows are in the DOM
+  applyFilters();
+
+  window.addEventListener('resize', function() { charts.forEach(function(ch) { ch.resize(); }); });
+}
+
 var PAGE_RENDERERS = {
-  'feature-velocity': renderFeatureVelocityV4
+  'feature-velocity': renderFeatureVelocityV4,
+  'sdk-versions': renderSdkVersions,
+  'engagement-decay': renderEngagementDecay
 };
 
 /* ════════════════════════════════════════════════════════

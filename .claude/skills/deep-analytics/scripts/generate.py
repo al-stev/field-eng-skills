@@ -72,15 +72,49 @@ def _feature_velocity_handler(client, account_id, customer_name):
     return transform.transform(product_areas=df, customer_name=customer_name, weave_customer=weave_customer)
 
 
+def _engagement_decay_handler(client, account_id, customer_name):
+    """Engagement Decay — per-user activity decline detection."""
+    from queries import engagement_decay_query, account_health_query
+    from bq_client import run_query
+    from transforms.engagement_decay import EngagementDecayTransform
+
+    sql = engagement_decay_query()
+    df = run_query(client, sql, account_id=account_id, maximum_bytes_billed=50_000_000_000)
+
+    # Get contracted seats for licensed-user filtering
+    health_df = run_query(client, account_health_query(), account_id=account_id, maximum_bytes_billed=50_000_000_000)
+    contracted_seats = None
+    if not health_df.empty:
+        contracted_seats = health_df.iloc[0].get("total_contracted_seats")
+        if contracted_seats is not None:
+            contracted_seats = int(contracted_seats)
+
+    transform = EngagementDecayTransform()
+    return transform.transform(engagement=df, customer_name=customer_name, contracted_seats=contracted_seats)
+
+
+def _sdk_versions_handler(client, account_id, customer_name):
+    """SDK Versions — cli_version/local_version distribution and freshness."""
+    from queries import sdk_versions_query
+    from bq_client import run_query
+    from transforms.sdk_versions import SdkVersionsTransform
+
+    sql = sdk_versions_query()
+    df = run_query(client, sql, account_id=account_id, maximum_bytes_billed=50_000_000_000)
+
+    transform = SdkVersionsTransform()
+    return transform.transform(sdk_versions=df, customer_name=customer_name)
+
+
 PAGE_REGISTRY = {
     "user-journey": _placeholder_handler,
     "cohort-analysis": _placeholder_handler,
-    "engagement-decay": _placeholder_handler,
+    "engagement-decay": _engagement_decay_handler,
     "feature-velocity": _feature_velocity_handler,
     "team-detection": _placeholder_handler,
     "risk-scoring": _placeholder_handler,
     "usage-correlation": _placeholder_handler,
-    "sdk-versions": _placeholder_handler,
+    "sdk-versions": _sdk_versions_handler,
     "performance": _placeholder_handler,
 }
 
