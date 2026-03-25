@@ -49,7 +49,7 @@ Exceptions:
 - Radar chart container: 360px height x 360px width (square for circle geometry).
 - Team activity bar chart: 400px height (standard).
 - Team x product area heatmap: 320px height (fewer rows than cohort heatmap).
-- Staleness banner: 12px vertical padding, 16px horizontal padding (compact warning bar).
+- Staleness banner: 8px vertical padding, 16px horizontal padding (compact warning bar).
 
 ---
 
@@ -62,14 +62,14 @@ Inherited from Phase 1 UI-SPEC. No new font sizes or weights.
 | Display | Instrument Serif, Georgia, serif | clamp(28px, 4vw, 42px) | 400 | 1.2 | Page title, KPI values, gauge detail number (36px fixed per research) |
 | Body | Outfit, system-ui, sans-serif | 14px | 400 | 1.5 | Narrative text, table body cells, empty state messages |
 | Label / Heading | Outfit, system-ui, sans-serif | 16px | 600 | 1.3 | Section sub-headings, table section labels, risk factor names |
-| Micro-label | JetBrains Mono, Fira Code, monospace | 11px | 400 | 1.4 | Chart axis labels, heatmap cell labels (10px), table headers, badge text, section labels |
+| Micro-label | JetBrains Mono, Fira Code, monospace | 11px | 400 | 1.4 | Chart axis labels, heatmap cell labels, table headers, badge text, section labels |
 
 Phase 3 specific sizing within existing scale:
-- Heatmap cell percentage labels: 10px JetBrains Mono (tighter fit inside cells).
+- Heatmap cell percentage labels: 11px JetBrains Mono (micro-label size, fits inside cells).
 - Gauge detail value: 36px Instrument Serif (large number inside gauge dial).
 - Gauge title label: 14px Outfit (below gauge dial, uses `--text-secondary`).
 - Radar indicator labels: 11px Outfit (around radar perimeter, uses `--text-secondary`).
-- Staleness banner text: 13px Outfit, weight 500 (slightly emphasized for visibility).
+- Staleness banner text: 14px Outfit, weight 600 (emphasized for warning visibility).
 
 ---
 
@@ -210,34 +210,34 @@ All three pages inherit the base template layout (nav, header, KPI row, narrativ
 |  [inherited: nav, header, KPI row, narrative]                     |
 |                                                                   |
 |  RETENTION HEATMAP                                                |
-|  ┌────────────────────────────────────────────────────────────┐   |
-|  │  y-axis: cohort month labels (n=size)                      │   |
-|  │  x-axis: M+0, M+1, M+2, ... M+11                          │   |  <- 480px height
-|  │  cells: retention % with color gradient                    │   |
-|  │  visualMap legend: 0% (red) to 100% (green) at bottom      │   |
-|  └────────────────────────────────────────────────────────────┘   |
+|  +------------------------------------------------------------+   |
+|  |  y-axis: cohort month labels (n=size)                      |   |
+|  |  x-axis: M+0, M+1, M+2, ... M+11                          |   |  <- 480px height
+|  |  cells: retention % with color gradient                    |   |
+|  |  visualMap legend: 0% (red) to 100% (green) at bottom      |   |
+|  +------------------------------------------------------------+   |
 |                                                                   |
-|  ┌─ Side by side ─────────────────────────────────────────────┐   |
-|  │  OVERALL RETENTION CURVE     │  COHORT COMPARISON          │   |
-|  │  ┌──────────────────────┐    │  ┌──────────────────────┐   │   |  <- 320px height each
-|  │  │  Line chart           │    │  │  Multi-line overlay   │   │   |
-|  │  │  x: 1mo, 3mo, 6mo,  │    │  │  Last 4 cohorts       │   │   |
-|  │  │     12mo              │    │  │                       │   │   |
-|  │  └──────────────────────┘    │  └──────────────────────┘   │   |
-|  └────────────────────────────────────────────────────────────┘   |
+|  +- Side by side -------------------------------------------+   |
+|  |  OVERALL RETENTION CURVE     |  COHORT COMPARISON          |   |
+|  |  +----------------------+    |  +----------------------+   |   |  <- 320px height each
+|  |  |  Line chart           |    |  |  Multi-line overlay   |   |   |
+|  |  |  x: 1mo, 3mo, 6mo,  |    |  |  Last 4 cohorts       |   |   |
+|  |  |     12mo              |    |  |                       |   |   |
+|  |  +----------------------+    |  +----------------------+   |   |
+|  +------------------------------------------------------------+   |
 |                                                                   |
 |  USER LIFECYCLE                                                   |
-|  ┌────────────────────────────────────────────────────────────┐   |
-|  │  Stacked area: New + Retained + Resurrected + Churned      │   |  <- 400px height
-|  │  x-axis: monthly                                           │   |
-|  │  legend: bottom                                            │   |
-|  └────────────────────────────────────────────────────────────┘   |
+|  +------------------------------------------------------------+   |
+|  |  Stacked area: New + Retained + Resurrected + Churned      |   |  <- 400px height
+|  |  x-axis: monthly                                           |   |
+|  |  legend: bottom                                            |   |
+|  +------------------------------------------------------------+   |
 |                                                                   |
 |  BEHAVIORAL COHORTS                                               |
-|  ┌────────────────────────────────────────────────────────────┐   |
-|  │  Multi-line retention curves grouped by first action type  │   |  <- 360px height
-|  │  legend: Experiments, Artifacts, Weave, etc.               │   |
-|  └────────────────────────────────────────────────────────────┘   |
+|  +------------------------------------------------------------+   |
+|  |  Multi-line retention curves grouped by first action type  |   |  <- 360px height
+|  |  legend: Experiments, Artifacts, Weave, etc.               |   |
+|  +------------------------------------------------------------+   |
 +------------------------------------------------------------------+
 ```
 
@@ -248,33 +248,33 @@ All three pages inherit the base template layout (nav, header, KPI row, narrativ
 |  [inherited: nav, header, KPI row, narrative]                     |
 |                                                                   |
 |  TEAM BREAKDOWN                                                   |
-|  ┌────────────────────────────────────────────────────────────┐   |
-|  │  Table: TEAM | MEMBERS | EVENTS | TOP PRODUCT | FIRST/LAST│   |  <- scrollable, max-height 400px
-|  │  Rows sorted by total events descending                    │   |
-|  │  Row border-bottom: 1px solid --border-subtle              │   |
-|  └────────────────────────────────────────────────────────────┘   |
+|  +------------------------------------------------------------+   |
+|  |  Table: TEAM | MEMBERS | EVENTS | TOP PRODUCT | FIRST/LAST|   |  <- scrollable, max-height 400px
+|  |  Rows sorted by total events descending                    |   |
+|  |  Row border-bottom: 1px solid --border-subtle              |   |
+|  +------------------------------------------------------------+   |
 |                                                                   |
-|  ┌─ Side by side ─────────────────────────────────────────────┐   |
-|  │  TEAM ACTIVITY COMPARISON    │  TEAM PRODUCT ADOPTION      │   |
-|  │  ┌──────────────────────┐    │  ┌──────────────────────┐   │   |
-|  │  │  Horizontal bar chart │    │  │  Heatmap: team rows  │   │   |  <- 400px / 320px
-|  │  │  Events + Users       │    │  │  x product area cols │   │   |
-|  │  └──────────────────────┘    │  └──────────────────────┘   │   |
-|  └────────────────────────────────────────────────────────────┘   |
+|  +- Side by side -------------------------------------------+   |
+|  |  TEAM ACTIVITY COMPARISON    |  TEAM PRODUCT ADOPTION      |   |
+|  |  +----------------------+    |  +----------------------+   |   |
+|  |  |  Horizontal bar chart |    |  |  Heatmap: team rows  |   |   |  <- 400px / 320px
+|  |  |  Events + Users       |    |  |  x product area cols |   |   |
+|  |  +----------------------+    |  +----------------------+   |   |
+|  +------------------------------------------------------------+   |
 |                                                                   |
 |  TEAM ADOPTION TIMELINE                                           |
-|  ┌────────────────────────────────────────────────────────────┐   |
-|  │  Horizontal bars: team name → first_active to last_active  │   |  <- 300px height
-|  │  Color: --blue                                             │   |
-|  └────────────────────────────────────────────────────────────┘   |
+|  +------------------------------------------------------------+   |
+|  |  Horizontal bars: team name -> first_active to last_active  |   |  <- 300px height
+|  |  Color: --blue                                             |   |
+|  +------------------------------------------------------------+   |
 |                                                                   |
-|  ┌─ Side by side ─────────────────────────────────────────────┐   |
-|  │  TEAM CHAMPIONS              │  TEAM GROWTH TREND          │   |
-|  │  ┌──────────────────────┐    │  ┌──────────────────────┐   │   |
-|  │  │  Table: team, user,  │    │  │  Stacked line/area    │   │   |  <- 280px / 360px
-|  │  │  events, last active │    │  │  per team per month   │   │   |
-|  │  └──────────────────────┘    │  └──────────────────────┘   │   |
-|  └────────────────────────────────────────────────────────────┘   |
+|  +- Side by side -------------------------------------------+   |
+|  |  TEAM CHAMPIONS              |  TEAM GROWTH TREND          |   |
+|  |  +----------------------+    |  +----------------------+   |   |
+|  |  |  Table: team, user,  |    |  |  Stacked line/area    |   |   |  <- 280px / 360px
+|  |  |  events, last active |    |  |  per team per month   |   |   |
+|  |  +----------------------+    |  +----------------------+   |   |
+|  +------------------------------------------------------------+   |
 |                                                                   |
 |  [or: TEAM DATA UNAVAILABLE empty state if TEAM-04 triggered]    |
 +------------------------------------------------------------------+
@@ -287,52 +287,52 @@ All three pages inherit the base template layout (nav, header, KPI row, narrativ
 |  [inherited: nav, header, KPI row, narrative]                     |
 |                                                                   |
 |  [STALENESS BANNER -- only if churn model > 30 days old]          |
-|  ┌────────────────────────────────────────────────────────────┐   |
-|  │  ⚠ Churn model data is {N} days old. Interpret with...    │   |  <- amber-dim bg
-|  └────────────────────────────────────────────────────────────┘   |
+|  +------------------------------------------------------------+   |
+|  |  Churn model data is {N} days old. Interpret with...        |   |  <- amber-dim bg
+|  +------------------------------------------------------------+   |
 |                                                                   |
 |  [NO CHURN MODEL BANNER -- only if renewal_predictions absent]    |
-|  ┌────────────────────────────────────────────────────────────┐   |
-|  │  Risk score excludes ML churn model (data unavailable)...  │   |  <- blue-dim bg
-|  └────────────────────────────────────────────────────────────┘   |
+|  +------------------------------------------------------------+   |
+|  |  Risk score excludes ML churn model (data unavailable)...  |   |  <- blue-dim bg
+|  +------------------------------------------------------------+   |
 |                                                                   |
-|  ┌─ Side by side ─────────────────────────────────────────────┐   |
-|  │  COMPOSITE RISK SCORE        │  RISK PROFILE               │   |
-|  │  ┌──────────────────────┐    │  ┌──────────────────────┐   │   |
-|  │  │  Gauge dial (0-100)  │    │  │  Radar chart          │   │   |  <- 300px / 360px
-|  │  │  Color zones: G/A/R  │    │  │  Current + Historical │   │   |
-|  │  │  Score number center │    │  │  5 indicator axes     │   │   |
-|  │  └──────────────────────┘    │  └──────────────────────┘   │   |
-|  └────────────────────────────────────────────────────────────┘   |
+|  +- Side by side -------------------------------------------+   |
+|  |  COMPOSITE RISK SCORE        |  RISK PROFILE               |   |
+|  |  +----------------------+    |  +----------------------+   |   |
+|  |  |  Gauge dial (0-100)  |    |  |  Radar chart          |   |   |  <- 300px / 360px
+|  |  |  Color zones: G/A/R  |    |  |  Current + Historical |   |   |
+|  |  |  Score number center |    |  |  5 indicator axes     |   |   |
+|  |  +----------------------+    |  +----------------------+   |   |
+|  +------------------------------------------------------------+   |
 |                                                                   |
 |  RISK FACTOR BREAKDOWN                                            |
-|  ┌────────────────────────────────────────────────────────────┐   |
-|  │  Table: FACTOR | RAW | NORMALIZED | WEIGHT | CONTRIBUTION  │   |
-|  │  Horizontal bars inline showing normalized value           │   |
-|  │  Color by severity (green < 30, amber 30-60, red > 60)    │   |
-|  └────────────────────────────────────────────────────────────┘   |
+|  +------------------------------------------------------------+   |
+|  |  Table: FACTOR | RAW | NORMALIZED | WEIGHT | CONTRIBUTION  |   |
+|  |  Horizontal bars inline showing normalized value           |   |
+|  |  Color by severity (green < 30, amber 30-60, red > 60)    |   |
+|  +------------------------------------------------------------+   |
 |                                                                   |
-|  ┌─ Side by side ─────────────────────────────────────────────┐   |
-|  │  RISK TREND (6 MONTHS)       │  RENEWAL CONTEXT            │   |
-|  │  ┌──────────────────────┐    │  ┌──────────────────────┐   │   |
-|  │  │  Line chart with     │    │  │  Key-value pairs:     │   │   |  <- 320px / auto
-|  │  │  colored zones bg    │    │  │  Days to Renewal      │   │   |
-|  │  │  markArea for risk   │    │  │  Contract End         │   │   |
-|  │  │  tier boundaries     │    │  │  ARR, Seats, Util     │   │   |
-|  │  └──────────────────────┘    │  └──────────────────────┘   │   |
-|  └────────────────────────────────────────────────────────────┘   |
+|  +- Side by side -------------------------------------------+   |
+|  |  RISK TREND (6 MONTHS)       |  RENEWAL CONTEXT            |   |
+|  |  +----------------------+    |  +----------------------+   |   |
+|  |  |  Line chart with     |    |  |  Key-value pairs:     |   |   |  <- 320px / auto
+|  |  |  colored zones bg    |    |  |  Days to Renewal      |   |   |
+|  |  |  markArea for risk   |    |  |  Contract End         |   |   |
+|  |  |  tier boundaries     |    |  |  ARR, Seats, Util     |   |   |
+|  |  +----------------------+    |  +----------------------+   |   |
+|  +------------------------------------------------------------+   |
 |                                                                   |
 |  RISK EVOLUTION                                                   |
-|  ┌────────────────────────────────────────────────────────────┐   |
-|  │  Multi-radar overlay: Current vs 3mo ago vs 6mo ago        │   |  <- 360px
-|  │  Legend: Current (red), 3mo (blue dashed), 6mo (grey dotted)|   |
-|  └────────────────────────────────────────────────────────────┘   |
+|  +------------------------------------------------------------+   |
+|  |  Multi-radar overlay: Current vs 3mo ago vs 6mo ago        |   |  <- 360px
+|  |  Legend: Current (red), 3mo (blue dashed), 6mo (grey dotted)|   |
+|  +------------------------------------------------------------+   |
 |                                                                   |
 |  RECOMMENDED ACTIONS                                              |
-|  ┌────────────────────────────────────────────────────────────┐   |
-|  │  Bulleted list from AI narrative recommendations           │   |  <- --bg-surface container
-|  │  Each action: priority badge + action text                 │   |
-|  └────────────────────────────────────────────────────────────┘   |
+|  +------------------------------------------------------------+   |
+|  |  Bulleted list from AI narrative recommendations           |   |  <- --bg-surface container
+|  |  Each action: priority badge + action text                 |   |
+|  +------------------------------------------------------------+   |
 +------------------------------------------------------------------+
 ```
 
@@ -596,9 +596,9 @@ function renderStalenessBanner(type, data) {
         }
     };
     var cfg = configs[type];
-    // Banner: 12px padding-block, 16px padding-inline, radius 6px, 13px Outfit weight 500
+    // Banner: 8px padding-block, 16px padding-inline, radius 6px, 14px Outfit weight 600
     return '<div style="background:' + cfg.bg + '; border:1px solid ' + cfg.border +
-           '; border-radius:6px; padding:12px 16px; margin-bottom:16px; font-family:Outfit,sans-serif; font-size:13px; font-weight:500; color:' + cfg.color + ';">' +
+           '; border-radius:6px; padding:8px 16px; margin-bottom:16px; font-family:Outfit,sans-serif; font-size:14px; font-weight:600; color:' + cfg.color + ';">' +
            cfg.text + '</div>';
 }
 ```
@@ -615,7 +615,7 @@ Phase 3 introduces data tables for Team Detection and Risk Scoring. These follow
 |----------|-------|--------|
 | Table width | 100% | Full container width |
 | Border collapse | collapse | No double borders |
-| Font | Outfit, 13px body; JetBrains Mono, 11px headers | Phase 1 typography |
+| Font | Outfit, 14px body; JetBrains Mono, 11px headers | Phase 1 typography |
 | Header font-weight | 400 | NOT bold; headers are subtle micro-labels |
 | Header text-transform | uppercase | Micro-label pattern |
 | Header color | `--text-tertiary` | Subtle header labels |
