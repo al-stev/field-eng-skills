@@ -153,6 +153,19 @@ class FeatureVelocityTransform(BaseTransform):
                 f"Inactive recently: {names} — had historical usage but no events in last 3 months."
             )
 
+        # Cliff detection: sudden drop (>90%) from one month to the next
+        for a in areas:
+            events = a["events"]
+            for i in range(1, len(events)):
+                if events[i - 1] > 100 and events[i] == 0 and i < len(events) - 1 and events[i + 1] <= 5 if i + 1 < len(events) else True:
+                    month_label = a["months"][i] if i < len(a["months"]) else "unknown"
+                    recommendations.append(
+                        f"{a['area']}: Abrupt drop to near-zero in {month_label} "
+                        f"(from {events[i-1]:,} events). Likely an instrumentation/tracking change "
+                        f"rather than user behavior — verify with product team."
+                    )
+                    break  # only flag once per area
+
         # Breadth assessment
         if active <= 3:
             recommendations.append(
