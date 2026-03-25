@@ -1,0 +1,45 @@
+{
+  "version": "1.0",
+  "timestamp": "2026-03-25T13:57:06.819Z",
+  "phase": "2",
+  "phase_name": "High-Confidence Pages",
+  "phase_dir": ".planning/phases/02-high-confidence-pages",
+  "plan": null,
+  "task": null,
+  "total_tasks": null,
+  "status": "paused",
+  "completed_tasks": [
+    {"id": "phase-1", "name": "Foundation and Template System (all 4 plans)", "status": "done"},
+    {"id": "feature-velocity", "name": "Feature Velocity page — full pipeline with real BQ data", "status": "done", "commit": "c2912d9"}
+  ],
+  "remaining_tasks": [
+    {"id": "sdk-versions", "name": "SDK Versions page — cli_version/local_version donut + table", "status": "not_started"},
+    {"id": "engagement-decay", "name": "Engagement Decay page — cold-detection table + sparklines", "status": "not_started"},
+    {"id": "user-journey", "name": "User Journey page — Sankey from dim_users first_*_at fields", "status": "not_started"},
+    {"id": "phase-3", "name": "Medium-Confidence Pages (Cohort, Team, Risk)", "status": "not_started"},
+    {"id": "phase-4", "name": "Privacy-Sensitive Pages (Correlation, Performance)", "status": "not_started"}
+  ],
+  "blockers": [],
+  "human_actions_pending": [
+    {"action": "Investigate Isomorphic Labs collaboration cliff (Jan 22 2026)", "context": "team_or_profile_viewed events dropped from 32 users to 2 overnight — customer-specific, not platform-wide", "blocking": false}
+  ],
+  "decisions": [
+    {"decision": "Separate pages per direction (not tabs in existing reports)", "rationale": "Enables parallel prototyping, each independently deployable", "phase": "project"},
+    {"decision": "All 9 directions + all differentiators in v1 scope", "rationale": "User wants full build, 82 requirements total", "phase": "project"},
+    {"decision": "V4 sparkline design: gold bars + event count labels above + user count below in green", "rationale": "Iterated through 4 options — lines were misleading, dots were messy, numbers are cleanest", "phase": "2"},
+    {"decision": "Filter event_count > 0 in product_areas_query", "rationale": "Ghost users appeared with null events but non-null user counts", "phase": "2"},
+    {"decision": "Weave suppression via account_health_query weave_customer flag", "rationale": "Non-Weave customers showed Weave data from trials", "phase": "2"},
+    {"decision": "Cliff detection in AI narrative", "rationale": "Isomorphic Labs collaboration cliff showed need to distinguish instrumentation changes from behavior", "phase": "2"},
+    {"decision": "Always use real data for prototyping, never fake data", "rationale": "User feedback — fake data is useless for validating visualizations", "phase": "project"},
+    {"decision": "Show deployment type and data provenance on pages", "rationale": "Server deployment customers have small SaaS footprints that aren't representative", "phase": "project"}
+  ],
+  "uncommitted_files": [
+    ".claude/skills/bigquery/scripts/usage.py",
+    ".claude/skills/bigquery/tests/conftest.py",
+    ".claude/skills/bigquery/tests/test_usage.py",
+    ".planning/STATE.md",
+    ".planning/config.json"
+  ],
+  "next_action": "Build SDK Versions page (easiest remaining Phase 2 page) following the same pattern: add query, create transform, add renderer to base template, generate with real data for Isomorphic Labs, iterate visually",
+  "context_notes": "Phase 1 foundation is complete but GSD phase tracking is slightly out of sync — we pulled Feature Velocity forward from Phase 2 during Phase 1 visual verification. The PAGE_RENDERERS pattern in base-template.html dispatches by page_type, so adding new pages means: 1) handler in generate.py, 2) transform class, 3) renderer function in template JS, 4) entry in PAGE_RENDERERS. V1-V3 renderer code for feature velocity is still in the template (dead code) — clean up when stabilized."
+}
