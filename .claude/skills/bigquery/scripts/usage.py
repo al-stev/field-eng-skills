@@ -30,6 +30,7 @@ from queries import (
     account_health_query,
     product_areas_query,
     power_users_query,
+    support_tickets_query,
     aggregate_weekly,
 )
 
@@ -294,6 +295,125 @@ def _build_power_users(pu_df: pd.DataFrame, internal: bool = False) -> Optional[
 
 
 
+def _build_support_tickets(tickets_df: pd.DataFrame) -> Optional[dict]:
+    """Build support_tickets sub-section from per-ticket helpdesk data."""
+    if _is_empty(tickets_df):
+        return None
+
+    total = len(tickets_df)
+
+    # Status distribution
+    by_status = {}
+    if "ticket_status" in tickets_df.columns:
+        counts = tickets_df["ticket_status"].value_counts()
+        by_status = {str(k): int(v) for k, v in counts.items()}
+
+    # Priority distribution
+    by_priority = {}
+    if "ticket_priority" in tickets_df.columns:
+        counts = tickets_df["ticket_priority"].dropna().value_counts()
+        by_priority = {str(k): int(v) for k, v in counts.items()}
+
+    # Escalation count
+    escalated_count = 0
+    if "escalated_to_jira" in tickets_df.columns:
+        escalated_count = int(
+            tickets_df["escalated_to_jira"]
+            .fillna("")
+            .apply(lambda v: str(v).lower() not in ("", "no", "false", "nan", "none"))
+            .sum()
+        )
+
+    # CSAT distribution
+    csat = {}
+    if "ticket_satisfaction_score" in tickets_df.columns:
+        scores = tickets_df["ticket_satisfaction_score"].dropna()
+        scores = scores[scores != ""]
+        if not scores.empty:
+            csat_counts = scores.value_counts()
+            csat = {str(k): int(v) for k, v in csat_counts.items()}
+
+    # Top concerns
+    top_concerns = []
+    if "primary_ticket_concern" in tickets_df.columns:
+        concerns = tickets_df["primary_ticket_concern"].dropna()
+        concerns = concerns[concerns != ""]
+        if not concerns.empty:
+            concern_counts = concerns.value_counts().head(10)
+            top_concerns = [
+                {"concern": str(k), "count": int(v)}
+                for k, v in concern_counts.items()
+            ]
+
+    # Monthly volume trend
+    monthly_volume = []
+    if "ticket_created_date_day" in tickets_df.columns:
+        work = tickets_df.copy()
+        work["month"] = pd.to_datetime(work["ticket_created_date_day"]).dt.to_period("M")
+        monthly = work.groupby("month").size().sort_index()
+        monthly_volume = [
+            {"month": str(m), "count": int(c)}
+            for m, c in monthly.items()
+        ]
+
+    # Recent non-closed tickets (most useful for dashboard detail view)
+    recent_tickets = []
+    open_mask = tickets_df["ticket_status"].isin(["new", "open", "pending", "hold"])
+    open_df = tickets_df[open_mask].head(25)
+    for _, row in open_df.iterrows():
+        ticket = {
+            "id": int(row["zendesk_ticket_id"]) if pd.notna(row.get("zendesk_ticket_id")) else None,
+            "subject": str(row.get("ticket_subject", ""))[:120],
+            "status": str(row.get("ticket_status", "")),
+            "priority": str(row.get("ticket_priority", "")) if pd.notna(row.get("ticket_priority")) else None,
+            "created_at": str(row["ticket_created_at"])[:10] if pd.notna(row.get("ticket_created_at")) else None,
+            "updated_at": str(row["ticket_last_updated_at"])[:10] if pd.notna(row.get("ticket_last_updated_at")) else None,
+            "concern": str(row.get("primary_ticket_concern", "")) if pd.notna(row.get("primary_ticket_concern")) else None,
+            "channel": str(row.get("channel", "")) if pd.notna(row.get("channel")) else None,
+        }
+        jira_id = row.get("jira_id")
+        if jira_id and pd.notna(jira_id) and str(jira_id).strip():
+            ticket["jira_id"] = str(jira_id).strip()
+            jira_link = row.get("jira_link")
+            if jira_link and pd.notna(jira_link):
+                ticket["jira_link"] = str(jira_link).strip()
+        recent_tickets.append(ticket)
+
+    # Top submitters
+    top_submitters = []
+    if "submitter_name" in tickets_df.columns:
+        submitters = tickets_df.copy()
+        submitters["submitter"] = submitters["submitter_name"].fillna("Unknown")
+        grouped = submitters.groupby("submitter")
+        sub_counts = grouped.size().sort_values(ascending=False).head(10)
+        for name, count in sub_counts.items():
+            sub_data = submitters[submitters["submitter"] == name]
+            concerns = []
+            if "primary_ticket_concern" in sub_data.columns:
+                concern_counts = sub_data["primary_ticket_concern"].dropna().value_counts()
+                concerns = [
+                    {"concern": str(k), "count": int(v)}
+                    for k, v in concern_counts.head(5).items()
+                ]
+            top_submitters.append({
+                "name": str(name),
+                "count": int(count),
+                "concerns": concerns,
+            })
+
+    return {
+        "total": total,
+        "by_status": by_status,
+        "by_priority": by_priority,
+        "escalated_to_jira": escalated_count,
+        "csat": csat,
+        "top_concerns": top_concerns,
+        "monthly_volume": monthly_volume,
+        "recent_tickets": recent_tickets,
+        "top_submitters": top_submitters,
+    }
+
+
 def build_usage_json(
     seat_df: pd.DataFrame,
     weave_df: pd.DataFrame,
@@ -301,6 +421,7 @@ def build_usage_json(
     account_df: pd.DataFrame,
     product_areas_df: pd.DataFrame = None,
     power_users_df: pd.DataFrame = None,
+    support_tickets_df: pd.DataFrame = None,
     internal: bool = False,
 ) -> dict:
     """
@@ -324,6 +445,7 @@ def build_usage_json(
     health = _build_account_health(account_df)
     product_areas = _build_product_areas(product_areas_df)
     power_users = _build_power_users(power_users_df, internal=internal)
+    support_tickets = _build_support_tickets(support_tickets_df)
 
     # Enrich with SFDC entitlement data if available
     if health:
@@ -354,7 +476,7 @@ def build_usage_json(
                 )
 
     # If all sections are None, no data available
-    if all(s is None for s in [seat_util, weave, tracked, health]):
+    if all(s is None for s in [seat_util, weave, tracked, health, support_tickets]):
         return {"available": False, "reason": "no_data"}
 
     # Compute period from available data
@@ -373,6 +495,7 @@ def build_usage_json(
         "account_health": health,
         "product_areas": product_areas,
         "power_users": power_users,
+        "support_tickets": support_tickets,
     }
 
 
@@ -405,17 +528,18 @@ def main():
         # Create BigQuery client
         client = get_client()
 
-        # Run all 6 queries
+        # Run all 7 queries
         seat_df = run_query(client, seat_utilization_query(), account_id=account_id)
         weave_df = run_query(client, weave_ingestion_query(), account_id=account_id)
         hours_df = run_query(client, tracked_hours_query(), account_id=account_id)
         account_df = run_query(client, account_health_query(), account_id=account_id)
         pa_df = run_query(client, product_areas_query(), account_id=account_id)
         pu_df = run_query(client, power_users_query(), account_id=account_id)
+        tickets_df = run_query(client, support_tickets_query(), account_id=account_id)
 
         # Build JSON output
         result = build_usage_json(
-            seat_df, weave_df, hours_df, account_df, pa_df, pu_df,
+            seat_df, weave_df, hours_df, account_df, pa_df, pu_df, tickets_df,
             internal=getattr(args, 'internal', False),
         )
 
@@ -444,6 +568,10 @@ def main():
             if result.get("account_health"):
                 ah = result["account_health"]
                 print(f"  Health: {ah['customer_health']} | Tier: {ah['cs_tier']}")
+            if result.get("support_tickets"):
+                st = result["support_tickets"]
+                open_count = st["by_status"].get("open", 0) + st["by_status"].get("pending", 0) + st["by_status"].get("new", 0) + st["by_status"].get("hold", 0)
+                print(f"  Support: {st['total']} tickets (12mo), {open_count} open, {st['escalated_to_jira']} escalated")
         else:
             print(f"No usage data: {result.get('reason', 'unknown')}")
             if result.get("detail"):

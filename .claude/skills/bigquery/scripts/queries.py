@@ -422,6 +422,107 @@ def account_health_query() -> str:
     """
 
 
+def sdk_versions_query() -> str:
+    """
+    SDK version distribution over time — cli_version and local_version per user.
+
+    Returns monthly version distribution with user counts. Filters out null/empty
+    versions and aggregates to the major.minor level for cleaner grouping.
+    """
+    daily_usage = _ref("ext_daily_user_event_usage")
+    return f"""
+    WITH raw_versions AS (
+        SELECT
+            universal_user_id,
+            date_day,
+            -- Treat 'N/A' and empty strings as NULL
+            NULLIF(NULLIF(cli_version, 'N/A'), '') AS cli_ver,
+            NULLIF(NULLIF(local_version, 'N/A'), '') AS local_ver
+        FROM {daily_usage}
+        WHERE account_id = @account_id
+            AND date_day >= DATE_SUB(CURRENT_DATE(), INTERVAL 12 MONTH)
+            AND event_count > 0
+    ),
+    -- Prefer cli_version; for local_version, take the first CSV entry (can be comma-separated)
+    resolved AS (
+        SELECT
+            universal_user_id,
+            date_day,
+            COALESCE(
+                cli_ver,
+                SPLIT(local_ver, ',')[SAFE_OFFSET(0)]
+            ) AS sdk_version
+        FROM raw_versions
+    ),
+    -- Aggregate to monthly per-user: take the MAX version seen that month
+    monthly_user AS (
+        SELECT
+            universal_user_id,
+            FORMAT_DATE('%Y-%m', date_day) AS month,
+            MAX(sdk_version) AS sdk_version
+        FROM resolved
+        WHERE sdk_version IS NOT NULL
+            AND REGEXP_CONTAINS(sdk_version, r'^\\d+\\.\\d+')
+        GROUP BY universal_user_id, month
+    )
+    SELECT
+        month,
+        sdk_version,
+        COUNT(DISTINCT universal_user_id) AS user_count
+    FROM monthly_user
+    GROUP BY month, sdk_version
+    ORDER BY month, sdk_version
+    """
+
+
+def engagement_decay_query() -> str:
+    """
+    Per-user weekly activity for engagement decay analysis.
+
+    Returns weekly event counts per user over 12 months, with identity resolution
+    for server deployments. Used to detect activity decline (cooling/cold users).
+    """
+    daily_usage = _ref("ext_daily_user_event_usage")
+    dim_users = _ref("dim_users")
+    return f"""
+    WITH user_weekly AS (
+        SELECT
+            universal_user_id,
+            username,
+            email,
+            DATE_TRUNC(date_day, WEEK(MONDAY)) AS week,
+            SUM(event_count) AS events
+        FROM {daily_usage}
+        WHERE account_id = @account_id
+            AND date_day >= DATE_SUB(CURRENT_DATE(), INTERVAL 12 MONTH)
+            AND event_count > 0
+        GROUP BY universal_user_id, username, email, week
+    ),
+    -- Resolve identity for server deployments
+    resolved AS (
+        SELECT
+            uw.universal_user_id,
+            COALESCE(uw.username, du.local_username) AS username,
+            COALESCE(uw.email, du.local_user_email) AS email,
+            uw.week,
+            uw.events
+        FROM user_weekly uw
+        LEFT JOIN {dim_users} du
+            ON uw.universal_user_id = du.universal_user_id
+            AND du.account_id = @account_id
+    )
+    SELECT
+        universal_user_id,
+        MAX(username) AS username,
+        MAX(email) AS email,
+        week,
+        SUM(events) AS events
+    FROM resolved
+    GROUP BY universal_user_id, week
+    ORDER BY universal_user_id, week
+    """
+
+
 def aggregate_weekly(
     df: pd.DataFrame,
     date_col: str = "date_day",

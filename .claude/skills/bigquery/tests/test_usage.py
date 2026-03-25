@@ -9,7 +9,7 @@ import pytest
 # Add scripts/ to path for imports
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 
-from usage import build_usage_json, classify_utilization_zone
+from usage import build_usage_json, classify_utilization_zone, _build_support_tickets
 
 
 class TestBuildUsageJson:
@@ -37,6 +37,7 @@ class TestBuildUsageJson:
         assert "tracked_hours" in result
         assert "account_health" in result
         assert "product_areas" in result
+        assert "support_tickets" in result
 
     def test_empty_data_returns_unavailable(self, sample_empty_df):
         """All empty DataFrames produce {"available": false, "reason": "no_data"}."""
@@ -127,6 +128,81 @@ class TestBuildUsageJson:
         weave = result["weave"]
         assert weave is not None
         assert weave["ingestion_gb"] > 0
+
+
+class TestBuildSupportTickets:
+    """Tests for _build_support_tickets() output schema and aggregation."""
+
+    def test_support_tickets_output_keys(self, sample_support_tickets_df):
+        """_build_support_tickets returns dict with all required keys."""
+        result = _build_support_tickets(sample_support_tickets_df)
+        assert result is not None
+        for key in [
+            "total", "by_status", "by_priority", "escalated_to_jira",
+            "csat", "top_concerns", "monthly_volume", "recent_tickets",
+        ]:
+            assert key in result, f"Missing key: {key}"
+
+    def test_support_tickets_total_count(self, sample_support_tickets_df):
+        """total equals number of ticket rows."""
+        result = _build_support_tickets(sample_support_tickets_df)
+        assert result["total"] == 6
+
+    def test_support_tickets_status_distribution(self, sample_support_tickets_df):
+        """by_status counts each status correctly."""
+        result = _build_support_tickets(sample_support_tickets_df)
+        assert result["by_status"]["open"] == 1
+        assert result["by_status"]["pending"] == 1
+        assert result["by_status"]["closed"] == 1
+        assert result["by_status"]["hold"] == 1
+        assert result["by_status"]["new"] == 1
+        assert result["by_status"]["solved"] == 1
+
+    def test_support_tickets_escalation_count(self, sample_support_tickets_df):
+        """escalated_to_jira counts 'yes' values (3 in fixture)."""
+        result = _build_support_tickets(sample_support_tickets_df)
+        assert result["escalated_to_jira"] == 3
+
+    def test_support_tickets_recent_only_open(self, sample_support_tickets_df):
+        """recent_tickets only includes open/pending/new/hold tickets."""
+        result = _build_support_tickets(sample_support_tickets_df)
+        statuses = {t["status"] for t in result["recent_tickets"]}
+        assert statuses <= {"open", "pending", "new", "hold"}
+        # closed and solved should NOT be in recent
+        assert "closed" not in statuses
+        assert "solved" not in statuses
+
+    def test_support_tickets_jira_cross_link(self, sample_support_tickets_df):
+        """Tickets with jira_id include jira_id and jira_link in output."""
+        result = _build_support_tickets(sample_support_tickets_df)
+        linked = [t for t in result["recent_tickets"] if "jira_id" in t]
+        assert len(linked) > 0
+        for t in linked:
+            assert t["jira_id"].startswith("WB-")
+
+    def test_support_tickets_monthly_volume(self, sample_support_tickets_df):
+        """monthly_volume has entries sorted by month."""
+        result = _build_support_tickets(sample_support_tickets_df)
+        months = [m["month"] for m in result["monthly_volume"]]
+        assert months == sorted(months)
+        assert sum(m["count"] for m in result["monthly_volume"]) == 6
+
+    def test_support_tickets_empty_returns_none(self, sample_empty_df):
+        """Empty DataFrame returns None."""
+        result = _build_support_tickets(sample_empty_df)
+        assert result is None
+
+    def test_support_tickets_in_usage_json(
+        self, sample_empty_df, sample_support_tickets_df
+    ):
+        """support_tickets appears in build_usage_json output."""
+        result = build_usage_json(
+            sample_empty_df, sample_empty_df, sample_empty_df, sample_empty_df,
+            support_tickets_df=sample_support_tickets_df,
+        )
+        assert result["available"] is True
+        assert result["support_tickets"] is not None
+        assert result["support_tickets"]["total"] == 6
 
 
 class TestClassifyUtilizationZone:
