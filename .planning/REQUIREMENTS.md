@@ -11,21 +11,21 @@
 - [x] **FOUND-02**: Shared identity resolution CTE utility for dim_users JOIN (server deployment support)
 - [x] **FOUND-03**: BQ cost guardrails: maximum_bytes_billed on every new query, bytes-processed logging
 - [x] **FOUND-04**: Schema validation utility that checks table existence and required columns before querying
-- [ ] **FOUND-05**: Shared W&B design system (CSS tokens, ECharts wandb theme, fonts, dark/light mode) documented and extractable from existing templates
+- [x] **FOUND-05**: Shared W&B design system (CSS tokens, ECharts wandb theme, fonts, dark/light mode) documented and extractable from existing templates
 
 ### Cross-Cutting (Every Page)
 
-- [ ] **XCUT-01**: AI narrative summary section with SE talk-track text generated at build time
-- [ ] **XCUT-02**: KPI headline row (2-4 top-level numbers) above charts
-- [ ] **XCUT-03**: Date range context header showing analysis period
-- [ ] **XCUT-04**: W&B branding (Instrument Serif, Outfit, JetBrains Mono, gold accent, noise texture)
-- [ ] **XCUT-05**: Self-contained HTML (single file, ECharts CDN, inline CSS/JS, no server)
-- [ ] **XCUT-06**: Dark/light mode via prefers-color-scheme CSS media query
-- [ ] **XCUT-07**: Graceful empty states when customer lacks data for a dimension
-- [ ] **XCUT-08**: Interactive tooltips on all chart data points
-- [ ] **XCUT-09**: Print/screenshot readiness (ECharts saveAsImage toolbox)
-- [ ] **XCUT-10**: Copy-to-clipboard for AI narrative text
-- [ ] **XCUT-11**: Linked navigation between related pages
+- [x] **XCUT-01**: AI narrative summary section with SE talk-track text generated at build time
+- [x] **XCUT-02**: KPI headline row (2-4 top-level numbers) above charts
+- [x] **XCUT-03**: Date range context header showing analysis period
+- [x] **XCUT-04**: W&B branding (Instrument Serif, Outfit, JetBrains Mono, gold accent, noise texture)
+- [x] **XCUT-05**: Self-contained HTML (single file, ECharts CDN, inline CSS/JS, no server)
+- [x] **XCUT-06**: Dark/light mode via prefers-color-scheme CSS media query
+- [x] **XCUT-07**: Graceful empty states when customer lacks data for a dimension
+- [x] **XCUT-08**: Interactive tooltips on all chart data points
+- [x] **XCUT-09**: Print/screenshot readiness (ECharts saveAsImage toolbox)
+- [x] **XCUT-10**: Copy-to-clipboard for AI narrative text
+- [x] **XCUT-11**: Linked navigation between related pages
 
 ### User Journey
 
@@ -150,18 +150,18 @@
 | FOUND-02 | Phase 1 | Complete |
 | FOUND-03 | Phase 1 | Complete |
 | FOUND-04 | Phase 1 | Complete |
-| FOUND-05 | Phase 1 | Pending |
-| XCUT-01 | Phase 1 | Pending |
-| XCUT-02 | Phase 1 | Pending |
-| XCUT-03 | Phase 1 | Pending |
-| XCUT-04 | Phase 1 | Pending |
-| XCUT-05 | Phase 1 | Pending |
-| XCUT-06 | Phase 1 | Pending |
-| XCUT-07 | Phase 1 | Pending |
-| XCUT-08 | Phase 1 | Pending |
-| XCUT-09 | Phase 1 | Pending |
-| XCUT-10 | Phase 1 | Pending |
-| XCUT-11 | Phase 1 | Pending |
+| FOUND-05 | Phase 1 | Complete |
+| XCUT-01 | Phase 1 | Complete |
+| XCUT-02 | Phase 1 | Complete |
+| XCUT-03 | Phase 1 | Complete |
+| XCUT-04 | Phase 1 | Complete |
+| XCUT-05 | Phase 1 | Complete |
+| XCUT-06 | Phase 1 | Complete |
+| XCUT-07 | Phase 1 | Complete |
+| XCUT-08 | Phase 1 | Complete |
+| XCUT-09 | Phase 1 | Complete |
+| XCUT-10 | Phase 1 | Complete |
+| XCUT-11 | Phase 1 | Complete |
 | JOUR-01 | Phase 2 | Pending |
 | JOUR-02 | Phase 2 | Pending |
 | JOUR-03 | Phase 2 | Pending |
