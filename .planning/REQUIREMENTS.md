@@ -71,13 +71,13 @@
 ### Team Detection
 
 - [x] **TEAM-01**: Team breakdown table listing teams (from org_name/is_part_of_team), member counts, total activity, top product areas
-- [ ] **TEAM-02**: Per-team activity bar chart comparing total activity and unique users
-- [ ] **TEAM-03**: Team x product area heatmap showing which teams use which products
+- [x] **TEAM-02**: Per-team activity bar chart comparing total activity and unique users
+- [x] **TEAM-03**: Team x product area heatmap showing which teams use which products
 - [x] **TEAM-04**: Clear "Team data unavailable" message when fields are not populated
-- [ ] **TEAM-05**: AI narrative identifying team patterns and per-team enablement opportunities
-- [ ] **TEAM-06**: Team adoption timeline showing when each team started using W&B
-- [ ] **TEAM-07**: Per-team champion identification (most active user per team)
-- [ ] **TEAM-08**: Team growth/contraction trend (new users joining vs dropping off per team)
+- [x] **TEAM-05**: AI narrative identifying team patterns and per-team enablement opportunities
+- [x] **TEAM-06**: Team adoption timeline showing when each team started using W&B
+- [x] **TEAM-07**: Per-team champion identification (most active user per team)
+- [x] **TEAM-08**: Team growth/contraction trend (new users joining vs dropping off per team)
 
 ### Risk Scoring
 
@@ -199,13 +199,13 @@
 | CHRT-06 | Phase 3 | Pending |
 | CHRT-07 | Phase 3 | Complete |
 | TEAM-01 | Phase 3 | Complete |
-| TEAM-02 | Phase 3 | Pending |
-| TEAM-03 | Phase 3 | Pending |
+| TEAM-02 | Phase 3 | Complete |
+| TEAM-03 | Phase 3 | Complete |
 | TEAM-04 | Phase 3 | Complete |
-| TEAM-05 | Phase 3 | Pending |
-| TEAM-06 | Phase 3 | Pending |
-| TEAM-07 | Phase 3 | Pending |
-| TEAM-08 | Phase 3 | Pending |
+| TEAM-05 | Phase 3 | Complete |
+| TEAM-06 | Phase 3 | Complete |
+| TEAM-07 | Phase 3 | Complete |
+| TEAM-08 | Phase 3 | Complete |
 | RISK-01 | Phase 3 | Complete |
 | RISK-02 | Phase 3 | Pending |
 | RISK-03 | Phase 3 | Complete |

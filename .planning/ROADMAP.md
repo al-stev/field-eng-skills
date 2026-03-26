@@ -63,7 +63,7 @@ Plans:
 Plans:
 - [x] 03-01-PLAN.md -- Phase 3 BQ queries and schema validation specs
 - [ ] 03-02-PLAN.md -- Cohort Analysis page (transform + handler + renderer)
-- [ ] 03-03-PLAN.md -- Team Detection page (transform + handler + renderer)
+- [x] 03-03-PLAN.md -- Team Detection page (transform + handler + renderer)
 - [ ] 03-04-PLAN.md -- Risk Scoring page (transform + handler + renderer)
 **UI hint**: yes
 
