@@ -92,14 +92,14 @@
 
 ### Usage Correlation
 
-- [ ] **CORR-01**: Product combination matrix (heatmap) showing which product combos co-occur across accounts with retention rates
-- [ ] **CORR-02**: Current account positioning showing their product mix against aggregate patterns
-- [ ] **CORR-03**: Next-best-action recommendation based on correlation data
-- [ ] **CORR-04**: "SE-Internal Only" privacy badge and aggregate-only queries (no individual account names)
-- [ ] **CORR-05**: AI narrative interpreting correlation patterns with account-specific recommendations
-- [ ] **CORR-06**: Expansion signal indicators (flag usage approaching contract limits for upsell)
-- [ ] **CORR-07**: Anonymized peer benchmarking (percentile ranking vs similar-tier accounts)
-- [ ] **CORR-08**: ARR-usage scatter overlay (product breadth vs ARR across accounts, SE-internal)
+- [x] **CORR-01**: Product combination matrix (heatmap) showing which product combos co-occur across accounts with retention rates
+- [x] **CORR-02**: Current account positioning showing their product mix against aggregate patterns
+- [x] **CORR-03**: Next-best-action recommendation based on correlation data
+- [x] **CORR-04**: "SE-Internal Only" privacy badge and aggregate-only queries (no individual account names)
+- [x] **CORR-05**: AI narrative interpreting correlation patterns with account-specific recommendations
+- [x] **CORR-06**: Expansion signal indicators (flag usage approaching contract limits for upsell)
+- [x] **CORR-07**: Anonymized peer benchmarking (percentile ranking vs similar-tier accounts)
+- [x] **CORR-08**: ARR-usage scatter overlay (product breadth vs ARR across accounts, SE-internal)
 
 ### SDK Versions
 
@@ -214,14 +214,14 @@
 | RISK-06 | Phase 3 | Complete |
 | RISK-07 | Phase 3 | Complete |
 | RISK-08 | Phase 3 | Complete |
-| CORR-01 | Phase 4 | Pending |
-| CORR-02 | Phase 4 | Pending |
-| CORR-03 | Phase 4 | Pending |
-| CORR-04 | Phase 4 | Pending |
-| CORR-05 | Phase 4 | Pending |
-| CORR-06 | Phase 4 | Pending |
-| CORR-07 | Phase 4 | Pending |
-| CORR-08 | Phase 4 | Pending |
+| CORR-01 | Phase 4 | Complete |
+| CORR-02 | Phase 4 | Complete |
+| CORR-03 | Phase 4 | Complete |
+| CORR-04 | Phase 4 | Complete |
+| CORR-05 | Phase 4 | Complete |
+| CORR-06 | Phase 4 | Complete |
+| CORR-07 | Phase 4 | Complete |
+| CORR-08 | Phase 4 | Complete |
 | PERF-01 | Phase 4 | Pending |
 | PERF-02 | Phase 4 | Pending |
 | PERF-03 | Phase 4 | Pending |

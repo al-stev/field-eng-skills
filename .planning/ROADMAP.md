@@ -78,9 +78,9 @@ Plans:
   4. All 9 deep analytics pages are discoverable via linked navigation between related pages, and the full suite generates successfully for at least one real customer
 **Plans**: 3 plans
 Plans:
-- [ ] 04-01-PLAN.md -- BQ queries (cross-account + performance), PRODUCT_AREA_CASE extraction, schema validation specs
-- [ ] 04-02-PLAN.md -- Usage Correlation page (transform + handler + renderer with privacy controls)
-- [ ] 04-03-PLAN.md -- Performance Deep Dive page (transform + handler + renderer with go/no-go gate)
+- [x] 04-01-PLAN.md -- BQ queries (cross-account + performance), PRODUCT_AREA_CASE extraction, schema validation specs
+- [x] 04-02-PLAN.md -- Usage Correlation page (transform + handler + renderer with privacy controls)
+- [x] 04-03-PLAN.md -- Performance Deep Dive page (transform + handler + renderer with go/no-go gate)
 **UI hint**: yes
 
 ## Progress
