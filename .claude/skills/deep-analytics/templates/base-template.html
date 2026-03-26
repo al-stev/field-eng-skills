@@ -2132,13 +2132,378 @@ function renderCohortAnalysis() {
   window.addEventListener('resize', function() { charts.forEach(function(ch) { ch.resize(); }); });
 }
 
+/* ── Staleness Banner helper (used by Risk Scoring) ── */
+
+function renderStalenessBanner(type, data) {
+  var c = getThemeColors();
+  var configs = {
+    stale_model: {
+      bg: 'rgba(251,191,36,0.10)',
+      border: 'rgba(251,191,36,0.22)',
+      color: c.amber,
+      text: 'Churn model data is ' + data.age_days + ' days old. Interpret ML-based risk factors with caution.'
+    },
+    no_model: {
+      bg: 'rgba(96,165,250,0.10)',
+      border: 'rgba(96,165,250,0.22)',
+      color: c.blue,
+      text: 'Risk score excludes ML churn model (data unavailable). Score is based on behavioral signals only: engagement trend, seat utilization, and support velocity.'
+    },
+    veto: {
+      bg: 'rgba(248,113,113,0.10)',
+      border: 'rgba(248,113,113,0.22)',
+      color: c.red,
+      text: 'Critical threshold exceeded: ' + (data.factor_name || 'Churn probability') + ' triggered automatic high-risk floor.'
+    }
+  };
+  var cfg = configs[type];
+  if (!cfg) return '';
+  return '<div style="background:' + cfg.bg + '; border:1px solid ' + cfg.border +
+         '; border-radius:6px; padding:8px 16px; margin-bottom:16px; font-family:Outfit,sans-serif; font-size:14px; font-weight:600; color:' + cfg.color + ';">' +
+         cfg.text + '</div>';
+}
+
+/* ── Risk Scoring page renderer ── */
+
+function renderRiskScoring() {
+  var grid = document.getElementById('sparklineGrid');
+  grid.style.display = 'block';
+  var c = getThemeColors();
+  var charts = [];
+  var risk = PAGE_DATA.risk || {};
+  var riskTrend = PAGE_DATA.risk_trend || {};
+  var renewalCtx = PAGE_DATA.renewal_context || {};
+  var riskRadar = PAGE_DATA.risk_radar || {};
+  var narrative = typeof AI_NARRATIVE !== 'undefined' ? AI_NARRATIVE : (PAGE_DATA.narrative || {});
+
+  var html = '';
+
+  // ── Banners ──
+  if (risk.churn_model_stale === true) {
+    html += renderStalenessBanner('stale_model', { age_days: risk.churn_model_age_days });
+  }
+  if (risk.churn_model_available === false) {
+    html += renderStalenessBanner('no_model', {});
+  }
+  if (risk.veto_applied === true) {
+    html += renderStalenessBanner('veto', { factor_name: 'Churn probability' });
+  }
+
+  // ── 1. Side-by-side: Gauge + Radar ──
+  html += '<div style="display:flex; gap:32px; flex-wrap:wrap; margin-bottom:32px;">';
+
+  // Left: Composite Risk Gauge
+  html += '<div style="flex:1; min-width:300px;">';
+  html += '<div style="font-family:var(--font-mono); font-size:11px; text-transform:uppercase; color:var(--text-tertiary); letter-spacing:0.05em; margin-bottom:12px;">COMPOSITE RISK SCORE</div>';
+  html += '<div id="riskGauge" style="width:100%; height:300px;"></div>';
+  html += '</div>';
+
+  // Right: Risk Radar
+  html += '<div style="flex:1; min-width:320px;">';
+  html += '<div style="font-family:var(--font-mono); font-size:11px; text-transform:uppercase; color:var(--text-tertiary); letter-spacing:0.05em; margin-bottom:12px;">RISK PROFILE</div>';
+  html += '<div id="riskRadar" style="width:100%; height:360px;"></div>';
+  html += '</div>';
+
+  html += '</div>';
+
+  // ── 2. Risk Factor Breakdown Table ──
+  html += '<div style="font-family:var(--font-mono); font-size:11px; text-transform:uppercase; color:var(--text-tertiary); letter-spacing:0.05em; margin-bottom:12px;">RISK FACTOR BREAKDOWN</div>';
+  html += '<div style="background:var(--bg-surface); border-radius:6px; padding:16px; margin-bottom:32px; overflow-x:auto;">';
+  html += '<table style="width:100%; border-collapse:collapse; font-family:var(--font-body); font-size:14px;">';
+  html += '<thead><tr style="border-bottom:1px solid var(--border-subtle);">';
+  html += '<th style="text-align:left; padding:8px 12px; font-family:var(--font-mono); font-size:11px; text-transform:uppercase; color:var(--text-tertiary); font-weight:500;">FACTOR</th>';
+  html += '<th style="text-align:right; padding:8px 12px; font-family:var(--font-mono); font-size:11px; text-transform:uppercase; color:var(--text-tertiary); font-weight:500;">RAW VALUE</th>';
+  html += '<th style="text-align:left; padding:8px 12px; font-family:var(--font-mono); font-size:11px; text-transform:uppercase; color:var(--text-tertiary); font-weight:500;">NORMALIZED (0-100)</th>';
+  html += '<th style="text-align:right; padding:8px 12px; font-family:var(--font-mono); font-size:11px; text-transform:uppercase; color:var(--text-tertiary); font-weight:500;">WEIGHT</th>';
+  html += '<th style="text-align:right; padding:8px 12px; font-family:var(--font-mono); font-size:11px; text-transform:uppercase; color:var(--text-tertiary); font-weight:500;">CONTRIBUTION</th>';
+  html += '</tr></thead><tbody>';
+
+  var factorOrder = ['churn_model', 'engagement_trend', 'seat_utilization', 'support_velocity'];
+  var factorLabels = { churn_model: 'Churn Model', engagement_trend: 'Engagement Trend', seat_utilization: 'Seat Utilization', support_velocity: 'Support Velocity' };
+  var factors = risk.factors || {};
+
+  factorOrder.forEach(function(key) {
+    var f = factors[key];
+    if (!f) return;
+    var norm = f.normalized;
+    var barColor = norm === null ? c.textTertiary : (norm <= 30 ? c.green : (norm <= 60 ? c.amber : c.red));
+    var rawDisplay = f.raw === null ? 'N/A' : (typeof f.raw === 'number' ? (f.raw < 1 && f.raw > 0 ? (f.raw * 100).toFixed(0) + '%' : f.raw.toFixed ? f.raw.toFixed(1) : f.raw) : f.raw);
+    var normDisplay = norm === null ? 'N/A' : norm.toFixed(1);
+    var barWidth = norm === null ? 0 : norm;
+
+    html += '<tr style="border-bottom:1px solid var(--border-subtle);">';
+    html += '<td style="padding:8px 12px; color:var(--text-primary); font-weight:500;">' + factorLabels[key] + '</td>';
+    html += '<td style="padding:8px 12px; text-align:right; font-family:var(--font-mono); font-size:12px; color:var(--text-secondary);">' + rawDisplay + '</td>';
+    html += '<td style="padding:8px 12px;">';
+    html += '<div style="display:flex; align-items:center; gap:8px;">';
+    html += '<div style="flex:1; background:var(--bg-hover); border-radius:4px; height:8px; overflow:hidden;">';
+    html += '<div style="width:' + barWidth + '%; height:8px; border-radius:4px; background:' + barColor + ';"></div>';
+    html += '</div>';
+    html += '<span style="font-family:var(--font-mono); font-size:12px; color:var(--text-secondary); min-width:32px; text-align:right;">' + normDisplay + '</span>';
+    html += '</div></td>';
+    html += '<td style="padding:8px 12px; text-align:right; font-family:var(--font-mono); font-size:12px; color:var(--text-secondary);">' + (f.weight * 100).toFixed(0) + '%</td>';
+    html += '<td style="padding:8px 12px; text-align:right; font-family:var(--font-mono); font-size:12px; color:var(--text-secondary);">' + f.contribution.toFixed(1) + '</td>';
+    html += '</tr>';
+  });
+
+  html += '</tbody></table></div>';
+
+  // ── 3. Side-by-side: Risk Trend + Renewal Context ──
+  html += '<div style="display:flex; gap:32px; flex-wrap:wrap; margin-bottom:32px;">';
+
+  // Left: Risk Trend Line
+  html += '<div style="flex:1; min-width:320px;">';
+  html += '<div style="font-family:var(--font-mono); font-size:11px; text-transform:uppercase; color:var(--text-tertiary); letter-spacing:0.05em; margin-bottom:12px;">RISK TREND (6 MONTHS)</div>';
+  html += '<div id="riskTrend" style="width:100%; height:320px;"></div>';
+  html += '</div>';
+
+  // Right: Renewal Context Card
+  html += '<div style="flex:0 0 320px; min-width:280px;">';
+  html += '<div style="font-family:var(--font-mono); font-size:11px; text-transform:uppercase; color:var(--text-tertiary); letter-spacing:0.05em; margin-bottom:12px;">RENEWAL CONTEXT</div>';
+  html += '<div style="background:var(--bg-surface); border-radius:6px; padding:16px;">';
+
+  var rcFields = [
+    { label: 'Days to Renewal', value: renewalCtx.days_to_renewal != null ? renewalCtx.days_to_renewal : 'N/A' },
+    { label: 'Contract End', value: renewalCtx.contract_end || 'N/A' },
+    { label: 'ARR', value: renewalCtx.arr ? '$' + Math.round(renewalCtx.arr / 1000) + 'K' : 'N/A' },
+    { label: 'Contracted Seats', value: renewalCtx.contracted_seats || 'N/A' },
+    { label: 'Active Seats', value: renewalCtx.active_seats || 'N/A' },
+    { label: 'Seat Utilization', value: renewalCtx.seat_utilization != null ? renewalCtx.seat_utilization + '%' : 'N/A' }
+  ];
+
+  rcFields.forEach(function(field) {
+    html += '<div style="margin-bottom:12px;">';
+    html += '<div style="font-family:var(--font-mono); font-size:11px; text-transform:uppercase; color:var(--text-tertiary); letter-spacing:0.05em;">' + field.label + '</div>';
+    html += '<div style="font-family:var(--font-body); font-size:16px; color:var(--text-primary); font-weight:500;">' + field.value + '</div>';
+    html += '</div>';
+  });
+
+  html += '</div></div>';
+  html += '</div>';
+
+  // ── 4. Risk Evolution (multi-radar) ──
+  html += '<div style="font-family:var(--font-mono); font-size:11px; text-transform:uppercase; color:var(--text-tertiary); letter-spacing:0.05em; margin-bottom:12px;">RISK EVOLUTION</div>';
+  html += '<div id="riskEvolution" style="width:100%; height:360px; margin-bottom:32px;"></div>';
+
+  // ── 5. Recommended Actions ──
+  html += '<div style="font-family:var(--font-mono); font-size:11px; text-transform:uppercase; color:var(--text-tertiary); letter-spacing:0.05em; margin-bottom:12px;">RECOMMENDED ACTIONS</div>';
+  html += '<div style="background:var(--bg-surface); border-radius:6px; padding:24px; margin-bottom:32px;">';
+
+  var recommendations = narrative.recommendations || [];
+  var tierColors = {
+    LOW: { bg: c.green + '1a', text: c.green, border: c.green + '38' },
+    MEDIUM: { bg: c.amber + '1a', text: c.amber, border: c.amber + '38' },
+    HIGH: { bg: c.red + '1a', text: c.red, border: c.red + '38' }
+  };
+  var tierKey = (risk.tier || 'medium').toUpperCase();
+  var tc = tierColors[tierKey] || tierColors.MEDIUM;
+
+  recommendations.forEach(function(rec) {
+    html += '<div style="display:flex; align-items:flex-start; gap:10px; margin-bottom:12px;">';
+    html += '<span style="display:inline-block; padding:2px 8px; border-radius:10px; font-family:var(--font-mono); font-size:11px; font-weight:600; background:' + tc.bg + '; color:' + tc.text + '; border:1px solid ' + tc.border + '; white-space:nowrap;">' + tierKey + '</span>';
+    html += '<span style="font-family:var(--font-body); font-size:14px; color:var(--text-primary);">' + rec + '</span>';
+    html += '</div>';
+  });
+
+  html += '</div>';
+
+  grid.innerHTML = html;
+
+  // ── Initialize ECharts ──
+
+  // Gauge chart
+  setTimeout(function() {
+    var gaugeEl = document.getElementById('riskGauge');
+    if (!gaugeEl) return;
+    var gaugeChart = echarts.init(gaugeEl, 'wandb');
+    gaugeChart.setOption({
+      series: [{
+        type: 'gauge',
+        min: 0, max: 100,
+        startAngle: 200, endAngle: -20,
+        axisLine: {
+          lineStyle: {
+            width: 20,
+            color: [
+              [0.3, c.green],
+              [0.6, c.amber],
+              [1, c.red]
+            ]
+          }
+        },
+        pointer: { length: '60%', width: 6, itemStyle: { color: c.textPrimary } },
+        axisTick: { show: false },
+        splitLine: { show: false },
+        axisLabel: {
+          color: c.textTertiary, fontSize: 11,
+          formatter: function(v) { return v === 0 ? 'Low' : v === 50 ? 'Med' : v === 100 ? 'High' : ''; }
+        },
+        detail: {
+          valueAnimation: true, fontSize: 36,
+          fontFamily: "'Instrument Serif', Georgia, serif",
+          color: c.textPrimary, offsetCenter: [0, '70%'],
+          formatter: function(v) { return Math.round(v); }
+        },
+        title: {
+          offsetCenter: [0, '90%'], fontSize: 14,
+          fontFamily: "'Outfit', sans-serif", color: c.textSecondary
+        },
+        data: [{ value: risk.score || 0, name: 'Risk Score' }]
+      }],
+      toolbox: { feature: { saveAsImage: { title: 'Save', pixelRatio: 2, backgroundColor: c.bgElevated } }, right: 16, top: 8, iconStyle: { borderColor: c.textTertiary } }
+    });
+    charts.push(gaugeChart);
+  }, 50);
+
+  // Radar chart (Risk Profile)
+  setTimeout(function() {
+    var radarEl = document.getElementById('riskRadar');
+    if (!radarEl) return;
+    var radarChart = echarts.init(radarEl, 'wandb');
+    var indicators = (riskRadar.indicators || []).map(function(ind) {
+      return { name: ind, max: 100 };
+    });
+    var radarData = [
+      {
+        value: riskRadar.current || [],
+        name: 'Current',
+        areaStyle: { color: 'rgba(248,113,113,0.2)' },
+        lineStyle: { color: c.red, width: 2 }
+      }
+    ];
+    if (riskRadar.historical_3mo) {
+      radarData.push({
+        value: riskRadar.historical_3mo,
+        name: '3 months ago',
+        areaStyle: { color: 'rgba(96,165,250,0.1)' },
+        lineStyle: { color: c.blue, width: 1, type: 'dashed' }
+      });
+    }
+    radarChart.setOption({
+      tooltip: { trigger: 'item' },
+      legend: { data: radarData.map(function(d) { return d.name; }), bottom: 0,
+                textStyle: { color: c.textSecondary, fontFamily: "'Outfit', sans-serif", fontSize: 12 } },
+      radar: {
+        indicator: indicators,
+        shape: 'circle',
+        axisName: { color: c.textSecondary, fontSize: 11, fontFamily: "'Outfit', sans-serif" },
+        splitArea: { areaStyle: { color: ['transparent'] } },
+        splitLine: { lineStyle: { color: c.borderSubtle } },
+        axisLine: { lineStyle: { color: c.borderSubtle } }
+      },
+      series: [{ type: 'radar', data: radarData }],
+      toolbox: { feature: { saveAsImage: { title: 'Save', pixelRatio: 2, backgroundColor: c.bgElevated } }, right: 16, top: 8, iconStyle: { borderColor: c.textTertiary } }
+    });
+    charts.push(radarChart);
+  }, 50);
+
+  // Risk Trend line chart
+  setTimeout(function() {
+    var trendEl = document.getElementById('riskTrend');
+    if (!trendEl) return;
+    var trendChart = echarts.init(trendEl, 'wandb');
+    var months = riskTrend.months || [];
+    var scores = riskTrend.scores || [];
+    var tiers = riskTrend.tiers || [];
+    trendChart.setOption({
+      tooltip: {
+        trigger: 'axis',
+        formatter: function(params) {
+          var idx = params[0].dataIndex;
+          var tier = tiers[idx] || '';
+          return months[idx] + ': Risk score ' + scores[idx] + ' (' + tier + ')';
+        }
+      },
+      toolbox: { feature: { saveAsImage: { title: 'Save', pixelRatio: 2, backgroundColor: c.bgElevated } }, right: 16, top: 8, iconStyle: { borderColor: c.textTertiary } },
+      grid: { left: 50, right: 40, top: 30, bottom: 60 },
+      xAxis: { type: 'category', data: months, boundaryGap: false },
+      yAxis: { type: 'value', min: 0, max: 100, splitNumber: 5 },
+      dataZoom: [
+        { type: 'inside' },
+        { type: 'slider', bottom: 10 }
+      ],
+      series: [{
+        type: 'line',
+        data: scores,
+        smooth: true,
+        lineStyle: { color: c.red, width: 2 },
+        itemStyle: { color: c.red },
+        areaStyle: { color: 'rgba(248,113,113,0.08)' },
+        markArea: {
+          silent: true,
+          data: [
+            [{ yAxis: 0, itemStyle: { color: 'rgba(74,222,128,0.06)' } }, { yAxis: 30 }],
+            [{ yAxis: 30, itemStyle: { color: 'rgba(251,191,36,0.06)' } }, { yAxis: 60 }],
+            [{ yAxis: 60, itemStyle: { color: 'rgba(248,113,113,0.06)' } }, { yAxis: 100 }]
+          ]
+        }
+      }]
+    });
+    charts.push(trendChart);
+  }, 50);
+
+  // Risk Evolution multi-radar
+  setTimeout(function() {
+    var evoEl = document.getElementById('riskEvolution');
+    if (!evoEl) return;
+    var evoChart = echarts.init(evoEl, 'wandb');
+    var indicators = (riskRadar.indicators || []).map(function(ind) {
+      return { name: ind, max: 100 };
+    });
+    var evoData = [
+      {
+        value: riskRadar.current || [],
+        name: 'Current',
+        areaStyle: { color: 'rgba(248,113,113,0.2)' },
+        lineStyle: { color: c.red, width: 2 }
+      }
+    ];
+    if (riskRadar.historical_3mo) {
+      evoData.push({
+        value: riskRadar.historical_3mo,
+        name: '3 months ago',
+        areaStyle: { color: 'rgba(96,165,250,0.1)' },
+        lineStyle: { color: c.blue, width: 1, type: 'dashed' }
+      });
+    }
+    if (riskRadar.historical_6mo) {
+      evoData.push({
+        value: riskRadar.historical_6mo,
+        name: '6 months ago',
+        areaStyle: { color: 'rgba(128,128,128,0.05)' },
+        lineStyle: { color: c.textTertiary, width: 1, type: 'dotted' }
+      });
+    }
+    evoChart.setOption({
+      tooltip: { trigger: 'item' },
+      legend: { data: evoData.map(function(d) { return d.name; }), bottom: 0,
+                textStyle: { color: c.textSecondary, fontFamily: "'Outfit', sans-serif", fontSize: 12 } },
+      radar: {
+        indicator: indicators,
+        shape: 'circle',
+        axisName: { color: c.textSecondary, fontSize: 11, fontFamily: "'Outfit', sans-serif" },
+        splitArea: { areaStyle: { color: ['transparent'] } },
+        splitLine: { lineStyle: { color: c.borderSubtle } },
+        axisLine: { lineStyle: { color: c.borderSubtle } }
+      },
+      series: [{ type: 'radar', data: evoData }],
+      toolbox: { feature: { saveAsImage: { title: 'Save', pixelRatio: 2, backgroundColor: c.bgElevated } }, right: 16, top: 8, iconStyle: { borderColor: c.textTertiary } }
+    });
+    charts.push(evoChart);
+  }, 50);
+
+  // Unified resize handler for all charts
+  window.addEventListener('resize', function() { charts.forEach(function(ch) { ch.resize(); }); });
+}
+
 var PAGE_RENDERERS = {
   'feature-velocity': renderFeatureVelocityV4,
   'sdk-versions': renderSdkVersions,
   'engagement-decay': renderEngagementDecay,
   'user-journey': renderUserJourney,
   'team-detection': renderTeamDetection,
-  'cohort-analysis': renderCohortAnalysis
+  'cohort-analysis': renderCohortAnalysis,
+  'risk-scoring': renderRiskScoring
 };
 
 /* ════════════════════════════════════════════════════════

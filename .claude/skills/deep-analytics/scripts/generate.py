@@ -18,6 +18,8 @@ import sys
 from datetime import date
 from pathlib import Path
 
+import pandas as pd
+
 # Paths
 SCRIPT_DIR = Path(__file__).resolve().parent
 SKILL_DIR = SCRIPT_DIR.parent
@@ -203,13 +205,59 @@ def _cohort_analysis_handler(client, account_id, customer_name):
     )
 
 
+def _risk_scoring_handler(client, account_id, customer_name):
+    """Risk Scoring -- composite churn risk from engagement, utilization, churn model."""
+    from queries import engagement_trend_query, risk_support_tickets_query, account_health_query, seat_utilization_query
+    from bq_client import run_query
+    from transforms.risk_scoring import RiskScoringTransform
+    from schema_validator import check_data_availability, PHASE3_DATA_CHECKS
+
+    # Check data availability for optional sources
+    avail = check_data_availability(client, account_id, {
+        "renewal_predictions": PHASE3_DATA_CHECKS["renewal_predictions"],
+        "engagement_scores": PHASE3_DATA_CHECKS["engagement_scores"],
+    })
+
+    # Account health (includes churn probability if available)
+    health_df = run_query(client, account_health_query(),
+                          account_id=account_id, maximum_bytes_billed=50_000_000_000)
+
+    # Engagement trend (6 months)
+    engagement_df = pd.DataFrame()
+    if avail.get("engagement_scores", {}).get("available", False):
+        try:
+            engagement_df = run_query(client, engagement_trend_query(),
+                                      account_id=account_id, maximum_bytes_billed=50_000_000_000)
+        except Exception:
+            pass
+
+    # Seat utilization
+    seats_df = run_query(client, seat_utilization_query(),
+                         account_id=account_id, maximum_bytes_billed=50_000_000_000)
+
+    # Support tickets
+    tickets_df = pd.DataFrame()
+    try:
+        tickets_df = run_query(client, risk_support_tickets_query(),
+                               account_id=account_id, maximum_bytes_billed=50_000_000_000)
+    except Exception:
+        pass
+
+    transform = RiskScoringTransform()
+    return transform.transform(
+        engagement=engagement_df, health=health_df,
+        seats=seats_df, tickets=tickets_df,
+        customer_name=customer_name
+    )
+
+
 PAGE_REGISTRY = {
     "user-journey": _user_journey_handler,
     "cohort-analysis": _cohort_analysis_handler,
     "engagement-decay": _engagement_decay_handler,
     "feature-velocity": _feature_velocity_handler,
     "team-detection": _team_detection_handler,
-    "risk-scoring": _placeholder_handler,
+    "risk-scoring": _risk_scoring_handler,
     "usage-correlation": _placeholder_handler,
     "sdk-versions": _sdk_versions_handler,
     "performance": _placeholder_handler,
