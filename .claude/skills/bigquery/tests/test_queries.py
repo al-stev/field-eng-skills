@@ -14,6 +14,12 @@ from queries import (
     account_health_query,
     support_tickets_query,
     _ref,
+    cohort_retention_query,
+    user_lifecycle_query,
+    team_detection_query,
+    team_champions_query,
+    engagement_trend_query,
+    risk_support_tickets_query,
 )
 
 
@@ -179,3 +185,197 @@ class TestIdentityResolutionCte:
         sql = identity_resolution_cte()
         expected_ref = _ref("dim_users")  # `wandb-production.analytics.dim_users`
         assert expected_ref in sql
+
+
+class TestCohortRetentionQuery:
+    """Verify cohort_retention_query() builds correct SQL for cohort analysis."""
+
+    def test_contains_account_id_param(self):
+        """Query uses @account_id parameter."""
+        sql = cohort_retention_query()
+        assert "@account_id" in sql
+
+    def test_uses_ref_for_table(self):
+        """Query uses _ref() for ext_daily_user_event_usage (no hardcoded paths)."""
+        sql = cohort_retention_query()
+        assert _ref("ext_daily_user_event_usage") in sql
+
+    def test_contains_format_date(self):
+        """Query contains FORMAT_DATE for month bucketing."""
+        sql = cohort_retention_query()
+        assert "FORMAT_DATE('%Y-%m'" in sql
+
+    def test_contains_universal_user_id(self):
+        """Query groups by universal_user_id."""
+        sql = cohort_retention_query()
+        assert "universal_user_id" in sql
+
+    def test_contains_event_count_filter(self):
+        """Query filters on event_count > 0."""
+        sql = cohort_retention_query()
+        assert "event_count > 0" in sql
+
+    def test_contains_18_month_lookback(self):
+        """Query looks back 18 months for cohort computation."""
+        sql = cohort_retention_query()
+        assert "INTERVAL 18 MONTH" in sql
+
+    def test_no_select_star(self):
+        """Query does NOT use SELECT *."""
+        sql = cohort_retention_query()
+        assert "SELECT *" not in sql
+
+
+class TestUserLifecycleQuery:
+    """Verify user_lifecycle_query() builds correct SQL for lifecycle states."""
+
+    def test_contains_account_id_param(self):
+        """Query uses @account_id parameter."""
+        sql = user_lifecycle_query()
+        assert "@account_id" in sql
+
+    def test_uses_ref_for_table(self):
+        """Query uses _ref() for agg_daily_user_activity."""
+        sql = user_lifecycle_query()
+        assert _ref("agg_daily_user_activity") in sql
+
+    def test_contains_accounting_field(self):
+        """Query references user_has_any_event_accounting for lifecycle states."""
+        sql = user_lifecycle_query()
+        assert "user_has_any_event_accounting" in sql
+
+    def test_contains_18_month_lookback(self):
+        """Query looks back 18 months."""
+        sql = user_lifecycle_query()
+        assert "INTERVAL 18 MONTH" in sql
+
+    def test_no_select_star(self):
+        """Query does NOT use SELECT *."""
+        sql = user_lifecycle_query()
+        assert "SELECT *" not in sql
+
+
+class TestTeamDetectionQuery:
+    """Verify team_detection_query() builds correct SQL for team breakdown."""
+
+    def test_contains_account_id_param(self):
+        """Query uses @account_id parameter."""
+        sql = team_detection_query()
+        assert "@account_id" in sql
+
+    def test_uses_ref_for_table(self):
+        """Query uses _ref() for ext_daily_user_event_usage."""
+        sql = team_detection_query()
+        assert _ref("ext_daily_user_event_usage") in sql
+
+    def test_contains_org_name(self):
+        """Query references org_name for team grouping."""
+        sql = team_detection_query()
+        assert "org_name" in sql
+
+    def test_contains_coalesce_org_name(self):
+        """Query COALESCEs org_name for NULL handling."""
+        sql = team_detection_query()
+        assert "COALESCE(org_name" in sql
+
+    def test_contains_is_part_of_team(self):
+        """Query references is_part_of_team flag."""
+        sql = team_detection_query()
+        assert "is_part_of_team" in sql
+
+    def test_contains_event_count(self):
+        """Query uses event_count for activity aggregation."""
+        sql = team_detection_query()
+        assert "event_count" in sql
+
+    def test_no_select_star(self):
+        """Query does NOT use SELECT *."""
+        sql = team_detection_query()
+        assert "SELECT *" not in sql
+
+
+class TestTeamChampionsQuery:
+    """Verify team_champions_query() builds correct SQL for per-team top users."""
+
+    def test_contains_account_id_param(self):
+        """Query uses @account_id parameter."""
+        sql = team_champions_query()
+        assert "@account_id" in sql
+
+    def test_uses_ref_for_table(self):
+        """Query uses _ref() for ext_daily_user_event_usage."""
+        sql = team_champions_query()
+        assert _ref("ext_daily_user_event_usage") in sql
+
+    def test_contains_org_name(self):
+        """Query references org_name for team identification."""
+        sql = team_champions_query()
+        assert "org_name" in sql
+
+    def test_contains_universal_user_id(self):
+        """Query tracks per-user activity."""
+        sql = team_champions_query()
+        assert "universal_user_id" in sql
+
+    def test_contains_row_number(self):
+        """Query uses ROW_NUMBER() to pick top user per team."""
+        sql = team_champions_query()
+        assert "ROW_NUMBER()" in sql
+
+    def test_no_select_star(self):
+        """Query does NOT use SELECT *."""
+        sql = team_champions_query()
+        assert "SELECT *" not in sql
+
+
+class TestEngagementTrendQuery:
+    """Verify engagement_trend_query() builds correct SQL for risk scoring input."""
+
+    def test_contains_account_id_param(self):
+        """Query uses @account_id parameter."""
+        sql = engagement_trend_query()
+        assert "@account_id" in sql
+
+    def test_uses_ref_for_table(self):
+        """Query uses _ref() for agg_daily_customer_engagement_score."""
+        sql = engagement_trend_query()
+        assert _ref("agg_daily_customer_engagement_score") in sql
+
+    def test_contains_engagement_score(self):
+        """Query references customer_engagement_score column."""
+        sql = engagement_trend_query()
+        assert "customer_engagement_score" in sql
+
+    def test_contains_6_month_lookback(self):
+        """Query looks back 6 months for engagement trend."""
+        sql = engagement_trend_query()
+        assert "INTERVAL 6 MONTH" in sql
+
+    def test_no_select_star(self):
+        """Query does NOT use SELECT *."""
+        sql = engagement_trend_query()
+        assert "SELECT *" not in sql
+
+
+class TestRiskSupportTicketsQuery:
+    """Verify risk_support_tickets_query() builds correct SQL for risk scoring input."""
+
+    def test_contains_account_id_param(self):
+        """Query uses @account_id parameter."""
+        sql = risk_support_tickets_query()
+        assert "@account_id" in sql
+
+    def test_uses_ref_for_table(self):
+        """Query uses _ref() for dim_helpdesk_tickets."""
+        sql = risk_support_tickets_query()
+        assert _ref("dim_helpdesk_tickets") in sql
+
+    def test_contains_90_day_lookback(self):
+        """Query looks back 90 days for support ticket count."""
+        sql = risk_support_tickets_query()
+        assert "INTERVAL 90 DAY" in sql
+
+    def test_no_select_star(self):
+        """Query does NOT use SELECT *."""
+        sql = risk_support_tickets_query()
+        assert "SELECT *" not in sql

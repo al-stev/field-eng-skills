@@ -547,6 +547,213 @@ def engagement_decay_query() -> str:
     """
 
 
+def cohort_retention_query() -> str:
+    """
+    Cohort retention matrix from raw activity data.
+
+    Computes user cohorts by first-activity month and tracks which subsequent
+    months each user was active. Returns cohort_month x active_month matrix
+    with active user counts.
+
+    This is Strategy B (fallback) from research -- always available since it
+    uses ext_daily_user_event_usage which is the most reliable table.
+
+    Returns:
+        SQL string with @account_id parameter placeholder
+    """
+    daily_usage = _ref("ext_daily_user_event_usage")
+    return f"""
+    WITH user_first_activity AS (
+        SELECT
+            universal_user_id,
+            FORMAT_DATE('%Y-%m', MIN(date_day)) AS cohort_month
+        FROM {daily_usage}
+        WHERE account_id = @account_id
+            AND date_day >= DATE_SUB(CURRENT_DATE(), INTERVAL 18 MONTH)
+            AND event_count > 0
+        GROUP BY universal_user_id
+    ),
+    user_monthly_activity AS (
+        SELECT DISTINCT
+            u.universal_user_id,
+            u.cohort_month,
+            FORMAT_DATE('%Y-%m', e.date_day) AS active_month
+        FROM user_first_activity u
+        JOIN {daily_usage} e
+            ON u.universal_user_id = e.universal_user_id
+        WHERE e.account_id = @account_id
+            AND e.event_count > 0
+    )
+    SELECT
+        cohort_month,
+        active_month,
+        COUNT(DISTINCT universal_user_id) AS active_users
+    FROM user_monthly_activity
+    GROUP BY cohort_month, active_month
+    ORDER BY cohort_month, active_month
+    """
+
+
+def user_lifecycle_query() -> str:
+    """
+    Monthly New/Retained/Resurrected/Churned user counts.
+
+    Uses the user_has_any_event_accounting field from agg_daily_user_activity
+    which tracks canonical lifecycle state transitions per user per day.
+
+    Returns:
+        SQL string with @account_id parameter placeholder
+    """
+    user_activity = _ref("agg_daily_user_activity")
+    return f"""
+    SELECT
+        FORMAT_DATE('%Y-%m', date_day) AS month,
+        SUM(CASE WHEN user_has_any_event_accounting = 'new' THEN 1 ELSE 0 END) AS new_users,
+        SUM(CASE WHEN user_has_any_event_accounting = 'retained' THEN 1 ELSE 0 END) AS retained,
+        SUM(CASE WHEN user_has_any_event_accounting = 'resurrected' THEN 1 ELSE 0 END) AS resurrected,
+        SUM(CASE WHEN user_has_any_event_accounting = 'churned' THEN 1 ELSE 0 END) AS churned
+    FROM {user_activity}
+    WHERE account_id = @account_id
+        AND date_day >= DATE_SUB(CURRENT_DATE(), INTERVAL 18 MONTH)
+    GROUP BY month
+    ORDER BY month
+    """
+
+
+def team_detection_query() -> str:
+    """
+    Team breakdown from org_name field in ext_daily_user_event_usage.
+
+    Groups users by organization name to detect team structure. Includes
+    team member count, total activity, and activity date range. Reports
+    whether the is_part_of_team flag is populated as a data-quality signal.
+
+    Returns:
+        SQL string with @account_id parameter placeholder
+    """
+    daily_usage = _ref("ext_daily_user_event_usage")
+    return f"""
+    SELECT
+        COALESCE(org_name, 'Unknown') AS team_name,
+        COUNT(DISTINCT universal_user_id) AS member_count,
+        SUM(event_count) AS total_events,
+        MIN(date_day) AS first_active,
+        MAX(date_day) AS last_active,
+        COUNT(DISTINCT CASE WHEN is_part_of_team THEN universal_user_id END) AS users_with_team_flag
+    FROM {daily_usage}
+    WHERE account_id = @account_id
+        AND date_day >= DATE_SUB(CURRENT_DATE(), INTERVAL 12 MONTH)
+        AND event_count > 0
+    GROUP BY team_name
+    ORDER BY total_events DESC
+    """
+
+
+def team_champions_query() -> str:
+    """
+    Most active user per team with identity resolution for server deployments.
+
+    Returns one row per team: the user with the highest total event count.
+    Uses ROW_NUMBER() window function to pick the top user per org_name.
+    Joins dim_users for server deployment identity resolution.
+
+    Returns:
+        SQL string with @account_id parameter placeholder
+    """
+    daily_usage = _ref("ext_daily_user_event_usage")
+    dim_users = _ref("dim_users")
+    return f"""
+    WITH team_activity AS (
+        SELECT
+            org_name,
+            universal_user_id,
+            username,
+            email,
+            SUM(event_count) AS total_events,
+            MAX(date_day) AS last_active
+        FROM {daily_usage}
+        WHERE account_id = @account_id
+            AND date_day >= DATE_SUB(CURRENT_DATE(), INTERVAL 12 MONTH)
+            AND org_name IS NOT NULL
+            AND event_count > 0
+        GROUP BY org_name, universal_user_id, username, email
+    ),
+    ranked AS (
+        SELECT
+            org_name AS team_name,
+            universal_user_id,
+            username,
+            email,
+            total_events,
+            last_active,
+            ROW_NUMBER() OVER (PARTITION BY org_name ORDER BY total_events DESC) AS rn
+        FROM team_activity
+    )
+    SELECT
+        r.team_name,
+        r.universal_user_id,
+        COALESCE(r.username, du.local_username) AS username,
+        COALESCE(r.email, du.local_user_email) AS email,
+        r.total_events,
+        r.last_active
+    FROM ranked r
+    LEFT JOIN {dim_users} du
+        ON r.universal_user_id = du.universal_user_id
+        AND du.account_id = @account_id
+    WHERE r.rn = 1
+    ORDER BY r.total_events DESC
+    """
+
+
+def engagement_trend_query() -> str:
+    """
+    Monthly customer engagement score for risk scoring trend analysis.
+
+    Returns average engagement score and active user count per month
+    over 6 months. Used as input to composite risk score computation.
+
+    Returns:
+        SQL string with @account_id parameter placeholder
+    """
+    engagement = _ref("agg_daily_customer_engagement_score")
+    return f"""
+    SELECT
+        FORMAT_DATE('%Y-%m', date_day) AS month,
+        AVG(customer_engagement_score) AS avg_engagement_score,
+        COUNT(DISTINCT universal_user_id) AS active_users
+    FROM {engagement}
+    WHERE account_id = @account_id
+        AND date_day >= DATE_SUB(CURRENT_DATE(), INTERVAL 6 MONTH)
+    GROUP BY month
+    ORDER BY month
+    """
+
+
+def risk_support_tickets_query() -> str:
+    """
+    Support ticket count for risk scoring -- 90-day rolling window.
+
+    Returns a single count of support tickets in the last 90 days,
+    used as one of four risk scoring factors. Joins through
+    stg_salesforce_accounts to filter by @account_id.
+
+    Returns:
+        SQL string with @account_id parameter placeholder
+    """
+    helpdesk = _ref("dim_helpdesk_tickets")
+    salesforce = _ref("stg_salesforce_accounts")
+    return f"""
+    SELECT
+        COUNT(*) AS ticket_count_90d
+    FROM {helpdesk} t
+    JOIN {salesforce} s
+        ON LOWER(t.account_name) = LOWER(s.name)
+    WHERE s.account_id = @account_id
+        AND t.ticket_created_date_day >= DATE_SUB(CURRENT_DATE(), INTERVAL 90 DAY)
+        AND t.ticket_status != 'deleted'
+    """
+
+
 def aggregate_weekly(
     df: pd.DataFrame,
     date_col: str = "date_day",
