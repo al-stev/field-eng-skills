@@ -1,23 +1,23 @@
 {
   "version": "1.0",
-  "timestamp": "2026-03-25T13:57:06.819Z",
+  "timestamp": "2026-03-26T13:23:49.858Z",
   "phase": "2",
   "phase_name": "High-Confidence Pages",
   "phase_dir": ".planning/phases/02-high-confidence-pages",
   "plan": null,
   "task": null,
   "total_tasks": null,
-  "status": "paused",
+  "status": "complete",
   "completed_tasks": [
     {"id": "phase-1", "name": "Foundation and Template System (all 4 plans)", "status": "done"},
-    {"id": "feature-velocity", "name": "Feature Velocity page — full pipeline with real BQ data", "status": "done", "commit": "c2912d9"}
+    {"id": "feature-velocity", "name": "Feature Velocity page — sparkline grid with momentum", "status": "done", "commit": "c2912d9"},
+    {"id": "sdk-versions", "name": "SDK Versions page — donut + stacked timeline + version table", "status": "done", "commit": "ce88aff"},
+    {"id": "engagement-decay", "name": "Engagement Decay page — per-user sparklines, licensed filter, status toggles", "status": "done", "commit": "ce88aff"},
+    {"id": "user-journey", "name": "User Journey page — Sankey from dim_users first_*_at fields", "status": "done", "commit": "5828608"}
   ],
   "remaining_tasks": [
-    {"id": "sdk-versions", "name": "SDK Versions page — cli_version/local_version donut + table", "status": "not_started"},
-    {"id": "engagement-decay", "name": "Engagement Decay page — cold-detection table + sparklines", "status": "not_started"},
-    {"id": "user-journey", "name": "User Journey page — Sankey from dim_users first_*_at fields", "status": "not_started"},
-    {"id": "phase-3", "name": "Medium-Confidence Pages (Cohort, Team, Risk)", "status": "not_started"},
-    {"id": "phase-4", "name": "Privacy-Sensitive Pages (Correlation, Performance)", "status": "not_started"}
+    {"id": "phase-3", "name": "Medium-Confidence Pages (Cohort, Team, Risk)", "status": "in_progress_other_session"},
+    {"id": "phase-4", "name": "Exploratory Pages (Usage Correlation, Performance)", "status": "not_started"}
   ],
   "blockers": [],
   "human_actions_pending": [
@@ -31,15 +31,18 @@
     {"decision": "Weave suppression via account_health_query weave_customer flag", "rationale": "Non-Weave customers showed Weave data from trials", "phase": "2"},
     {"decision": "Cliff detection in AI narrative", "rationale": "Isomorphic Labs collaboration cliff showed need to distinguish instrumentation changes from behavior", "phase": "2"},
     {"decision": "Always use real data for prototyping, never fake data", "rationale": "User feedback — fake data is useless for validating visualizations", "phase": "project"},
-    {"decision": "Show deployment type and data provenance on pages", "rationale": "Server deployment customers have small SaaS footprints that aren't representative", "phase": "project"}
+    {"decision": "Show deployment type and data provenance on pages", "rationale": "Server deployment customers have small SaaS footprints that aren't representative", "phase": "project"},
+    {"decision": "SDK versions query: NULLIF for N/A, SPLIT for comma-separated local_version", "rationale": "Server deployments have N/A cli_version and comma-separated local_version", "phase": "2"},
+    {"decision": "Engagement decay: licensed filter defaults ON using SFDC contracted_seats", "rationale": "238 tracked users vs ~183 licensed — SE wants to focus on licensed users by default", "phase": "2"},
+    {"decision": "Engagement decay: hot-first sort, no user cap", "rationale": "Cold-first with 50 cap hid all hot/warm/cooling users", "phase": "2"},
+    {"decision": "Identity resolution: prefer username > email local-part > user-ID fallback", "rationale": "Some server deployment users have email but no username in dim_users", "phase": "2"},
+    {"decision": "User Journey: auto-suppress empty stages (license for server, weave for non-weave)", "rationale": "Empty stages add noise without information", "phase": "2"}
   ],
   "uncommitted_files": [
-    ".claude/skills/bigquery/scripts/usage.py",
-    ".claude/skills/bigquery/tests/conftest.py",
-    ".claude/skills/bigquery/tests/test_usage.py",
     ".planning/STATE.md",
-    ".planning/config.json"
+    ".planning/config.json",
+    "templates/customers.yaml"
   ],
-  "next_action": "Build SDK Versions page (easiest remaining Phase 2 page) following the same pattern: add query, create transform, add renderer to base template, generate with real data for Isomorphic Labs, iterate visually",
-  "context_notes": "Phase 1 foundation is complete but GSD phase tracking is slightly out of sync — we pulled Feature Velocity forward from Phase 2 during Phase 1 visual verification. The PAGE_RENDERERS pattern in base-template.html dispatches by page_type, so adding new pages means: 1) handler in generate.py, 2) transform class, 3) renderer function in template JS, 4) entry in PAGE_RENDERERS. V1-V3 renderer code for feature velocity is still in the template (dead code) — clean up when stabilized."
+  "next_action": "Phase 3 is being built in a parallel session. Phase 4 (Usage Correlation + Performance) needs ui-spec then plan before execution. Start with /gsd:ui-phase for Phase 4, then /gsd:plan-phase.",
+  "context_notes": "Phase 2 was built without formal GSD plans — we iterated directly against real BQ data after user pushed back on overly formal phasing. The pattern is well-established: query in queries.py -> transform class -> handler in generate.py -> renderer in base-template.html -> PAGE_RENDERERS entry. V1-V3 dead renderer code for feature velocity still in template. Phase 3 (Cohort, Team, Risk) being built in parallel session. Phase 4 tables (fct_application_performance, usage correlation cross-account) have LOW data confidence — may need descoping."
 }
