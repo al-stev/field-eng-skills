@@ -40,13 +40,13 @@
 
 ### Cohort Analysis
 
-- [ ] **CHRT-01**: Retention heatmap (rows=monthly signup cohorts, columns=months since signup, cells=retention %)
+- [x] **CHRT-01**: Retention heatmap (rows=monthly signup cohorts, columns=months since signup, cells=retention %)
 - [ ] **CHRT-02**: Cohort size labels on each row showing starting cohort size
 - [ ] **CHRT-03**: Overall retention curve (aggregate % active after 1mo, 3mo, 6mo, 12mo)
 - [ ] **CHRT-04**: AI narrative interpreting cohort health vs historical averages
-- [ ] **CHRT-05**: New/Retained/Resurrected/Churned stacked area lifecycle chart
+- [x] **CHRT-05**: New/Retained/Resurrected/Churned stacked area lifecycle chart
 - [ ] **CHRT-06**: Cohort-over-cohort trend line overlay (last 4 cohorts)
-- [ ] **CHRT-07**: Behavioral cohort comparison (group by first action type, compare retention)
+- [x] **CHRT-07**: Behavioral cohort comparison (group by first action type, compare retention)
 
 ### Engagement Decay
 
@@ -70,10 +70,10 @@
 
 ### Team Detection
 
-- [ ] **TEAM-01**: Team breakdown table listing teams (from org_name/is_part_of_team), member counts, total activity, top product areas
+- [x] **TEAM-01**: Team breakdown table listing teams (from org_name/is_part_of_team), member counts, total activity, top product areas
 - [ ] **TEAM-02**: Per-team activity bar chart comparing total activity and unique users
 - [ ] **TEAM-03**: Team x product area heatmap showing which teams use which products
-- [ ] **TEAM-04**: Clear "Team data unavailable" message when fields are not populated
+- [x] **TEAM-04**: Clear "Team data unavailable" message when fields are not populated
 - [ ] **TEAM-05**: AI narrative identifying team patterns and per-team enablement opportunities
 - [ ] **TEAM-06**: Team adoption timeline showing when each team started using W&B
 - [ ] **TEAM-07**: Per-team champion identification (most active user per team)
@@ -81,10 +81,10 @@
 
 ### Risk Scoring
 
-- [ ] **RISK-01**: Composite risk score (0-100) combining ML churn probability, engagement trend, seat utilization, support ticket velocity — displayed as gauge chart
+- [x] **RISK-01**: Composite risk score (0-100) combining ML churn probability, engagement trend, seat utilization, support ticket velocity — displayed as gauge chart
 - [ ] **RISK-02**: Risk factor breakdown showing which factors contribute most to the score
-- [ ] **RISK-03**: Risk trend line showing score evolution over last 6 months
-- [ ] **RISK-04**: Renewal context (days to renewal, ARR, contract details) alongside risk score
+- [x] **RISK-03**: Risk trend line showing score evolution over last 6 months
+- [x] **RISK-04**: Renewal context (days to renewal, ARR, contract details) alongside risk score
 - [ ] **RISK-05**: AI narrative with actionable risk assessment and recommended SE interventions
 - [ ] **RISK-06**: Risk radar chart (multi-dimensional radar showing risk shape at a glance)
 - [ ] **RISK-07**: AI-generated action recommendations (schedule QBR, run workshop, engage champion)
@@ -191,25 +191,25 @@
 | SDKV-05 | Phase 2 | Pending |
 | SDKV-06 | Phase 2 | Pending |
 | SDKV-07 | Phase 2 | Pending |
-| CHRT-01 | Phase 3 | Pending |
+| CHRT-01 | Phase 3 | Complete |
 | CHRT-02 | Phase 3 | Pending |
 | CHRT-03 | Phase 3 | Pending |
 | CHRT-04 | Phase 3 | Pending |
-| CHRT-05 | Phase 3 | Pending |
+| CHRT-05 | Phase 3 | Complete |
 | CHRT-06 | Phase 3 | Pending |
-| CHRT-07 | Phase 3 | Pending |
-| TEAM-01 | Phase 3 | Pending |
+| CHRT-07 | Phase 3 | Complete |
+| TEAM-01 | Phase 3 | Complete |
 | TEAM-02 | Phase 3 | Pending |
 | TEAM-03 | Phase 3 | Pending |
-| TEAM-04 | Phase 3 | Pending |
+| TEAM-04 | Phase 3 | Complete |
 | TEAM-05 | Phase 3 | Pending |
 | TEAM-06 | Phase 3 | Pending |
 | TEAM-07 | Phase 3 | Pending |
 | TEAM-08 | Phase 3 | Pending |
-| RISK-01 | Phase 3 | Pending |
+| RISK-01 | Phase 3 | Complete |
 | RISK-02 | Phase 3 | Pending |
-| RISK-03 | Phase 3 | Pending |
-| RISK-04 | Phase 3 | Pending |
+| RISK-03 | Phase 3 | Complete |
+| RISK-04 | Phase 3 | Complete |
 | RISK-05 | Phase 3 | Pending |
 | RISK-06 | Phase 3 | Pending |
 | RISK-07 | Phase 3 | Pending |

@@ -61,7 +61,7 @@ Plans:
   4. Schema validation runs successfully for `agg_weekly_user_retention_features`, team fields in `ext_daily_user_event_usage`, and `renewal_predictions` in `landing_development` before page development begins
 **Plans**: 4 plans
 Plans:
-- [ ] 03-01-PLAN.md -- Phase 3 BQ queries and schema validation specs
+- [x] 03-01-PLAN.md -- Phase 3 BQ queries and schema validation specs
 - [ ] 03-02-PLAN.md -- Cohort Analysis page (transform + handler + renderer)
 - [ ] 03-03-PLAN.md -- Team Detection page (transform + handler + renderer)
 - [ ] 03-04-PLAN.md -- Risk Scoring page (transform + handler + renderer)
