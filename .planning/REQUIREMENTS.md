@@ -41,11 +41,11 @@
 ### Cohort Analysis
 
 - [x] **CHRT-01**: Retention heatmap (rows=monthly signup cohorts, columns=months since signup, cells=retention %)
-- [ ] **CHRT-02**: Cohort size labels on each row showing starting cohort size
-- [ ] **CHRT-03**: Overall retention curve (aggregate % active after 1mo, 3mo, 6mo, 12mo)
-- [ ] **CHRT-04**: AI narrative interpreting cohort health vs historical averages
+- [x] **CHRT-02**: Cohort size labels on each row showing starting cohort size
+- [x] **CHRT-03**: Overall retention curve (aggregate % active after 1mo, 3mo, 6mo, 12mo)
+- [x] **CHRT-04**: AI narrative interpreting cohort health vs historical averages
 - [x] **CHRT-05**: New/Retained/Resurrected/Churned stacked area lifecycle chart
-- [ ] **CHRT-06**: Cohort-over-cohort trend line overlay (last 4 cohorts)
+- [x] **CHRT-06**: Cohort-over-cohort trend line overlay (last 4 cohorts)
 - [x] **CHRT-07**: Behavioral cohort comparison (group by first action type, compare retention)
 
 ### Engagement Decay
@@ -192,11 +192,11 @@
 | SDKV-06 | Phase 2 | Pending |
 | SDKV-07 | Phase 2 | Pending |
 | CHRT-01 | Phase 3 | Complete |
-| CHRT-02 | Phase 3 | Pending |
-| CHRT-03 | Phase 3 | Pending |
-| CHRT-04 | Phase 3 | Pending |
+| CHRT-02 | Phase 3 | Complete |
+| CHRT-03 | Phase 3 | Complete |
+| CHRT-04 | Phase 3 | Complete |
 | CHRT-05 | Phase 3 | Complete |
-| CHRT-06 | Phase 3 | Pending |
+| CHRT-06 | Phase 3 | Complete |
 | CHRT-07 | Phase 3 | Complete |
 | TEAM-01 | Phase 3 | Complete |
 | TEAM-02 | Phase 3 | Complete |
