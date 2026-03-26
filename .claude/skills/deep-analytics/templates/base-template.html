@@ -447,6 +447,8 @@ function renderEmptyState(section, reason) {
     no_data: 'No data available for this section. The customer may not have activity in this dimension.',
     api_error: 'BigQuery data unavailable -- check ADC credentials with /bigquery-setup.',
     schema_error: 'Required data tables are not accessible. Contact the analytics team.',
+    team_data_unavailable: 'Team data unavailable. This account does not have organization structure configured in W&B. Team-level analysis requires org_name to be populated.',
+    team_names_unavailable: 'Teams detected but names unavailable. Users are flagged as team members, but organization names are not populated.',
   };
   const msg = messages[reason] || 'No data available.';
   return '<div class="empty-state">' + msg + '</div>';
@@ -1389,11 +1391,401 @@ function renderUserJourney() {
   window.addEventListener('resize', function() { charts.forEach(function(ch) { ch.resize(); }); });
 }
 
+/* ── Team Detection: team breakdown, activity, heatmap, timeline, champions, growth ── */
+
+function renderTeamDetection() {
+  var grid = document.getElementById('sparklineGrid');
+  grid.style.display = 'block';
+  var c = getThemeColors();
+  var charts = [];
+
+  // --- Three-tier empty state branching (TEAM-04) ---
+  if (PAGE_DATA.team_data_status === 'unavailable') {
+    grid.innerHTML = renderEmptyState('chart', 'team_data_unavailable');
+    return;
+  }
+  if (PAGE_DATA.team_data_status === 'names_unavailable') {
+    grid.innerHTML = renderEmptyState('chart', 'team_names_unavailable');
+    return;
+  }
+
+  // --- Section 1: Team Breakdown Table (TEAM-01) ---
+  var tableLabel = document.createElement('div');
+  tableLabel.style.cssText = 'font-family:JetBrains Mono,monospace; font-size:11px; color:' + c.textTertiary + '; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:8px;';
+  tableLabel.textContent = 'TEAM BREAKDOWN';
+  var tableScroll = document.createElement('div');
+  tableScroll.style.cssText = 'max-height:400px; overflow-y:auto; margin-bottom:32px;';
+
+  var tableHtml = '<table style="width:100%; border-collapse:collapse; font-family:Outfit,sans-serif; font-size:14px;">';
+  tableHtml += '<thead><tr style="border-bottom:1px solid ' + c.borderSubtle + ';">';
+  var headers = ['TEAM', 'MEMBERS', 'EVENTS', 'TOP PRODUCT', 'FIRST ACTIVE', 'LAST ACTIVE'];
+  headers.forEach(function(h) {
+    var align = h === 'TEAM' || h === 'TOP PRODUCT' ? 'left' : 'right';
+    tableHtml += '<th style="text-align:' + align + '; padding:8px 16px; color:' + c.textTertiary + '; font-family:JetBrains Mono,monospace; font-size:11px; font-weight:400; text-transform:uppercase;">' + h + '</th>';
+  });
+  tableHtml += '</tr></thead><tbody>';
+
+  (PAGE_DATA.teams || []).forEach(function(t) {
+    tableHtml += '<tr style="border-bottom:1px solid ' + c.borderSubtle + ';">';
+    tableHtml += '<td style="padding:8px 16px; color:' + c.textPrimary + '; font-weight:500;">' + t.name + '</td>';
+    tableHtml += '<td style="padding:8px 16px; text-align:right; color:' + c.textSecondary + ';">' + t.member_count + '</td>';
+    tableHtml += '<td style="padding:8px 16px; text-align:right; color:' + c.textSecondary + ';">' + (t.total_events || 0).toLocaleString() + '</td>';
+    tableHtml += '<td style="padding:8px 16px; color:' + c.textSecondary + ';">' + (t.top_product || '--') + '</td>';
+    tableHtml += '<td style="padding:8px 16px; text-align:right; color:' + c.textSecondary + ';">' + (t.first_active || '--') + '</td>';
+    tableHtml += '<td style="padding:8px 16px; text-align:right; color:' + c.textSecondary + ';">' + (t.last_active || '--') + '</td>';
+    tableHtml += '</tr>';
+  });
+  tableHtml += '</tbody></table>';
+  tableScroll.innerHTML = tableHtml;
+  grid.appendChild(tableLabel);
+  grid.appendChild(tableScroll);
+
+  // --- Section 2: Side-by-side: Team Activity + Team Product Adoption (TEAM-02, TEAM-03) ---
+  var midRow = document.createElement('div');
+  midRow.style.cssText = 'display:flex; gap:32px; flex-wrap:wrap; margin-bottom:32px;';
+
+  // Left: Team Activity horizontal bar chart (TEAM-02)
+  var activityWrap = document.createElement('div');
+  activityWrap.style.cssText = 'flex:1; min-width:320px;';
+  var activityLabel = document.createElement('div');
+  activityLabel.style.cssText = 'font-family:JetBrains Mono,monospace; font-size:11px; color:' + c.textTertiary + '; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:8px;';
+  activityLabel.textContent = 'TEAM ACTIVITY COMPARISON';
+  var activityDiv = document.createElement('div');
+  activityDiv.style.cssText = 'width:100%; height:400px; background:' + c.bgSurface + '; border-radius:6px;';
+  activityWrap.appendChild(activityLabel);
+  activityWrap.appendChild(activityDiv);
+
+  // Right: Team Product Adoption heatmap (TEAM-03)
+  var heatmapWrap = document.createElement('div');
+  heatmapWrap.style.cssText = 'flex:1; min-width:320px;';
+  var heatmapLabel = document.createElement('div');
+  heatmapLabel.style.cssText = 'font-family:JetBrains Mono,monospace; font-size:11px; color:' + c.textTertiary + '; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:8px;';
+  heatmapLabel.textContent = 'TEAM PRODUCT ADOPTION';
+  var heatmapDiv = document.createElement('div');
+  heatmapDiv.style.cssText = 'width:100%; height:320px; background:' + c.bgSurface + '; border-radius:6px;';
+  heatmapWrap.appendChild(heatmapLabel);
+  heatmapWrap.appendChild(heatmapDiv);
+
+  midRow.appendChild(activityWrap);
+  midRow.appendChild(heatmapWrap);
+  grid.appendChild(midRow);
+
+  // Render activity bar chart
+  setTimeout(function() {
+    var activityChart = echarts.init(activityDiv, 'wandb');
+    var ta = PAGE_DATA.team_activity || {};
+    activityChart.setOption({
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: { type: 'shadow' },
+        formatter: function(params) {
+          var html = '<strong>' + params[0].axisValue + '</strong>';
+          params.forEach(function(p) {
+            html += '<br/>' + p.marker + ' ' + p.seriesName + ': ' + (p.value || 0).toLocaleString();
+          });
+          return html;
+        }
+      },
+      toolbox: { feature: { saveAsImage: { title: 'Save as PNG', pixelRatio: 2, backgroundColor: c.bgElevated } }, right: 8, top: 0, iconStyle: { borderColor: c.textTertiary }, itemSize: 12 },
+      legend: {
+        data: ['Events', 'Users'],
+        bottom: 0,
+        textStyle: { color: c.textSecondary, fontSize: 11, fontFamily: 'JetBrains Mono, monospace' },
+        itemWidth: 12, itemHeight: 12
+      },
+      grid: { left: 120, right: 24, top: 16, bottom: 40 },
+      xAxis: {
+        type: 'value',
+        axisLabel: { color: c.textTertiary, fontSize: 11, formatter: function(v) { return v >= 1000 ? (v/1000).toFixed(0) + 'k' : v; } },
+        splitLine: { lineStyle: { color: c.borderSubtle, type: 'dashed' } }
+      },
+      yAxis: {
+        type: 'category',
+        data: (ta.team_names || []).slice().reverse(),
+        axisLabel: { color: c.textPrimary, fontSize: 12, fontFamily: 'Outfit, sans-serif' },
+        axisLine: { lineStyle: { color: c.borderSubtle } },
+        axisTick: { show: false }
+      },
+      series: [
+        {
+          name: 'Events',
+          type: 'bar',
+          data: (ta.events || []).slice().reverse(),
+          itemStyle: { color: c.blue, borderRadius: [0, 3, 3, 0] },
+          barMaxWidth: 18
+        },
+        {
+          name: 'Users',
+          type: 'bar',
+          data: (ta.users || []).slice().reverse(),
+          itemStyle: { color: c.green, borderRadius: [0, 3, 3, 0] },
+          barMaxWidth: 18
+        }
+      ]
+    });
+    charts.push(activityChart);
+  }, 10);
+
+  // Render heatmap chart
+  setTimeout(function() {
+    var heatmapChart = echarts.init(heatmapDiv, 'wandb');
+    var hm = PAGE_DATA.team_product_heatmap || {};
+    var maxVal = 0;
+    (hm.matrix || []).forEach(function(m) { if (m[2] > maxVal) maxVal = m[2]; });
+    heatmapChart.setOption({
+      tooltip: {
+        position: 'top',
+        formatter: function(p) {
+          return '<strong>' + (hm.team_names || [])[p.value[0]] + '</strong><br/>' +
+                 (hm.product_areas || [])[p.value[1]] + ': ' + (p.value[2] || 0).toLocaleString() + ' events';
+        }
+      },
+      toolbox: { feature: { saveAsImage: { title: 'Save as PNG', pixelRatio: 2, backgroundColor: c.bgElevated } }, right: 8, top: 0, iconStyle: { borderColor: c.textTertiary }, itemSize: 12 },
+      grid: { left: 120, right: 60, top: 8, bottom: 48 },
+      xAxis: {
+        type: 'category',
+        data: hm.product_areas || [],
+        axisLabel: { color: c.textTertiary, fontSize: 10, fontFamily: 'JetBrains Mono, monospace', rotate: 30 },
+        axisLine: { lineStyle: { color: c.borderSubtle } },
+        axisTick: { show: false }
+      },
+      yAxis: {
+        type: 'category',
+        data: hm.team_names || [],
+        axisLabel: { color: c.textPrimary, fontSize: 11, fontFamily: 'Outfit, sans-serif' },
+        axisLine: { lineStyle: { color: c.borderSubtle } },
+        axisTick: { show: false }
+      },
+      visualMap: {
+        min: 0,
+        max: maxVal || 1,
+        calculable: true,
+        orient: 'horizontal',
+        left: 'center',
+        bottom: 0,
+        itemWidth: 12,
+        itemHeight: 80,
+        textStyle: { color: c.textTertiary, fontSize: 10 },
+        inRange: { color: [c.red, c.amber, c.green] }
+      },
+      series: [{
+        type: 'heatmap',
+        data: hm.matrix || [],
+        label: {
+          show: true,
+          fontSize: 10,
+          color: c.textPrimary,
+          formatter: function(p) { return p.value[2] > 0 ? (p.value[2] >= 1000 ? (p.value[2]/1000).toFixed(1) + 'k' : p.value[2]) : ''; }
+        },
+        emphasis: {
+          itemStyle: { shadowBlur: 8, shadowColor: 'rgba(0,0,0,0.3)' }
+        }
+      }]
+    });
+    charts.push(heatmapChart);
+  }, 20);
+
+  // --- Section 3: Team Adoption Timeline (TEAM-06) ---
+  var timelineLabel = document.createElement('div');
+  timelineLabel.style.cssText = 'font-family:JetBrains Mono,monospace; font-size:11px; color:' + c.textTertiary + '; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:8px;';
+  timelineLabel.textContent = 'TEAM ADOPTION TIMELINE';
+  var timelineDiv = document.createElement('div');
+  timelineDiv.style.cssText = 'width:100%; height:300px; background:' + c.bgSurface + '; border-radius:6px; margin-bottom:32px;';
+  grid.appendChild(timelineLabel);
+  grid.appendChild(timelineDiv);
+
+  setTimeout(function() {
+    var timelineChart = echarts.init(timelineDiv, 'wandb');
+    var tl = PAGE_DATA.team_timeline || [];
+    var teamNames = tl.map(function(t) { return t.name; }).reverse();
+
+    // Build custom series: each bar is a range from first_active to last_active
+    var minDate = null;
+    var maxDate = null;
+    tl.forEach(function(t) {
+      var start = new Date(t.first_active).getTime();
+      var end = new Date(t.last_active).getTime();
+      if (!minDate || start < minDate) minDate = start;
+      if (!maxDate || end > maxDate) maxDate = end;
+    });
+
+    var renderData = tl.map(function(t, i) {
+      return {
+        value: [new Date(t.first_active).getTime(), tl.length - 1 - i, new Date(t.last_active).getTime()],
+        name: t.name
+      };
+    });
+
+    timelineChart.setOption({
+      tooltip: {
+        formatter: function(p) {
+          var d = p.data || {};
+          var start = new Date(d.value[0]).toISOString().slice(0, 10);
+          var end = new Date(d.value[2]).toISOString().slice(0, 10);
+          return '<strong>' + d.name + '</strong><br/>First active: ' + start + '<br/>Last active: ' + end;
+        }
+      },
+      toolbox: { feature: { saveAsImage: { title: 'Save as PNG', pixelRatio: 2, backgroundColor: c.bgElevated } }, right: 8, top: 0, iconStyle: { borderColor: c.textTertiary }, itemSize: 12 },
+      grid: { left: 120, right: 24, top: 16, bottom: 24 },
+      xAxis: {
+        type: 'time',
+        min: minDate,
+        max: maxDate,
+        axisLabel: { color: c.textTertiary, fontSize: 11 },
+        axisLine: { lineStyle: { color: c.borderSubtle } },
+        splitLine: { lineStyle: { color: c.borderSubtle, type: 'dashed' } }
+      },
+      yAxis: {
+        type: 'category',
+        data: teamNames,
+        axisLabel: { color: c.textPrimary, fontSize: 12, fontFamily: 'Outfit, sans-serif' },
+        axisLine: { lineStyle: { color: c.borderSubtle } },
+        axisTick: { show: false }
+      },
+      series: [{
+        type: 'custom',
+        renderItem: function(params, api) {
+          var start = api.coord([api.value(0), api.value(1)]);
+          var end = api.coord([api.value(2), api.value(1)]);
+          var height = api.size([0, 1])[1] * 0.5;
+          return {
+            type: 'rect',
+            shape: {
+              x: start[0],
+              y: start[1] - height / 2,
+              width: Math.max(end[0] - start[0], 4),
+              height: height
+            },
+            style: api.style({ fill: c.blue }),
+            styleEmphasis: api.styleEmphasis()
+          };
+        },
+        encode: { x: [0, 2], y: 1 },
+        data: renderData,
+        itemStyle: { color: c.blue, borderRadius: 3 }
+      }]
+    });
+    charts.push(timelineChart);
+  }, 30);
+
+  // --- Section 4: Side-by-side: Champions Table + Growth Trend (TEAM-07, TEAM-08) ---
+  var bottomRow = document.createElement('div');
+  bottomRow.style.cssText = 'display:flex; gap:32px; flex-wrap:wrap; margin-bottom:32px;';
+
+  // Left: Champions table (TEAM-07)
+  var champWrap = document.createElement('div');
+  champWrap.style.cssText = 'flex:1; min-width:320px;';
+  var champLabel = document.createElement('div');
+  champLabel.style.cssText = 'font-family:JetBrains Mono,monospace; font-size:11px; color:' + c.textTertiary + '; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:8px;';
+  champLabel.textContent = 'TEAM CHAMPIONS';
+  var champScroll = document.createElement('div');
+  champScroll.style.cssText = 'max-height:280px; overflow-y:auto;';
+
+  var champHtml = '<table style="width:100%; border-collapse:collapse; font-family:Outfit,sans-serif; font-size:14px;">';
+  champHtml += '<thead><tr style="border-bottom:1px solid ' + c.borderSubtle + ';">';
+  ['TEAM', 'CHAMPION', 'EVENTS', 'LAST ACTIVE'].forEach(function(h) {
+    var align = h === 'TEAM' || h === 'CHAMPION' ? 'left' : 'right';
+    champHtml += '<th style="text-align:' + align + '; padding:8px 16px; color:' + c.textTertiary + '; font-family:JetBrains Mono,monospace; font-size:11px; font-weight:400; text-transform:uppercase;">' + h + '</th>';
+  });
+  champHtml += '</tr></thead><tbody>';
+
+  (PAGE_DATA.teams || []).forEach(function(t) {
+    if (!t.champion) return;
+    champHtml += '<tr style="border-bottom:1px solid ' + c.borderSubtle + ';">';
+    champHtml += '<td style="padding:8px 16px; color:' + c.textPrimary + '; font-weight:500;">' + t.name + '</td>';
+    champHtml += '<td style="padding:8px 16px; color:' + c.textSecondary + ';">' + (t.champion.display_name || t.champion.username || '--') + '</td>';
+    champHtml += '<td style="padding:8px 16px; text-align:right; color:' + c.textSecondary + ';">' + (t.champion.events || 0).toLocaleString() + '</td>';
+    champHtml += '<td style="padding:8px 16px; text-align:right; color:' + c.textSecondary + ';">' + (t.last_active || '--') + '</td>';
+    champHtml += '</tr>';
+  });
+  champHtml += '</tbody></table>';
+  champScroll.innerHTML = champHtml;
+  champWrap.appendChild(champLabel);
+  champWrap.appendChild(champScroll);
+
+  // Right: Team Growth Trend (TEAM-08)
+  var growthWrap = document.createElement('div');
+  growthWrap.style.cssText = 'flex:1; min-width:320px;';
+  var growthLabel = document.createElement('div');
+  growthLabel.style.cssText = 'font-family:JetBrains Mono,monospace; font-size:11px; color:' + c.textTertiary + '; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:8px;';
+  growthLabel.textContent = 'TEAM GROWTH TREND';
+  var growthDiv = document.createElement('div');
+  growthDiv.style.cssText = 'width:100%; height:360px; background:' + c.bgSurface + '; border-radius:6px;';
+  growthWrap.appendChild(growthLabel);
+  growthWrap.appendChild(growthDiv);
+
+  bottomRow.appendChild(champWrap);
+  bottomRow.appendChild(growthWrap);
+  grid.appendChild(bottomRow);
+
+  // Render growth chart or empty message
+  var tg = PAGE_DATA.team_growth || {};
+  if ((tg.months || []).length === 0) {
+    growthDiv.innerHTML = '<div style="display:flex; align-items:center; justify-content:center; height:100%; color:' + c.textTertiary + '; font-family:Outfit,sans-serif; font-size:14px;">Growth data not available</div>';
+  } else {
+    setTimeout(function() {
+      var growthChart = echarts.init(growthDiv, 'wandb');
+      var teamColors = [c.blue, c.green, c.accent, c.amber, c.red, '#9333ea', '#06b6d4', '#ec4899'];
+      var series = (tg.teams || []).map(function(t, i) {
+        return {
+          name: t.name,
+          type: 'line',
+          stack: 'total',
+          areaStyle: { opacity: 0.3 },
+          emphasis: { focus: 'series' },
+          data: t.user_counts || [],
+          itemStyle: { color: teamColors[i % teamColors.length] },
+          lineStyle: { width: 2 }
+        };
+      });
+      growthChart.setOption({
+        tooltip: {
+          trigger: 'axis',
+          formatter: function(params) {
+            var html = '<strong>' + params[0].axisValue + '</strong>';
+            params.forEach(function(p) {
+              html += '<br/>' + p.marker + ' ' + p.seriesName + ': ' + p.value + ' users';
+            });
+            return html;
+          }
+        },
+        toolbox: { feature: { saveAsImage: { title: 'Save as PNG', pixelRatio: 2, backgroundColor: c.bgElevated } }, right: 8, top: 0, iconStyle: { borderColor: c.textTertiary }, itemSize: 12 },
+        legend: {
+          data: (tg.teams || []).map(function(t) { return t.name; }),
+          bottom: 0,
+          textStyle: { color: c.textSecondary, fontSize: 11, fontFamily: 'JetBrains Mono, monospace' },
+          itemWidth: 12, itemHeight: 12
+        },
+        grid: { left: 40, right: 16, top: 16, bottom: 40 },
+        xAxis: {
+          type: 'category',
+          data: tg.months || [],
+          axisLabel: { color: c.textTertiary, fontSize: 11 },
+          axisLine: { lineStyle: { color: c.borderSubtle } },
+          axisTick: { show: false }
+        },
+        yAxis: {
+          type: 'value',
+          name: 'Users',
+          nameTextStyle: { color: c.textTertiary, fontSize: 11 },
+          axisLabel: { color: c.textTertiary, fontSize: 11 },
+          splitLine: { lineStyle: { color: c.borderSubtle, type: 'dashed' } }
+        },
+        series: series
+      });
+      charts.push(growthChart);
+    }, 40);
+  }
+
+  window.addEventListener('resize', function() { charts.forEach(function(ch) { ch.resize(); }); });
+}
+
 var PAGE_RENDERERS = {
   'feature-velocity': renderFeatureVelocityV4,
   'sdk-versions': renderSdkVersions,
   'engagement-decay': renderEngagementDecay,
-  'user-journey': renderUserJourney
+  'user-journey': renderUserJourney,
+  'team-detection': renderTeamDetection
 };
 
 /* ════════════════════════════════════════════════════════

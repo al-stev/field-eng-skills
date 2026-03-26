@@ -125,12 +125,90 @@ def _sdk_versions_handler(client, account_id, customer_name):
     return transform.transform(sdk_versions=df, customer_name=customer_name)
 
 
+def _team_detection_handler(client, account_id, customer_name):
+    """Team Detection -- organizational structure from org_name fields."""
+    from queries import team_detection_query, team_champions_query, account_health_query
+    from bq_client import run_query
+    from transforms.team_detection import TeamDetectionTransform
+    from schema_validator import check_data_availability, PHASE3_DATA_CHECKS
+
+    # Check team data availability before running expensive queries
+    avail = check_data_availability(client, account_id, {
+        "team_org_names": PHASE3_DATA_CHECKS["team_org_names"],
+        "team_flags": PHASE3_DATA_CHECKS["team_flags"],
+    })
+
+    teams_df = run_query(client, team_detection_query(),
+                         account_id=account_id, maximum_bytes_billed=50_000_000_000)
+
+    # Only query champions if we have team data with org names
+    champions_df = None
+    if avail.get("team_org_names", {}).get("available", False):
+        try:
+            champions_df = run_query(client, team_champions_query(),
+                                     account_id=account_id, maximum_bytes_billed=50_000_000_000)
+        except Exception:
+            pass
+
+    # Get deployment type for data provenance
+    health_df = run_query(client, account_health_query(),
+                          account_id=account_id, maximum_bytes_billed=50_000_000_000)
+    deployment_type = "Unknown"
+    if not health_df.empty and "deployment_type" in health_df.columns:
+        deployment_type = str(health_df.iloc[0].get("deployment_type", "Unknown"))
+
+    transform = TeamDetectionTransform()
+    return transform.transform(
+        teams=teams_df, champions=champions_df,
+        customer_name=customer_name, deployment_type=deployment_type
+    )
+
+
+def _cohort_analysis_handler(client, account_id, customer_name):
+    """Cohort Analysis -- retention heatmap from user activity data."""
+    from queries import cohort_retention_query, user_lifecycle_query, user_journey_query
+    from bq_client import run_query
+    from transforms.cohort_analysis import CohortAnalysisTransform
+    from schema_validator import check_data_availability, PHASE3_DATA_CHECKS
+
+    # Check if preferred retention features table is available
+    avail = check_data_availability(client, account_id,
+        {"retention_features": PHASE3_DATA_CHECKS["retention_features"]})
+
+    # Always use fallback (activity-based) for now -- safer and always available
+    retention_df = run_query(client, cohort_retention_query(),
+                             account_id=account_id, maximum_bytes_billed=50_000_000_000)
+
+    # Lifecycle data
+    lifecycle_df = None
+    try:
+        lifecycle_df = run_query(client, user_lifecycle_query(),
+                                 account_id=account_id, maximum_bytes_billed=50_000_000_000)
+    except Exception:
+        pass  # Transform handles None lifecycle gracefully
+
+    # Journey data for behavioral cohorts (reuse existing query)
+    journey_df = None
+    try:
+        journey_df = run_query(client, user_journey_query(),
+                               account_id=account_id, maximum_bytes_billed=100_000_000_000)
+    except Exception:
+        pass
+
+    transform = CohortAnalysisTransform()
+    return transform.transform(
+        retention=retention_df, lifecycle=lifecycle_df, journey=journey_df,
+        customer_name=customer_name,
+        data_source="ext_daily_user_event_usage (activity-based cohorts)"
+    )
+
+
 PAGE_REGISTRY = {
     "user-journey": _user_journey_handler,
-    "cohort-analysis": _placeholder_handler,
+    "cohort-analysis": _cohort_analysis_handler,
     "engagement-decay": _engagement_decay_handler,
     "feature-velocity": _feature_velocity_handler,
-    "team-detection": _placeholder_handler,
+    "team-detection": _team_detection_handler,
     "risk-scoring": _placeholder_handler,
     "usage-correlation": _placeholder_handler,
     "sdk-versions": _sdk_versions_handler,
