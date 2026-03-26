@@ -82,13 +82,13 @@
 ### Risk Scoring
 
 - [x] **RISK-01**: Composite risk score (0-100) combining ML churn probability, engagement trend, seat utilization, support ticket velocity — displayed as gauge chart
-- [ ] **RISK-02**: Risk factor breakdown showing which factors contribute most to the score
+- [x] **RISK-02**: Risk factor breakdown showing which factors contribute most to the score
 - [x] **RISK-03**: Risk trend line showing score evolution over last 6 months
 - [x] **RISK-04**: Renewal context (days to renewal, ARR, contract details) alongside risk score
-- [ ] **RISK-05**: AI narrative with actionable risk assessment and recommended SE interventions
-- [ ] **RISK-06**: Risk radar chart (multi-dimensional radar showing risk shape at a glance)
-- [ ] **RISK-07**: AI-generated action recommendations (schedule QBR, run workshop, engage champion)
-- [ ] **RISK-08**: Historical risk snapshot comparison (now vs 3mo ago vs 6mo ago)
+- [x] **RISK-05**: AI narrative with actionable risk assessment and recommended SE interventions
+- [x] **RISK-06**: Risk radar chart (multi-dimensional radar showing risk shape at a glance)
+- [x] **RISK-07**: AI-generated action recommendations (schedule QBR, run workshop, engage champion)
+- [x] **RISK-08**: Historical risk snapshot comparison (now vs 3mo ago vs 6mo ago)
 
 ### Usage Correlation
 
@@ -207,13 +207,13 @@
 | TEAM-07 | Phase 3 | Complete |
 | TEAM-08 | Phase 3 | Complete |
 | RISK-01 | Phase 3 | Complete |
-| RISK-02 | Phase 3 | Pending |
+| RISK-02 | Phase 3 | Complete |
 | RISK-03 | Phase 3 | Complete |
 | RISK-04 | Phase 3 | Complete |
-| RISK-05 | Phase 3 | Pending |
-| RISK-06 | Phase 3 | Pending |
-| RISK-07 | Phase 3 | Pending |
-| RISK-08 | Phase 3 | Pending |
+| RISK-05 | Phase 3 | Complete |
+| RISK-06 | Phase 3 | Complete |
+| RISK-07 | Phase 3 | Complete |
+| RISK-08 | Phase 3 | Complete |
 | CORR-01 | Phase 4 | Pending |
 | CORR-02 | Phase 4 | Pending |
 | CORR-03 | Phase 4 | Pending |
