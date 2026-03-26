@@ -76,7 +76,11 @@ Plans:
   2. Usage Correlation page displays a prominent "SE-Internal Only" privacy badge and never embeds individual account names or IDs in the output HTML
   3. Performance Deep Dive page shows performance index gauge, per-feature slowness breakdown, error metrics KPI cards, chart load latency distribution, and slow chart load user breakdown -- with AI narrative flagging areas of concern (or the page is gracefully descoped if `fct_application_performance` data proves insufficient)
   4. All 9 deep analytics pages are discoverable via linked navigation between related pages, and the full suite generates successfully for at least one real customer
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+- [ ] 04-01-PLAN.md -- BQ queries (cross-account + performance), PRODUCT_AREA_CASE extraction, schema validation specs
+- [ ] 04-02-PLAN.md -- Usage Correlation page (transform + handler + renderer with privacy controls)
+- [ ] 04-03-PLAN.md -- Performance Deep Dive page (transform + handler + renderer with go/no-go gate)
 **UI hint**: yes
 
 ## Progress
@@ -89,4 +93,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 1. Foundation and Template System | 0/4 | Planning complete | - |
 | 2. High-Confidence Pages | 0/TBD | Not started | - |
 | 3. Medium-Confidence Pages | 0/4 | Planning complete | - |
-| 4. Privacy-Sensitive and Exploratory Pages | 0/TBD | Not started | - |
+| 4. Privacy-Sensitive and Exploratory Pages | 0/3 | Planning complete | - |
