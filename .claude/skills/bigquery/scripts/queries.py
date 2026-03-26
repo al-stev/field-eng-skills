@@ -34,6 +34,21 @@ def _ref(table: str, dataset: str = "analytics") -> str:
     return f"`{PROJECT_ID}.{dataset}.{table}`"
 
 
+PRODUCT_AREA_CASE = """CASE
+        WHEN event IN ('run_created', 'run_viewed', 'project_created', 'project_viewed') THEN 'Experiments'
+        WHEN event IN ('artifact_created', 'artifact_used', 'artifact_viewed') THEN 'Artifacts'
+        WHEN event IN ('model_registry_viewed') THEN 'Model Registry'
+        WHEN event IN ('sweep_created', 'sweep_viewed') THEN 'Sweeps'
+        WHEN event IN ('report_created', 'report_viewed') THEN 'Reports'
+        WHEN event IN ('weave_table_created', 'weave_table_viewed') THEN 'Tables'
+        WHEN event IN ('team_or_profile_viewed') THEN 'Collaboration'
+        WHEN event IN ('weave_call_created', 'weave_model_created', 'weave_op_created') THEN 'Weave Tracing'
+        WHEN event IN ('weave_feedback_created', 'weave_evaluation_created', 'weave_scorer_created') THEN 'Weave Evaluation'
+        WHEN event LIKE 'weave_backend%' OR event IN ('weave_object_created', 'weave_file_created', 'weave_dataset_created') THEN 'Weave Data'
+        ELSE 'Other'
+    END"""
+
+
 def identity_resolution_cte(table_alias: str = "src") -> str:
     """
     Returns a SQL CTE that resolves user identity for server deployments.
@@ -209,19 +224,7 @@ def product_areas_query() -> str:
             date_day,
             universal_user_id,
             event_count,
-            CASE
-                WHEN event IN ('run_created', 'run_viewed', 'project_created', 'project_viewed') THEN 'Experiments'
-                WHEN event IN ('artifact_created', 'artifact_used', 'artifact_viewed') THEN 'Artifacts'
-                WHEN event IN ('model_registry_viewed') THEN 'Model Registry'
-                WHEN event IN ('sweep_created', 'sweep_viewed') THEN 'Sweeps'
-                WHEN event IN ('report_created', 'report_viewed') THEN 'Reports'
-                WHEN event IN ('weave_table_created', 'weave_table_viewed') THEN 'Tables'
-                WHEN event IN ('team_or_profile_viewed') THEN 'Collaboration'
-                WHEN event IN ('weave_call_created', 'weave_model_created', 'weave_op_created') THEN 'Weave Tracing'
-                WHEN event IN ('weave_feedback_created', 'weave_evaluation_created', 'weave_scorer_created') THEN 'Weave Evaluation'
-                WHEN event LIKE 'weave_backend%' OR event IN ('weave_object_created', 'weave_file_created', 'weave_dataset_created') THEN 'Weave Data'
-                ELSE 'Other'
-            END AS product_area
+            {PRODUCT_AREA_CASE} AS product_area
         FROM {daily_usage}
         WHERE account_id = @account_id
             AND date_day >= DATE_SUB(CURRENT_DATE(), INTERVAL 12 MONTH)
@@ -751,6 +754,129 @@ def risk_support_tickets_query() -> str:
     WHERE s.account_id = @account_id
         AND t.ticket_created_date_day >= DATE_SUB(CURRENT_DATE(), INTERVAL 90 DAY)
         AND t.ticket_status != 'deleted'
+    """
+
+
+def cross_account_product_areas_query() -> str:
+    """
+    Cross-account product area presence matrix. NO @account_id filter.
+
+    Returns account_id for grouping in transform (stripped before output).
+    PRIVACY: account_id used for aggregation only, never in output HTML.
+    """
+    daily_usage = _ref("ext_daily_user_event_usage")
+    return f"""
+    WITH mapped AS (
+        SELECT
+            account_id,
+            {PRODUCT_AREA_CASE} AS product_area,
+            COUNT(DISTINCT universal_user_id) AS users,
+            SUM(event_count) AS events
+        FROM {daily_usage}
+        WHERE date_day >= DATE_SUB(CURRENT_DATE(), INTERVAL 6 MONTH)
+            AND event_count > 0
+        GROUP BY account_id, product_area
+    )
+    SELECT account_id, product_area, users, events
+    FROM mapped
+    WHERE product_area IS NOT NULL AND product_area != 'Other'
+    """
+
+
+def cross_account_arr_breadth_query() -> str:
+    """
+    Cross-account ARR and product breadth for peer benchmarking.
+
+    Joins product area presence with SFDC account data (ARR, cs_tier).
+    NO @account_id filter -- returns all accounts.
+    """
+    daily_usage = _ref("ext_daily_user_event_usage")
+    sfdc = _ref("stg_salesforce_accounts")
+    return f"""
+    WITH account_areas AS (
+        SELECT
+            account_id,
+            COUNT(DISTINCT {PRODUCT_AREA_CASE}) AS product_breadth
+        FROM {daily_usage}
+        WHERE date_day >= DATE_SUB(CURRENT_DATE(), INTERVAL 6 MONTH)
+            AND event_count > 0
+            AND {PRODUCT_AREA_CASE} != 'Other'
+        GROUP BY account_id
+    )
+    SELECT
+        aa.account_id,
+        aa.product_breadth,
+        sa.renewal_arr__c AS arr,
+        sa.cs_tier
+    FROM account_areas aa
+    LEFT JOIN {sfdc} sa ON aa.account_id = sa.account_id
+    WHERE sa.renewal_arr__c IS NOT NULL AND sa.renewal_arr__c > 0
+    """
+
+
+def performance_query() -> str:
+    """Performance index and slowness metrics from fct_application_performance."""
+    perf = _ref("fct_application_performance")
+    return f"""
+    SELECT
+        date_day,
+        application_performance_index,
+        slow_charts,
+        slow_project_search,
+        slow_artifact_creating,
+        slow_run_sidebar,
+        slow_workspace_settings,
+        users_facing_errors_ct,
+        error_count
+    FROM {perf}
+    WHERE account_id = @account_id
+        AND date_day >= DATE_SUB(CURRENT_DATE(), INTERVAL 90 DAY)
+    ORDER BY date_day
+    """
+
+
+def latency_distribution_query() -> str:
+    """Chart load latency data from fct_onscreen_loader_latencies."""
+    latency = _ref("fct_onscreen_loader_latencies")
+    return f"""
+    SELECT
+        latency_ms,
+        universal_user_id
+    FROM {latency}
+    WHERE account_id = @account_id
+        AND date_day >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)
+    """
+
+
+def slow_chart_users_query() -> str:
+    """Slow chart load breakdown per user from agg_daily_team_members_slow_chart_loads."""
+    slow = _ref("agg_daily_team_members_slow_chart_loads")
+    dim_users = _ref("dim_users")
+    return f"""
+    WITH user_slow AS (
+        SELECT
+            universal_user_id,
+            SUM(slow_chart_loads) AS slow_loads,
+            SUM(total_chart_loads) AS total_loads,
+            MAX(date_day) AS last_seen
+        FROM {slow}
+        WHERE account_id = @account_id
+            AND date_day >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)
+        GROUP BY universal_user_id
+    )
+    SELECT
+        us.universal_user_id,
+        COALESCE(du.local_username, 'unknown') AS username,
+        us.slow_loads,
+        us.total_loads,
+        SAFE_DIVIDE(us.slow_loads, us.total_loads) * 100 AS slow_pct,
+        us.last_seen
+    FROM user_slow us
+    LEFT JOIN {dim_users} du
+        ON us.universal_user_id = du.universal_user_id
+        AND du.account_id = @account_id
+    WHERE us.total_loads > 0
+    ORDER BY slow_pct DESC
     """
 
 

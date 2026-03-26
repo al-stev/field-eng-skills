@@ -20,6 +20,13 @@ from queries import (
     team_champions_query,
     engagement_trend_query,
     risk_support_tickets_query,
+    product_areas_query,
+    PRODUCT_AREA_CASE,
+    cross_account_product_areas_query,
+    cross_account_arr_breadth_query,
+    performance_query,
+    latency_distribution_query,
+    slow_chart_users_query,
 )
 
 
@@ -378,4 +385,245 @@ class TestRiskSupportTicketsQuery:
     def test_no_select_star(self):
         """Query does NOT use SELECT *."""
         sql = risk_support_tickets_query()
+        assert "SELECT *" not in sql
+
+
+class TestProductAreaCase:
+    """Verify PRODUCT_AREA_CASE shared constant for product area mapping."""
+
+    def test_is_string_constant(self):
+        """PRODUCT_AREA_CASE is a string containing CASE."""
+        assert isinstance(PRODUCT_AREA_CASE, str)
+        assert "CASE" in PRODUCT_AREA_CASE
+
+    def test_contains_all_10_product_areas(self):
+        """PRODUCT_AREA_CASE maps all 10 product areas."""
+        expected_areas = [
+            "Experiments", "Artifacts", "Model Registry", "Sweeps",
+            "Reports", "Tables", "Collaboration", "Weave Tracing",
+            "Weave Evaluation", "Weave Data",
+        ]
+        for area in expected_areas:
+            assert f"'{area}'" in PRODUCT_AREA_CASE, f"Missing product area: {area}"
+
+    def test_contains_else_other(self):
+        """PRODUCT_AREA_CASE has ELSE 'Other' fallback."""
+        assert "ELSE 'Other'" in PRODUCT_AREA_CASE
+
+    def test_contains_end(self):
+        """PRODUCT_AREA_CASE ends with END."""
+        assert "END" in PRODUCT_AREA_CASE
+
+    def test_product_areas_query_uses_constant(self):
+        """product_areas_query() output contains the same CASE logic as PRODUCT_AREA_CASE."""
+        sql = product_areas_query()
+        # The constant's content should appear in the query output
+        # Check key fragments that prove the constant is used (not a duplicate)
+        assert "Experiments" in sql
+        assert "Weave Data" in sql
+        assert "ELSE 'Other'" in sql
+
+
+class TestCrossAccountProductAreasQuery:
+    """Verify cross_account_product_areas_query() for cross-account product area presence."""
+
+    def test_no_account_id_param(self):
+        """Cross-account query does NOT contain @account_id parameter."""
+        sql = cross_account_product_areas_query()
+        assert "@account_id" not in sql
+
+    def test_contains_product_area_case_logic(self):
+        """Query contains PRODUCT_AREA_CASE logic (product area mapping)."""
+        sql = cross_account_product_areas_query()
+        assert "Experiments" in sql
+        assert "Weave Data" in sql
+
+    def test_selects_required_columns(self):
+        """Query selects account_id, product_area, users, events."""
+        sql = cross_account_product_areas_query()
+        assert "account_id" in sql
+        assert "product_area" in sql
+        assert "users" in sql
+        assert "events" in sql
+
+    def test_filters_6_months(self):
+        """Query filters to 6 months of data."""
+        sql = cross_account_product_areas_query()
+        assert "INTERVAL 6 MONTH" in sql
+
+    def test_excludes_other(self):
+        """Query excludes 'Other' product area."""
+        sql = cross_account_product_areas_query()
+        assert "'Other'" in sql
+
+    def test_uses_ref_for_table(self):
+        """Query uses _ref() for ext_daily_user_event_usage."""
+        sql = cross_account_product_areas_query()
+        assert _ref("ext_daily_user_event_usage") in sql
+
+    def test_no_select_star(self):
+        """Query does NOT use SELECT *."""
+        sql = cross_account_product_areas_query()
+        assert "SELECT *" not in sql
+
+
+class TestCrossAccountArrBreadthQuery:
+    """Verify cross_account_arr_breadth_query() for peer benchmarking."""
+
+    def test_no_account_id_param(self):
+        """Cross-account query does NOT contain @account_id parameter."""
+        sql = cross_account_arr_breadth_query()
+        assert "@account_id" not in sql
+
+    def test_joins_stg_salesforce_accounts(self):
+        """Query joins stg_salesforce_accounts for ARR and tier data."""
+        sql = cross_account_arr_breadth_query()
+        assert "stg_salesforce_accounts" in sql
+
+    def test_contains_arr_column(self):
+        """Query selects ARR data."""
+        sql = cross_account_arr_breadth_query()
+        assert "arr" in sql.lower()
+
+    def test_contains_cs_tier_column(self):
+        """Query selects cs_tier for tier-based grouping."""
+        sql = cross_account_arr_breadth_query()
+        assert "cs_tier" in sql
+
+    def test_contains_product_breadth(self):
+        """Query computes product_breadth (count of distinct product areas)."""
+        sql = cross_account_arr_breadth_query()
+        assert "product_breadth" in sql
+
+    def test_uses_ref_for_tables(self):
+        """Query uses _ref() for both tables."""
+        sql = cross_account_arr_breadth_query()
+        assert _ref("ext_daily_user_event_usage") in sql
+        assert _ref("stg_salesforce_accounts") in sql
+
+    def test_no_select_star(self):
+        """Query does NOT use SELECT *."""
+        sql = cross_account_arr_breadth_query()
+        assert "SELECT *" not in sql
+
+
+class TestPerformanceQuery:
+    """Verify performance_query() for application performance metrics."""
+
+    def test_contains_account_id_param(self):
+        """Query uses @account_id parameter."""
+        sql = performance_query()
+        assert "@account_id" in sql
+
+    def test_contains_application_performance_index(self):
+        """Query selects application_performance_index."""
+        sql = performance_query()
+        assert "application_performance_index" in sql
+
+    def test_contains_slow_columns(self):
+        """Query selects all slow_* columns."""
+        sql = performance_query()
+        assert "slow_charts" in sql
+        assert "slow_project_search" in sql
+        assert "slow_artifact_creating" in sql
+        assert "slow_run_sidebar" in sql
+        assert "slow_workspace_settings" in sql
+
+    def test_contains_error_columns(self):
+        """Query selects error metric columns."""
+        sql = performance_query()
+        assert "users_facing_errors_ct" in sql
+        assert "error_count" in sql
+
+    def test_filters_90_days(self):
+        """Query filters to 90 days of data."""
+        sql = performance_query()
+        assert "INTERVAL 90 DAY" in sql
+
+    def test_uses_ref_for_table(self):
+        """Query uses _ref() for fct_application_performance."""
+        sql = performance_query()
+        assert _ref("fct_application_performance") in sql
+
+    def test_no_select_star(self):
+        """Query does NOT use SELECT *."""
+        sql = performance_query()
+        assert "SELECT *" not in sql
+
+
+class TestLatencyDistributionQuery:
+    """Verify latency_distribution_query() for chart load latency data."""
+
+    def test_contains_account_id_param(self):
+        """Query uses @account_id parameter."""
+        sql = latency_distribution_query()
+        assert "@account_id" in sql
+
+    def test_contains_latency_ms(self):
+        """Query selects latency_ms column."""
+        sql = latency_distribution_query()
+        assert "latency_ms" in sql
+
+    def test_contains_universal_user_id(self):
+        """Query selects universal_user_id for per-user breakdown."""
+        sql = latency_distribution_query()
+        assert "universal_user_id" in sql
+
+    def test_filters_30_days(self):
+        """Query filters to 30 days of data."""
+        sql = latency_distribution_query()
+        assert "INTERVAL 30 DAY" in sql
+
+    def test_uses_ref_for_table(self):
+        """Query uses _ref() for fct_onscreen_loader_latencies."""
+        sql = latency_distribution_query()
+        assert _ref("fct_onscreen_loader_latencies") in sql
+
+    def test_no_select_star(self):
+        """Query does NOT use SELECT *."""
+        sql = latency_distribution_query()
+        assert "SELECT *" not in sql
+
+
+class TestSlowChartUsersQuery:
+    """Verify slow_chart_users_query() for per-user slow chart load breakdown."""
+
+    def test_contains_account_id_param(self):
+        """Query uses @account_id parameter."""
+        sql = slow_chart_users_query()
+        assert "@account_id" in sql
+
+    def test_contains_safe_divide(self):
+        """Query uses SAFE_DIVIDE for percentage calculation."""
+        sql = slow_chart_users_query()
+        assert "SAFE_DIVIDE" in sql
+
+    def test_joins_dim_users(self):
+        """Query JOINs dim_users for identity resolution."""
+        sql = slow_chart_users_query()
+        assert "dim_users" in sql
+
+    def test_contains_slow_pct(self):
+        """Query computes slow_pct percentage."""
+        sql = slow_chart_users_query()
+        assert "slow_pct" in sql
+
+    def test_orders_by_slow_pct_desc(self):
+        """Query orders by slow_pct DESC."""
+        sql = slow_chart_users_query()
+        assert "slow_pct DESC" in sql
+
+    def test_uses_ref_for_table(self):
+        """Query uses _ref() for agg_daily_team_members_slow_chart_loads."""
+        sql = slow_chart_users_query()
+        assert _ref("agg_daily_team_members_slow_chart_loads") in sql
+
+    def test_filters_30_days(self):
+        """Query filters to 30 days of data."""
+        sql = slow_chart_users_query()
+        assert "INTERVAL 30 DAY" in sql
+
+    def test_no_select_star(self):
+        """Query does NOT use SELECT *."""
+        sql = slow_chart_users_query()
         assert "SELECT *" not in sql

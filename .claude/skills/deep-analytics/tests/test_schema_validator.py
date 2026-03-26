@@ -263,3 +263,107 @@ class TestCheckDataAvailability:
         assert result["check_a"]["count"] == 10
         assert result["check_b"]["available"] is False
         assert result["check_b"]["count"] == 0
+
+
+class TestPhase4SchemaSpecs:
+    """Verify PHASE4_SCHEMA_SPECS dict has correct structure and table coverage."""
+
+    def test_has_exactly_3_entries(self):
+        """PHASE4_SCHEMA_SPECS has exactly 3 table entries."""
+        from schema_validator import PHASE4_SCHEMA_SPECS
+
+        assert len(PHASE4_SCHEMA_SPECS) == 3
+
+    def test_contains_fct_application_performance(self):
+        """PHASE4_SCHEMA_SPECS includes fct_application_performance with required columns."""
+        from schema_validator import PHASE4_SCHEMA_SPECS
+
+        key = "`wandb-production.analytics.fct_application_performance`"
+        assert key in PHASE4_SCHEMA_SPECS
+        cols = PHASE4_SCHEMA_SPECS[key]
+        assert "account_id" in cols
+        assert "date_day" in cols
+        assert "application_performance_index" in cols
+        assert "slow_charts" in cols
+        assert "users_facing_errors_ct" in cols
+        assert "error_count" in cols
+
+    def test_contains_fct_onscreen_loader_latencies(self):
+        """PHASE4_SCHEMA_SPECS includes fct_onscreen_loader_latencies with required columns."""
+        from schema_validator import PHASE4_SCHEMA_SPECS
+
+        key = "`wandb-production.analytics.fct_onscreen_loader_latencies`"
+        assert key in PHASE4_SCHEMA_SPECS
+        cols = PHASE4_SCHEMA_SPECS[key]
+        assert "account_id" in cols
+        assert "date_day" in cols
+        assert "latency_ms" in cols
+
+    def test_contains_agg_daily_team_members_slow_chart_loads(self):
+        """PHASE4_SCHEMA_SPECS includes agg_daily_team_members_slow_chart_loads."""
+        from schema_validator import PHASE4_SCHEMA_SPECS
+
+        key = "`wandb-production.analytics.agg_daily_team_members_slow_chart_loads`"
+        assert key in PHASE4_SCHEMA_SPECS
+        cols = PHASE4_SCHEMA_SPECS[key]
+        assert "account_id" in cols
+        assert "date_day" in cols
+        assert "universal_user_id" in cols
+        assert "slow_chart_loads" in cols
+        assert "total_chart_loads" in cols
+
+
+class TestPhase4DataChecks:
+    """Verify PHASE4_DATA_CHECKS dict has correct structure and SQL content."""
+
+    def test_has_exactly_3_entries(self):
+        """PHASE4_DATA_CHECKS has exactly 3 check entries."""
+        from schema_validator import PHASE4_DATA_CHECKS
+
+        assert len(PHASE4_DATA_CHECKS) == 3
+
+    def test_check_names(self):
+        """PHASE4_DATA_CHECKS has the expected check names."""
+        from schema_validator import PHASE4_DATA_CHECKS
+
+        expected = {"perf_index", "latency_data", "slow_chart_data"}
+        assert set(PHASE4_DATA_CHECKS.keys()) == expected
+
+    def test_all_checks_contain_account_id_param(self):
+        """Every SQL check uses @account_id parameter."""
+        from schema_validator import PHASE4_DATA_CHECKS
+
+        for name, sql in PHASE4_DATA_CHECKS.items():
+            assert "@account_id" in sql, f"Check '{name}' missing @account_id"
+
+    def test_all_checks_contain_count_and_limit(self):
+        """Every SQL check contains COUNT and LIMIT 1."""
+        from schema_validator import PHASE4_DATA_CHECKS
+
+        for name, sql in PHASE4_DATA_CHECKS.items():
+            assert "COUNT" in sql, f"Check '{name}' missing COUNT"
+            assert "LIMIT 1" in sql, f"Check '{name}' missing LIMIT 1"
+
+    def test_perf_index_references_correct_table(self):
+        """perf_index check references fct_application_performance and filters 90 days."""
+        from schema_validator import PHASE4_DATA_CHECKS
+
+        sql = PHASE4_DATA_CHECKS["perf_index"]
+        assert "fct_application_performance" in sql
+        assert "90 DAY" in sql
+
+    def test_latency_data_references_correct_table(self):
+        """latency_data check references fct_onscreen_loader_latencies and filters 30 days."""
+        from schema_validator import PHASE4_DATA_CHECKS
+
+        sql = PHASE4_DATA_CHECKS["latency_data"]
+        assert "fct_onscreen_loader_latencies" in sql
+        assert "30 DAY" in sql
+
+    def test_slow_chart_data_references_correct_table(self):
+        """slow_chart_data check references agg_daily_team_members_slow_chart_loads and filters 30 days."""
+        from schema_validator import PHASE4_DATA_CHECKS
+
+        sql = PHASE4_DATA_CHECKS["slow_chart_data"]
+        assert "agg_daily_team_members_slow_chart_loads" in sql
+        assert "30 DAY" in sql
