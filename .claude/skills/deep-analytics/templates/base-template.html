@@ -1266,10 +1266,134 @@ function renderEngagementDecay() {
   window.addEventListener('resize', function() { charts.forEach(function(ch) { ch.resize(); }); });
 }
 
+/* ── User Journey: Sankey diagram + funnel bars ── */
+
+function renderUserJourney() {
+  var grid = document.getElementById('sparklineGrid');
+  grid.style.display = 'block';
+  var c = getThemeColors();
+  var charts = [];
+
+  var sankey = PAGE_DATA.sankey || { nodes: [], links: [] };
+  var funnel = PAGE_DATA.funnel || [];
+
+  // --- Section 1: Sankey diagram ---
+  var sankeyLabel = document.createElement('div');
+  sankeyLabel.style.cssText = 'font-family:JetBrains Mono,monospace; font-size:11px; color:' + c.textTertiary + '; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:8px;';
+  sankeyLabel.textContent = 'Adoption Flow';
+  var sankeyDiv = document.createElement('div');
+  sankeyDiv.style.cssText = 'width:100%; height:400px; background:' + c.bgSurface + '; border-radius:6px;';
+  grid.appendChild(sankeyLabel);
+  grid.appendChild(sankeyDiv);
+
+  setTimeout(function() {
+    var sankeyChart = echarts.init(sankeyDiv, 'wandb');
+
+    // Color nodes by position in funnel
+    var nodeColors = {
+      'All Users': c.textSecondary,
+      'SDK Installed': c.blue,
+      'First Run': c.green,
+      'First Sweep': c.accent,
+      'First Table': c.accent,
+      'First Weave Call': c.accent,
+      'No SDK': c.red,
+      'SDK Only': c.amber,
+      'Runs Only': c.amber
+    };
+
+    var coloredNodes = sankey.nodes.map(function(n) {
+      return {
+        name: n.name,
+        itemStyle: { color: nodeColors[n.name] || c.textTertiary, borderColor: 'transparent' }
+      };
+    });
+
+    sankeyChart.setOption({
+      tooltip: {
+        trigger: 'item',
+        formatter: function(p) {
+          if (p.dataType === 'edge') {
+            return p.data.source + ' \u2192 ' + p.data.target + '<br/>' + p.data.value + ' users';
+          }
+          return p.name + ': ' + (p.value || '') + ' users';
+        }
+      },
+      toolbox: { feature: { saveAsImage: { title: 'Save as PNG', pixelRatio: 2, backgroundColor: c.bgElevated } }, right: 16, top: 8, iconStyle: { borderColor: c.textTertiary } },
+      series: [{
+        type: 'sankey',
+        layout: 'none',
+        emphasis: { focus: 'adjacency' },
+        nodeAlign: 'left',
+        nodeWidth: 20,
+        nodeGap: 16,
+        layoutIterations: 0,
+        data: coloredNodes,
+        links: sankey.links,
+        lineStyle: {
+          color: 'gradient',
+          opacity: 0.3,
+          curveness: 0.5
+        },
+        label: {
+          color: c.textPrimary,
+          fontFamily: 'Outfit, sans-serif',
+          fontSize: 13,
+          formatter: function(p) {
+            return p.name + '\n' + (p.value || '');
+          }
+        },
+        left: 40,
+        right: 120,
+        top: 20,
+        bottom: 20
+      }]
+    });
+    charts.push(sankeyChart);
+  }, 10);
+
+  // --- Section 2: Funnel bars ---
+  var funnelLabel = document.createElement('div');
+  funnelLabel.style.cssText = 'font-family:JetBrains Mono,monospace; font-size:11px; color:' + c.textTertiary + '; text-transform:uppercase; letter-spacing:1.5px; margin:24px 0 8px 0;';
+  funnelLabel.textContent = 'Stage Completion';
+  grid.appendChild(funnelLabel);
+
+  var total = PAGE_DATA.total_users || 1;
+  funnel.forEach(function(stage) {
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex; align-items:center; gap:12px; margin-bottom:8px;';
+
+    var label = document.createElement('div');
+    label.style.cssText = 'width:140px; font-family:Outfit,sans-serif; font-size:13px; font-weight:500; color:' + c.textPrimary + '; text-align:right;';
+    label.textContent = stage.label;
+
+    var barOuter = document.createElement('div');
+    barOuter.style.cssText = 'flex:1; height:28px; background:' + c.bgSurface + '; border-radius:4px; position:relative; overflow:hidden;';
+
+    var barInner = document.createElement('div');
+    var pct = stage.count / total * 100;
+    var barColor = pct >= 60 ? c.green : pct >= 30 ? c.blue : pct >= 10 ? c.amber : c.red;
+    barInner.style.cssText = 'height:100%; width:' + pct + '%; background:' + barColor + '33; border-right:2px solid ' + barColor + '; transition:width 0.6s ease;';
+    barOuter.appendChild(barInner);
+
+    var stat = document.createElement('div');
+    stat.style.cssText = 'width:120px; font-family:JetBrains Mono,monospace; font-size:12px; color:' + c.textSecondary + ';';
+    stat.textContent = stage.count + ' (' + stage.pct + '%)';
+
+    row.appendChild(label);
+    row.appendChild(barOuter);
+    row.appendChild(stat);
+    grid.appendChild(row);
+  });
+
+  window.addEventListener('resize', function() { charts.forEach(function(ch) { ch.resize(); }); });
+}
+
 var PAGE_RENDERERS = {
   'feature-velocity': renderFeatureVelocityV4,
   'sdk-versions': renderSdkVersions,
-  'engagement-decay': renderEngagementDecay
+  'engagement-decay': renderEngagementDecay,
+  'user-journey': renderUserJourney
 };
 
 /* ════════════════════════════════════════════════════════

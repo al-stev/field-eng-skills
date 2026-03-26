@@ -72,6 +72,25 @@ def _feature_velocity_handler(client, account_id, customer_name):
     return transform.transform(product_areas=df, customer_name=customer_name, weave_customer=weave_customer)
 
 
+def _user_journey_handler(client, account_id, customer_name):
+    """User Journey — adoption funnel Sankey from dim_users first_*_at fields."""
+    from queries import user_journey_query, account_health_query
+    from bq_client import run_query
+    from transforms.user_journey import UserJourneyTransform
+
+    sql = user_journey_query()
+    df = run_query(client, sql, account_id=account_id, maximum_bytes_billed=100_000_000_000)
+
+    # Check Weave status
+    health_df = run_query(client, account_health_query(), account_id=account_id, maximum_bytes_billed=50_000_000_000)
+    weave_customer = False
+    if not health_df.empty and "weave_customer" in health_df.columns:
+        weave_customer = bool(health_df.iloc[0].get("weave_customer", False))
+
+    transform = UserJourneyTransform()
+    return transform.transform(user_journey=df, customer_name=customer_name, weave_customer=weave_customer)
+
+
 def _engagement_decay_handler(client, account_id, customer_name):
     """Engagement Decay — per-user activity decline detection."""
     from queries import engagement_decay_query, account_health_query
@@ -107,7 +126,7 @@ def _sdk_versions_handler(client, account_id, customer_name):
 
 
 PAGE_REGISTRY = {
-    "user-journey": _placeholder_handler,
+    "user-journey": _user_journey_handler,
     "cohort-analysis": _placeholder_handler,
     "engagement-decay": _engagement_decay_handler,
     "feature-velocity": _feature_velocity_handler,

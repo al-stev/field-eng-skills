@@ -475,6 +475,30 @@ def sdk_versions_query() -> str:
     """
 
 
+def user_journey_query() -> str:
+    """
+    Per-user adoption stage data from dim_users first_*_at fields.
+
+    Returns one row per user with timestamps for each adoption milestone.
+    Used to build Sankey diagrams showing the adoption funnel.
+    """
+    dim_users = _ref("dim_users")
+    return f"""
+    SELECT
+        universal_user_id,
+        local_username,
+        local_user_email,
+        first_telemetry_at,
+        first_run_at,
+        first_sweep_at,
+        first_table_created_at,
+        first_weave_call_at,
+        first_license_created_at
+    FROM {dim_users}
+    WHERE account_id = @account_id
+    """
+
+
 def engagement_decay_query() -> str:
     """
     Per-user weekly activity for engagement decay analysis.
