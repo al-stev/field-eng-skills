@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Support Ticket Pain Points — Isomorphic Labs</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<style>
+  /* ── DESIGN TOKENS ── */
+  :root {
+    --bg-primary: #1F1F1F;
+    --bg-elevated: #2a2a2a;
+    --bg-surface: #333333;
+    --border: #444444;
+    --text-primary: #f0f0f0;
+    --text-secondary: #a0a0a0;
+    --text-tertiary: #707070;
+    --accent: #FFCC00;
+    --accent-dim: rgba(255, 204, 0, 0.12);
+    --accent-border: rgba(255, 204, 0, 0.30);
+    --font-body: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    --font-mono: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    --radius: 8px;
+  }
+
+  /* ── RESET ── */
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  /* ── BASE ── */
+  body {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    line-height: 1.6;
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  /* ── LAYOUT ── */
+  .page-wrapper {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 32px;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    margin-bottom: 32px;
+  }
+
+  .header-top {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 8px;
+  }
+
+  .wb-badge {
+    background: var(--accent);
+    color: var(--bg-primary);
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 4px;
+  }
+
+  .header h1 {
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+  }
+
+  .header .subtitle {
+    color: var(--text-secondary);
+    font-size: 15px;
+    margin-top: 4px;
+  }
+
+  .header .date {
+    color: var(--text-tertiary);
+    font-size: 13px;
+    font-family: var(--font-mono);
+    margin-top: 2px;
+  }
+
+  /* ── STATS BAR ── */
+  .stats-bar {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+
+  .stat-card {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 24px;
+    flex: 1;
+    min-width: 160px;
+  }
+
+  .stat-card .stat-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-tertiary);
+    margin-bottom: 4px;
+  }
+
+  .stat-card .stat-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .stat-card .stat-value .stat-unit {
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--text-secondary);
+    margin-left: 4px;
+  }
+
+  .stat-card.urgent .stat-value {
+    color: #ff5252;
+  }
+
+  .stat-card.high .stat-value {
+    color: #ffa726;
+  }
+
+  .stat-card.categories .stat-value {
+    color: var(--accent);
+  }
+
+  /* ── CHART CONTAINER ── */
+  .chart-section {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 24px;
+  }
+
+  .chart-section h2 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+  }
+
+  .chart-section .chart-subtitle {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+  }
+
+  #treemap {
+    width: 100%;
+    height: 520px;
+  }
+
+  /* ── LEGEND ── */
+  .legend {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+
+  .legend-swatch {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+  }
+
+  /* ── INSIGHT PANEL ── */
+  .insight-panel {
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-border);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    margin-bottom: 24px;
+  }
+
+  .insight-panel .insight-icon {
+    color: var(--accent);
+    font-size: 16px;
+    margin-right: 8px;
+  }
+
+  .insight-panel .insight-title {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+
+  .insight-panel .insight-text {
+    font-size: 14px;
+    color: var(--text-primary);
+    line-height: 1.7;
+  }
+
+  .insight-panel .insight-text strong {
+    color: var(--accent);
+  }
+
+  /* ── BREAKDOWN TABLE ── */
+  .breakdown-section {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+  }
+
+  .breakdown-section h2 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+  }
+
+  .breakdown-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .breakdown-table th {
+    text-align: left;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-tertiary);
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .breakdown-table td {
+    padding: 10px 12px;
+    font-size: 14px;
+    color: var(--text-primary);
+    border-bottom: 1px solid rgba(68, 68, 68, 0.4);
+  }
+
+  .breakdown-table tr:last-child td {
+    border-bottom: none;
+  }
+
+  .breakdown-table .group-label {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    font-family: var(--font-mono);
+  }
+
+  .bar-cell {
+    width: 200px;
+  }
+
+  .bar-container {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+    height: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.6s ease;
+  }
+
+  .bar-label {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: var(--text-primary);
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  }
+
+  /* ── FOOTER ── */
+  .footer {
+    text-align: center;
+    margin-top: 32px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    color: var(--text-tertiary);
+    font-size: 12px;
+  }
+</style>
+</head>
+<body>
+
+<div class="page-wrapper">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-top">
+      <span class="wb-badge">W&B Field Engineering</span>
+    </div>
+    <h1>Support Ticket Pain Points</h1>
+    <div class="subtitle">Isomorphic Labs — Concern Category Analysis</div>
+    <div class="date">2026-03-24</div>
+  </div>
+
+  <!-- STATS BAR -->
+  <div class="stats-bar">
+    <div class="stat-card">
+      <div class="stat-label">Total Tickets</div>
+      <div class="stat-value">30</div>
+    </div>
+    <div class="stat-card categories">
+      <div class="stat-label">Concern Categories</div>
+      <div class="stat-value">10<span class="stat-unit">+ uncategorized</span></div>
+    </div>
+    <div class="stat-card high">
+      <div class="stat-label">High Priority</div>
+      <div class="stat-value">28<span class="stat-unit">tickets</span></div>
+    </div>
+    <div class="stat-card urgent">
+      <div class="stat-label">Urgent Priority</div>
+      <div class="stat-value">2<span class="stat-unit">tickets</span></div>
+    </div>
+  </div>
+
+  <!-- TREEMAP -->
+  <div class="chart-section">
+    <h2>Pain Point Treemap</h2>
+    <div class="chart-subtitle">Rectangle area proportional to ticket count. Color intensity reflects priority severity.</div>
+    <div id="treemap"></div>
+    <div class="legend">
+      <div class="legend-item">
+        <div class="legend-swatch" style="background: #ff5252;"></div>
+        Urgent / Critical
+      </div>
+      <div class="legend-item">
+        <div class="legend-swatch" style="background: #ffa726;"></div>
+        High Priority
+      </div>
+      <div class="legend-item">
+        <div class="legend-swatch" style="background: #FFCC00;"></div>
+        Standard
+      </div>
+    </div>
+  </div>
+
+  <!-- INSIGHT PANEL -->
+  <div class="insight-panel">
+    <div class="insight-title">Key Insights</div>
+    <div class="insight-text">
+      <strong>Top pain point: Workspace issues (20% of tickets)</strong> — the single largest categorized concern, indicating significant friction with workspace configuration and management.
+      <strong>Uncategorized tickets (27%)</strong> represent the largest block overall, suggesting a need for better ticket classification.
+      App Issues as a group (Workspace, Runs Table, Charts, Performance) account for <strong>43% of all tickets</strong>, making the web application the primary area of friction.
+      <strong>93% of tickets are high priority</strong> — only 2 of 30 tickets escalated to urgent, both likely tied to crashed runs or connectivity.
+    </div>
+  </div>
+
+  <!-- BREAKDOWN TABLE -->
+  <div class="breakdown-section">
+    <h2>Concern Breakdown</h2>
+    <table class="breakdown-table">
+      <thead>
+        <tr>
+          <th>Concern</th>
+          <th>Group</th>
+          <th>Tickets</th>
+          <th class="bar-cell">Distribution</th>
+        </tr>
+      </thead>
+      <tbody id="breakdown-body">
+      </tbody>
+    </table>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    W&B Field Engineering &middot; Generated 2026-03-24 &middot; Data from Jira WB project
+  </div>
+
+</div>
+
+<script>
+// ── DATA ──
+const concerns = [
+  { key: 'uncategorized', label: 'Uncategorized', group: 'Other', count: 8, severity: 0.5,
+    examples: ['General inquiry', 'Miscellaneous support request', 'Unclassified issue'] },
+  { key: 'workspace', label: 'Workspace', group: 'App Issues', count: 6, severity: 0.75,
+    examples: ['Workspace settings not persisting', 'Cannot add team members to workspace', 'Workspace storage quota exceeded'] },
+  { key: 'crashed_run', label: 'Crashed Runs', group: 'SDK Issues', count: 4, severity: 0.9,
+    examples: ['Run crashes on large artifact upload', 'Segfault during wandb.finish()', 'Run stuck in crashed state'] },
+  { key: 'app__runs_table', label: 'Runs Table', group: 'App Issues', count: 3, severity: 0.65,
+    examples: ['Runs table filter not working', 'Column sorting broken', 'Cannot export runs table to CSV'] },
+  { key: 'charts', label: 'Charts', group: 'App Issues', count: 2, severity: 0.55,
+    examples: ['Custom chart not rendering', 'Chart axis labels overlapping'] },
+  { key: 'performance', label: 'Performance', group: 'App Issues', count: 2, severity: 0.7,
+    examples: ['Dashboard load times >30s', 'UI freeze with large run sets'] },
+  { key: 'client__authentication', label: 'Authentication', group: 'SDK Issues', count: 1, severity: 0.6,
+    examples: ['API key rotation causing auth failures'] },
+  { key: 'reports', label: 'Reports', group: 'App Issues', count: 1, severity: 0.45,
+    examples: ['Report sharing permissions error'] },
+  { key: 'admin__service_accounts', label: 'Service Accounts', group: 'Admin', count: 1, severity: 0.55,
+    examples: ['Service account token expiry not notified'] },
+  { key: 'connectivity', label: 'Connectivity', group: 'Admin', count: 1, severity: 0.8,
+    examples: ['Cannot connect to W&B server behind proxy'] },
+  { key: 'resuming', label: 'Resuming Runs', group: 'SDK Issues', count: 1, severity: 0.65,
+    examples: ['Resumed run loses prior logged metrics'] },
+];
+
+const totalTickets = 30;
+
+const groupColors = {
+  'App Issues': '#FFCC00',
+  'SDK Issues': '#ff7043',
+  'Admin': '#42a5f5',
+  'Other': '#78909c',
+};
+
+// Severity to color: higher severity = more red/hot
+function severityColor(severity) {
+  // 0.0 = cool blue (#42a5f5), 0.5 = amber (#ffa726), 1.0 = hot red (#ff5252)
+  if (severity <= 0.5) {
+    const t = severity / 0.5;
+    return lerpColor('#42a5f5', '#ffa726', t);
+  } else {
+    const t = (severity - 0.5) / 0.5;
+    return lerpColor('#ffa726', '#ff5252', t);
+  }
+}
+
+function lerpColor(a, b, t) {
+  const ar = parseInt(a.slice(1,3), 16), ag = parseInt(a.slice(3,5), 16), ab = parseInt(a.slice(5,7), 16);
+  const br = parseInt(b.slice(1,3), 16), bg = parseInt(b.slice(3,5), 16), bb = parseInt(b.slice(5,7), 16);
+  const rr = Math.round(ar + (br - ar) * t);
+  const rg = Math.round(ag + (bg - ag) * t);
+  const rb = Math.round(ab + (bb - ab) * t);
+  return '#' + [rr, rg, rb].map(x => x.toString(16).padStart(2, '0')).join('');
+}
+
+// ── BUILD TREEMAP DATA ──
+// Group concerns into parent categories
+const groups = {};
+concerns.forEach(c => {
+  if (!groups[c.group]) groups[c.group] = [];
+  groups[c.group].push(c);
+});
+
+const treemapData = Object.entries(groups).map(([groupName, items]) => ({
+  name: groupName,
+  itemStyle: {
+    borderColor: '#1F1F1F',
+    borderWidth: 3,
+    gapWidth: 2,
+  },
+  children: items.map(item => ({
+    name: item.label,
+    value: item.count,
+    itemStyle: {
+      color: severityColor(item.severity),
+      borderColor: '#1F1F1F',
+      borderWidth: 2,
+    },
+    concern: item,
+  })),
+}));
+
+// ── ECHARTS INIT ──
+const chart = echarts.init(document.getElementById('treemap'), null, { renderer: 'canvas' });
+
+const option = {
+  tooltip: {
+    trigger: 'item',
+    backgroundColor: 'rgba(30, 30, 30, 0.96)',
+    borderColor: '#555',
+    borderWidth: 1,
+    textStyle: {
+      color: '#f0f0f0',
+      fontSize: 13,
+      fontFamily: 'Segoe UI, system-ui, sans-serif',
+    },
+    formatter: function(params) {
+      const data = params.data;
+      if (!data.concern) {
+        // Group level
+        const groupTotal = data.children ? data.children.reduce((s, c) => s + c.value, 0) : 0;
+        return '<div style="padding:4px 2px;">' +
+          '<div style="font-weight:600;font-size:15px;margin-bottom:6px;">' + params.name + '</div>' +
+          '<div style="color:#a0a0a0;">' + groupTotal + ' tickets &middot; ' +
+          ((groupTotal / totalTickets * 100).toFixed(0)) + '% of total</div>' +
+          '</div>';
+      }
+      const c = data.concern;
+      const pct = (c.count / totalTickets * 100).toFixed(1);
+      let html = '<div style="padding:4px 2px;">' +
+        '<div style="font-weight:600;font-size:15px;margin-bottom:2px;">' + c.label + '</div>' +
+        '<div style="color:#a0a0a0;font-size:12px;margin-bottom:8px;">' + c.group + '</div>' +
+        '<div style="margin-bottom:6px;">' +
+        '<span style="font-size:22px;font-weight:700;color:' + severityColor(c.severity) + ';">' + c.count + '</span>' +
+        '<span style="color:#a0a0a0;margin-left:6px;">tickets (' + pct + '%)</span></div>';
+      if (c.examples && c.examples.length > 0) {
+        html += '<div style="border-top:1px solid #444;padding-top:8px;margin-top:4px;">' +
+          '<div style="color:#707070;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">Example tickets</div>';
+        c.examples.forEach(function(ex) {
+          html += '<div style="color:#ccc;font-size:12px;padding:2px 0;">&#8226; ' + ex + '</div>';
+        });
+        html += '</div>';
+      }
+      html += '</div>';
+      return html;
+    },
+  },
+  series: [{
+    type: 'treemap',
+    width: '100%',
+    height: '100%',
+    roam: false,
+    nodeClick: false,
+    breadcrumb: {
+      show: true,
+      top: 6,
+      left: 8,
+      itemStyle: {
+        color: '#2a2a2a',
+        borderColor: '#444',
+        textStyle: {
+          color: '#a0a0a0',
+          fontSize: 12,
+        },
+      },
+      emphasis: {
+        itemStyle: {
+          color: '#333',
+        },
+      },
+    },
+    levels: [
+      {
+        // Root level (groups)
+        itemStyle: {
+          borderColor: '#1F1F1F',
+          borderWidth: 4,
+          gapWidth: 4,
+        },
+        upperLabel: {
+          show: true,
+          height: 28,
+          color: '#f0f0f0',
+          fontSize: 13,
+          fontWeight: 600,
+          fontFamily: 'Segoe UI, system-ui, sans-serif',
+          backgroundColor: 'rgba(30, 30, 30, 0.85)',
+          borderRadius: [4, 4, 0, 0],
+          padding: [4, 10],
+        },
+      },
+      {
+        // Leaf level (individual concerns)
+        itemStyle: {
+          borderColor: '#1F1F1F',
+          borderWidth: 2,
+          gapWidth: 2,
+        },
+        label: {
+          show: true,
+          formatter: function(params) {
+            if (params.data && params.data.concern) {
+              return '{name|' + params.data.concern.label + '}\n{count|' + params.data.concern.count + '}';
+            }
+            return params.name;
+          },
+          rich: {
+            name: {
+              fontSize: 14,
+              fontWeight: 600,
+              color: '#fff',
+              fontFamily: 'Segoe UI, system-ui, sans-serif',
+              textShadowColor: 'rgba(0,0,0,0.6)',
+              textShadowBlur: 4,
+              padding: [0, 0, 2, 0],
+            },
+            count: {
+              fontSize: 22,
+              fontWeight: 700,
+              color: 'rgba(255,255,255,0.95)',
+              fontFamily: 'Segoe UI, system-ui, sans-serif',
+              textShadowColor: 'rgba(0,0,0,0.6)',
+              textShadowBlur: 4,
+            },
+          },
+          position: 'inside',
+          align: 'center',
+          verticalAlign: 'middle',
+        },
+        emphasis: {
+          itemStyle: {
+            borderColor: '#FFCC00',
+            borderWidth: 3,
+            shadowBlur: 12,
+            shadowColor: 'rgba(255, 204, 0, 0.3)',
+          },
+        },
+      },
+    ],
+    data: treemapData,
+  }],
+};
+
+chart.setOption(option);
+
+// Responsive
+window.addEventListener('resize', function() {
+  chart.resize();
+});
+
+// ── BREAKDOWN TABLE ──
+const tbody = document.getElementById('breakdown-body');
+const sorted = [...concerns].sort((a, b) => b.count - a.count);
+
+sorted.forEach(function(c) {
+  const pct = (c.count / totalTickets * 100).toFixed(1);
+  const barColor = severityColor(c.severity);
+  const row = document.createElement('tr');
+  row.innerHTML =
+    '<td><strong>' + c.label + '</strong></td>' +
+    '<td><span class="group-label">' + c.group + '</span></td>' +
+    '<td>' + c.count + ' <span style="color:var(--text-tertiary);font-size:12px;">(' + pct + '%)</span></td>' +
+    '<td class="bar-cell"><div class="bar-container">' +
+    '<div class="bar-fill" style="width:' + pct + '%;background:' + barColor + ';"></div>' +
+    '<span class="bar-label">' + pct + '%</span></div></td>';
+  tbody.appendChild(row);
+});
+</script>
+
+</body>
+</html>

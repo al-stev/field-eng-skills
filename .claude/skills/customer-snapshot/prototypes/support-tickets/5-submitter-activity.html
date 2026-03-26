@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Support Requester Analysis — Isomorphic Labs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<style>
+/* ── DESIGN TOKENS (dark mode default) ── */
+:root {
+  --bg-primary: #0c0f14;
+  --bg-elevated: #141820;
+  --bg-surface: #1a1f2b;
+  --bg-hover: #222838;
+  --border: #2a3040;
+  --border-subtle: #1e2430;
+  --text-primary: #e8eaed;
+  --text-secondary: #8b92a0;
+  --text-tertiary: #5c6370;
+  --accent: #d4a853;
+  --accent-dim: rgba(212, 168, 83, 0.12);
+  --accent-border: rgba(212, 168, 83, 0.25);
+  --green: #4ade80;
+  --green-dim: rgba(74, 222, 128, 0.10);
+  --green-border: rgba(74, 222, 128, 0.22);
+  --blue: #60a5fa;
+  --blue-dim: rgba(96, 165, 250, 0.10);
+  --blue-border: rgba(96, 165, 250, 0.22);
+  --amber: #fbbf24;
+  --amber-dim: rgba(251, 191, 36, 0.10);
+  --amber-border: rgba(251, 191, 36, 0.22);
+  --red: #f87171;
+  --red-dim: rgba(248, 113, 113, 0.10);
+  --red-border: rgba(248, 113, 113, 0.22);
+  --font-display: 'Instrument Serif', Georgia, serif;
+  --font-body: 'Outfit', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --radius: 6px;
+  --noise-opacity: 0.025;
+  --mode: dark;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg-primary: #f6f4f0;
+    --bg-elevated: #ffffff;
+    --bg-surface: #eeece8;
+    --bg-hover: #e6e4e0;
+    --border: #d4d2ce;
+    --border-subtle: #e0ded9;
+    --text-primary: #1a1a1a;
+    --text-secondary: #5c5c5c;
+    --text-tertiary: #8c8c8c;
+    --accent: #b8922e;
+    --accent-dim: rgba(184, 146, 46, 0.10);
+    --accent-border: rgba(184, 146, 46, 0.25);
+    --green: #1a7a4c;
+    --green-dim: rgba(26, 122, 76, 0.08);
+    --green-border: rgba(26, 122, 76, 0.20);
+    --blue: #1565a0;
+    --blue-dim: rgba(96, 165, 250, 0.08);
+    --blue-border: rgba(21, 101, 160, 0.20);
+    --amber: #9a6e08;
+    --amber-dim: rgba(154, 110, 8, 0.08);
+    --amber-border: rgba(154, 110, 8, 0.20);
+    --red: #dc2626;
+    --red-dim: rgba(220, 38, 38, 0.08);
+    --red-border: rgba(220, 38, 38, 0.20);
+    --noise-opacity: 0;
+    --mode: light;
+  }
+}
+
+/* ── RESET ── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* ── BASE ── */
+body {
+  font-family: var(--font-body);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── NOISE TEXTURE ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  opacity: var(--noise-opacity);
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 256px;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* ── CONTAINER ── */
+.container {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: clamp(48px, 6vw, 80px) clamp(16px, 3vw, 32px) clamp(32px, 4vw, 64px);
+}
+
+/* ── HEADER ── */
+.header {
+  margin-bottom: clamp(32px, 4vw, 48px);
+}
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.header-brand svg {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+}
+
+.header-brand-text {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.5px;
+}
+
+.header-subtitle {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+.header-title {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 4vw, 42px);
+  font-weight: 400;
+  line-height: 1.1;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+
+.header-rule {
+  width: 64px;
+  height: 2px;
+  background: var(--accent);
+  border: none;
+  margin-bottom: 12px;
+}
+
+.header-meta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-tertiary);
+  letter-spacing: 0.5px;
+}
+
+/* ── SECTION ── */
+.section {
+  margin-bottom: clamp(24px, 3vw, 40px);
+  opacity: 0;
+  transform: translateY(12px);
+  animation: fadeUp 0.4s ease-out forwards;
+}
+
+.section:nth-child(2) { animation-delay: 0.05s; }
+.section:nth-child(3) { animation-delay: 0.10s; }
+.section:nth-child(4) { animation-delay: 0.15s; }
+.section:nth-child(5) { animation-delay: 0.20s; }
+.section:nth-child(6) { animation-delay: 0.25s; }
+
+@keyframes fadeUp {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .section { opacity: 1; transform: none; animation: none; }
+}
+
+.section-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+/* ── INSIGHT CARDS ── */
+.insight-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.insight-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.insight-card-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-tertiary);
+}
+
+.insight-card-value {
+  font-family: var(--font-body);
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.insight-card-value .highlight {
+  color: var(--accent);
+}
+
+.insight-card-detail {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.concentration-bar {
+  display: inline-flex;
+  gap: 3px;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+.concentration-bar .block {
+  width: 14px;
+  height: 14px;
+  border-radius: 2px;
+  display: inline-block;
+}
+
+.concentration-bar .block.filled { background: var(--red); }
+.concentration-bar .block.empty { background: var(--border); }
+
+/* ── CHART PANELS ── */
+.chart-panel {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+}
+
+.chart-panel-title {
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.chart-panel-desc {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-bottom: 16px;
+}
+
+.chart-container {
+  width: 100%;
+  height: 400px;
+}
+
+.chart-container-tall {
+  width: 100%;
+  height: 480px;
+}
+
+/* ── DUAL CHART LAYOUT ── */
+.dual-chart {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 900px) {
+  .dual-chart {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── TABLE ── */
+.detail-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+}
+
+.detail-table th {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--text-tertiary);
+  text-align: left;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.detail-table td {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--text-primary);
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.detail-table tr:last-child td {
+  border-bottom: none;
+}
+
+.detail-table .name-cell {
+  font-weight: 500;
+}
+
+.detail-table .count-cell {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.detail-table .pct-cell {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.tag {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 3px;
+  margin: 1px 3px 1px 0;
+}
+
+.tag-workspace { background: rgba(96, 165, 250, 0.15); color: #60a5fa; }
+.tag-crashed { background: rgba(248, 113, 113, 0.15); color: #f87171; }
+.tag-performance { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
+.tag-charts { background: rgba(74, 222, 128, 0.15); color: #4ade80; }
+.tag-runs-table { background: rgba(167, 139, 250, 0.15); color: #a78bfa; }
+.tag-resuming { background: rgba(251, 146, 60, 0.15); color: #fb923c; }
+.tag-reports { background: rgba(56, 189, 248, 0.15); color: #38bdf8; }
+.tag-login { background: rgba(244, 114, 182, 0.15); color: #f472b6; }
+.tag-admin { background: rgba(212, 168, 83, 0.15); color: #d4a853; }
+.tag-auth { background: rgba(148, 163, 184, 0.15); color: #94a3b8; }
+.tag-public-api { background: rgba(129, 230, 217, 0.15); color: #81e6d9; }
+.tag-cloud { background: rgba(196, 181, 253, 0.15); color: #c4b5fd; }
+.tag-uncategorized { background: rgba(107, 114, 128, 0.15); color: #6b7280; }
+
+/* ── FOOTER ── */
+.footer {
+  margin-top: 48px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border-subtle);
+  text-align: center;
+}
+
+.footer-text {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-tertiary);
+  letter-spacing: 0.5px;
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- ── HEADER ── -->
+  <header class="header section">
+    <div class="header-brand">
+      <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="100" height="100" rx="16" fill="#FFCC00"/>
+        <path d="M25 70 L25 35 M40 70 L40 45 M55 70 L55 30 M75 70 L75 50" stroke="#1F1F1F" stroke-width="8" stroke-linecap="round"/>
+        <circle cx="75" cy="35" r="8" fill="#1F1F1F"/>
+      </svg>
+      <span class="header-brand-text">Weights & Biases</span>
+    </div>
+    <div class="header-subtitle">Support Intelligence</div>
+    <h1 class="header-title">Support Requester Analysis</h1>
+    <hr class="header-rule">
+    <div class="header-meta">Isomorphic Labs &mdash; 30 tickets &mdash; 6 unique submitters &mdash; Generated 24 Mar 2026</div>
+  </header>
+
+  <!-- ── INSIGHT CARDS ── -->
+  <div class="section">
+    <div class="section-label">Key Insights</div>
+    <div class="insight-row">
+      <div class="insight-card">
+        <div class="insight-card-label">Top Requester</div>
+        <div class="insight-card-value">Nikitas Rontsis <span class="highlight">(63%)</span></div>
+        <div class="insight-card-detail">19 of 30 tickets — workspace, crashed runs, reports, charts, service accounts, and 8 uncategorized</div>
+      </div>
+      <div class="insight-card">
+        <div class="insight-card-label">Volume Concentration</div>
+        <div class="insight-card-value">3 people = <span class="highlight">87%</span> of tickets</div>
+        <div class="insight-card-detail">Rontsis (19) + Ashukha (4) + Grewe (3) account for 26 of 30 support tickets</div>
+      </div>
+      <div class="insight-card">
+        <div class="insight-card-label">Concentration Risk</div>
+        <div class="insight-card-value">
+          Very High
+          <span class="concentration-bar">
+            <span class="block filled"></span>
+            <span class="block filled"></span>
+            <span class="block filled"></span>
+            <span class="block filled"></span>
+            <span class="block filled"></span>
+          </span>
+        </div>
+        <div class="insight-card-detail">One person files nearly two-thirds of all tickets — extreme single-user dependency on support</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MAIN CHART: Stacked Bar + Sparklines ── -->
+  <div class="section">
+    <div class="section-label">Who Needs Help Most?</div>
+    <div class="dual-chart">
+      <div class="chart-panel">
+        <div class="chart-panel-title">Tickets by Requester &amp; Concern Category</div>
+        <div class="chart-panel-desc">Horizontal stacked bars — hover segments for category breakdown</div>
+        <div id="chart-stacked-bar" class="chart-container-tall"></div>
+      </div>
+      <div class="chart-panel">
+        <div class="chart-panel-title">Monthly Submission Frequency</div>
+        <div class="chart-panel-desc">Monthly ticket cadence per person — Nikitas is consistent, others sporadic</div>
+        <div id="chart-sparklines" class="chart-container-tall"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── CATEGORY BREAKDOWN CHART ── -->
+  <div class="section">
+    <div class="section-label">Concern Categories Across Requesters</div>
+    <div class="chart-panel">
+      <div class="chart-panel-title">Category Heatmap</div>
+      <div class="chart-panel-desc">Which concerns are shared across requesters vs. unique to individuals</div>
+      <div id="chart-heatmap" class="chart-container-tall"></div>
+    </div>
+  </div>
+
+  <!-- ── DETAIL TABLE ── -->
+  <div class="section">
+    <div class="section-label">Requester Detail</div>
+    <div class="chart-panel">
+      <table class="detail-table">
+        <thead>
+          <tr>
+            <th>Requester</th>
+            <th>Tickets</th>
+            <th>Share</th>
+            <th>Top Concerns</th>
+            <th>Pattern</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="name-cell">Nikitas Rontsis</td>
+            <td class="count-cell">19</td>
+            <td class="pct-cell">63%</td>
+            <td>
+              <span class="tag tag-workspace">Workspace (4)</span>
+              <span class="tag tag-crashed">Crashed Runs (4)</span>
+              <span class="tag tag-reports">Reports (1)</span>
+              <span class="tag tag-charts">Charts (1)</span>
+              <span class="tag tag-admin">Service Accounts (1)</span>
+              <span class="tag tag-uncategorized">Uncategorized (8)</span>
+            </td>
+            <td class="pct-cell">~1.5/month, consistent</td>
+          </tr>
+          <tr>
+            <td class="name-cell">Arsenii Ashukha</td>
+            <td class="count-cell">4</td>
+            <td class="pct-cell">13%</td>
+            <td>
+              <span class="tag tag-workspace">Workspace (2)</span>
+              <span class="tag tag-runs-table">Runs Table (2)</span>
+            </td>
+            <td class="pct-cell">Sporadic</td>
+          </tr>
+          <tr>
+            <td class="name-cell">Dominik Grewe</td>
+            <td class="count-cell">3</td>
+            <td class="pct-cell">10%</td>
+            <td>
+              <span class="tag tag-resuming">Resuming Runs (1)</span>
+              <span class="tag tag-login">Login (1)</span>
+              <span class="tag tag-public-api">Public API (1)</span>
+            </td>
+            <td class="pct-cell">Sporadic</td>
+          </tr>
+          <tr>
+            <td class="name-cell">Alden Hung</td>
+            <td class="count-cell">2</td>
+            <td class="pct-cell">7%</td>
+            <td>
+              <span class="tag tag-auth">Authentication (1)</span>
+              <span class="tag tag-cloud">Cloud Services (1)</span>
+            </td>
+            <td class="pct-cell">Rare</td>
+          </tr>
+          <tr>
+            <td class="name-cell">Jacob Deasy</td>
+            <td class="count-cell">1</td>
+            <td class="pct-cell">3%</td>
+            <td>
+              <span class="tag tag-charts">Charts (1)</span>
+            </td>
+            <td class="pct-cell">One-off</td>
+          </tr>
+          <tr>
+            <td class="name-cell">Marco Fiscato</td>
+            <td class="count-cell">1</td>
+            <td class="pct-cell">3%</td>
+            <td>
+              <span class="tag tag-performance">Performance (1)</span>
+            </td>
+            <td class="pct-cell">One-off</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── FOOTER ── -->
+  <footer class="footer section">
+    <div class="footer-text">W&B Support Intelligence &mdash; Isomorphic Labs &mdash; 30 tickets, 6 submitters &mdash; 24 Mar 2026</div>
+  </footer>
+
+</div>
+
+<script>
+// ── DATA ──
+const COLORS = {
+  workspace: '#60a5fa',
+  crashed_run: '#f87171',
+  performance: '#fbbf24',
+  charts: '#4ade80',
+  app__runs_table: '#a78bfa',
+  resuming: '#fb923c',
+  reports: '#38bdf8',
+  app__login: '#f472b6',
+  admin__service_accounts: '#d4a853',
+  client__authentication: '#94a3b8',
+  client__public_api: '#81e6d9',
+  cloud_services: '#c4b5fd',
+  uncategorized: '#6b7280'
+};
+
+const CATEGORY_LABELS = {
+  workspace: 'Workspace',
+  crashed_run: 'Crashed Runs',
+  performance: 'Performance',
+  charts: 'Charts',
+  app__runs_table: 'Runs Table',
+  resuming: 'Resuming Runs',
+  reports: 'Reports',
+  app__login: 'Login',
+  admin__service_accounts: 'Service Accounts',
+  client__authentication: 'Authentication',
+  client__public_api: 'Public API',
+  cloud_services: 'Cloud Services',
+  uncategorized: 'Uncategorized'
+};
+
+// Real per-submitter monthly data from BigQuery (Mar 2025 – Mar 2026)
+// Months: Mar25, Apr25, May25, Jun25, Jul25, Aug25, Sep25, Oct25, Nov25, Dec25, Jan26, Feb26, Mar26
+const requesters = [
+  {
+    name: 'Nikitas Rontsis',
+    total: 19,
+    breakdown: { workspace: 4, crashed_run: 4, reports: 1, charts: 1, admin__service_accounts: 1, uncategorized: 8 },
+    monthly: [0, 2, 2, 0, 1, 1, 2, 2, 6, 1, 0, 0, 2]
+  },
+  {
+    name: 'Arsenii Ashukha',
+    total: 4,
+    breakdown: { workspace: 2, app__runs_table: 2 },
+    monthly: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 1]
+  },
+  {
+    name: 'Dominik Grewe',
+    total: 3,
+    breakdown: { resuming: 1, app__login: 1, client__public_api: 1 },
+    monthly: [0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1]
+  },
+  {
+    name: 'Alden Hung',
+    total: 2,
+    breakdown: { client__authentication: 1, cloud_services: 1 },
+    monthly: [0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0]
+  },
+  {
+    name: 'Jacob Deasy',
+    total: 1,
+    breakdown: { charts: 1 },
+    monthly: [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+  },
+  {
+    name: 'Marco Fiscato',
+    total: 1,
+    breakdown: { performance: 1 },
+    monthly: [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+  }
+];
+
+// Sort descending by total
+requesters.sort((a, b) => b.total - a.total);
+
+// All unique categories across all requesters
+const allCategories = [...new Set(requesters.flatMap(r => Object.keys(r.breakdown)))];
+
+// Month labels (13 months: Mar 2025 – Mar 2026)
+const monthLabels = [];
+const now = new Date(2026, 2, 25);
+for (let i = 12; i >= 0; i--) {
+  const d = new Date(now);
+  d.setMonth(d.getMonth() - i);
+  monthLabels.push(d.toLocaleDateString('en-GB', { month: 'short', year: '2-digit' }));
+}
+
+// ── DETECT THEME ──
+function isDark() {
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+}
+
+function getThemeColors() {
+  const dark = isDark();
+  return {
+    textPrimary: dark ? '#e8eaed' : '#1a1a1a',
+    textSecondary: dark ? '#8b92a0' : '#5c5c5c',
+    textTertiary: dark ? '#5c6370' : '#8c8c8c',
+    bgElevated: dark ? '#141820' : '#ffffff',
+    border: dark ? '#2a3040' : '#d4d2ce',
+    borderSubtle: dark ? '#1e2430' : '#e0ded9',
+    splitLine: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
+    tooltipBg: dark ? 'rgba(20,24,32,0.96)' : 'rgba(255,255,255,0.96)',
+    tooltipBorder: dark ? '#2a3040' : '#d4d2ce',
+    tooltipText: dark ? '#e8eaed' : '#1a1a1a',
+  };
+}
+
+// ── CHART 1: STACKED HORIZONTAL BAR ──
+function renderStackedBar() {
+  const chart = echarts.init(document.getElementById('chart-stacked-bar'));
+  const t = getThemeColors();
+
+  // Reversed for horizontal bar (bottom to top)
+  const names = requesters.map(r => r.name).reverse();
+
+  const series = allCategories.map(cat => ({
+    name: CATEGORY_LABELS[cat] || cat,
+    type: 'bar',
+    stack: 'total',
+    barWidth: 28,
+    itemStyle: {
+      color: COLORS[cat] || '#888',
+      borderRadius: 0
+    },
+    emphasis: {
+      itemStyle: {
+        shadowBlur: 10,
+        shadowOffsetX: 0,
+        shadowColor: 'rgba(0, 0, 0, 0.3)'
+      }
+    },
+    data: requesters.map(r => r.breakdown[cat] || 0).reverse()
+  }));
+
+  chart.setOption({
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: { type: 'shadow' },
+      backgroundColor: t.tooltipBg,
+      borderColor: t.tooltipBorder,
+      textStyle: {
+        fontFamily: 'Outfit, system-ui, sans-serif',
+        fontSize: 12,
+        color: t.tooltipText
+      },
+      formatter: function(params) {
+        let total = 0;
+        let rows = '';
+        params.forEach(p => {
+          if (p.value > 0) {
+            total += p.value;
+            rows += `<div style="display:flex;align-items:center;gap:6px;margin:3px 0">
+              <span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${p.color}"></span>
+              <span>${p.seriesName}</span>
+              <span style="margin-left:auto;font-weight:600">${p.value}</span>
+            </div>`;
+          }
+        });
+        return `<div style="font-weight:600;margin-bottom:6px">${params[0].axisValue} — ${total} tickets</div>${rows}`;
+      }
+    },
+    legend: {
+      data: allCategories.map(c => CATEGORY_LABELS[c] || c),
+      bottom: 0,
+      textStyle: { color: t.textSecondary, fontFamily: 'Outfit, system-ui, sans-serif', fontSize: 11 },
+      itemWidth: 12,
+      itemHeight: 12,
+      itemGap: 14
+    },
+    grid: {
+      left: 140,
+      right: 24,
+      top: 12,
+      bottom: 80
+    },
+    xAxis: {
+      type: 'value',
+      max: 20,
+      axisLabel: { color: t.textTertiary, fontFamily: 'JetBrains Mono, monospace', fontSize: 10 },
+      axisLine: { show: false },
+      axisTick: { show: false },
+      splitLine: { lineStyle: { color: t.splitLine } }
+    },
+    yAxis: {
+      type: 'category',
+      data: names,
+      axisLabel: {
+        color: t.textPrimary,
+        fontFamily: 'Outfit, system-ui, sans-serif',
+        fontSize: 13,
+        fontWeight: 500
+      },
+      axisLine: { show: false },
+      axisTick: { show: false }
+    },
+    series: series,
+    animationDuration: 800,
+    animationEasing: 'cubicOut'
+  });
+
+  window.addEventListener('resize', () => chart.resize());
+  return chart;
+}
+
+// ── CHART 2: SPARKLINES (monthly) ──
+function renderSparklines() {
+  const chart = echarts.init(document.getElementById('chart-sparklines'));
+  const t = getThemeColors();
+
+  const gridCount = requesters.length;
+  const gridHeight = 100 / gridCount - 2;
+
+  const grids = [];
+  const xAxes = [];
+  const yAxes = [];
+  const seriesList = [];
+
+  const sparkColors = ['#d4a853', '#60a5fa', '#4ade80', '#fbbf24', '#f87171', '#94a3b8'];
+
+  requesters.forEach((r, i) => {
+    const topPct = (i * (100 / gridCount)) + 1;
+    grids.push({
+      left: 140,
+      right: 16,
+      top: topPct + '%',
+      height: gridHeight + '%'
+    });
+
+    xAxes.push({
+      type: 'category',
+      gridIndex: i,
+      data: monthLabels,
+      show: i === gridCount - 1,
+      axisLabel: {
+        color: t.textTertiary,
+        fontFamily: 'JetBrains Mono, monospace',
+        fontSize: 9,
+        rotate: 45
+      },
+      axisLine: { show: false },
+      axisTick: { show: false }
+    });
+
+    yAxes.push({
+      type: 'value',
+      gridIndex: i,
+      max: 7,
+      show: false
+    });
+
+    seriesList.push({
+      name: r.name,
+      type: 'line',
+      xAxisIndex: i,
+      yAxisIndex: i,
+      data: r.monthly,
+      smooth: false,
+      symbol: 'circle',
+      symbolSize: 3,
+      lineStyle: {
+        color: sparkColors[i % sparkColors.length],
+        width: 2
+      },
+      itemStyle: {
+        color: sparkColors[i % sparkColors.length]
+      },
+      areaStyle: {
+        color: {
+          type: 'linear',
+          x: 0, y: 0, x2: 0, y2: 1,
+          colorStops: [
+            { offset: 0, color: sparkColors[i % sparkColors.length] + '30' },
+            { offset: 1, color: sparkColors[i % sparkColors.length] + '05' }
+          ]
+        }
+      }
+    });
+  });
+
+  // Add name annotations — vertically centered within each grid
+  const graphic = requesters.map((r, i) => {
+    const topPct = (i * (100 / gridCount)) + 1 + (gridHeight / 2) - 1;
+    return {
+      type: 'text',
+      left: 16,
+      top: topPct + '%',
+      style: {
+        text: r.name,
+        fill: t.textSecondary,
+        font: '500 11px "Outfit", system-ui, sans-serif',
+        textVerticalAlign: 'middle'
+      },
+      z: 100
+    };
+  });
+
+  chart.setOption({
+    tooltip: {
+      trigger: 'axis',
+      backgroundColor: t.tooltipBg,
+      borderColor: t.tooltipBorder,
+      textStyle: {
+        fontFamily: 'Outfit, system-ui, sans-serif',
+        fontSize: 11,
+        color: t.tooltipText
+      }
+    },
+    grid: grids,
+    xAxis: xAxes,
+    yAxis: yAxes,
+    series: seriesList,
+    graphic: graphic,
+    animationDuration: 1000,
+    animationEasing: 'cubicOut'
+  });
+
+  window.addEventListener('resize', () => chart.resize());
+  return chart;
+}
+
+// ── CHART 3: HEATMAP ──
+function renderHeatmap() {
+  const chart = echarts.init(document.getElementById('chart-heatmap'));
+  const t = getThemeColors();
+
+  const names = requesters.map(r => r.name);
+  const cats = allCategories.map(c => CATEGORY_LABELS[c] || c);
+
+  // Build data: [catIndex, requesterIndex, value]
+  const data = [];
+  requesters.forEach((r, ri) => {
+    allCategories.forEach((cat, ci) => {
+      const val = r.breakdown[cat] || 0;
+      data.push([ci, ri, val]);
+    });
+  });
+
+  chart.setOption({
+    tooltip: {
+      position: 'top',
+      backgroundColor: t.tooltipBg,
+      borderColor: t.tooltipBorder,
+      textStyle: {
+        fontFamily: 'Outfit, system-ui, sans-serif',
+        fontSize: 12,
+        color: t.tooltipText
+      },
+      formatter: function(p) {
+        if (p.value[2] === 0) return '';
+        return `<strong>${names[p.value[1]]}</strong><br/>
+                ${cats[p.value[0]]}: <strong>${p.value[2]} ticket${p.value[2] > 1 ? 's' : ''}</strong>`;
+      }
+    },
+    grid: {
+      left: 140,
+      right: 40,
+      top: 12,
+      bottom: 100
+    },
+    xAxis: {
+      type: 'category',
+      data: cats,
+      position: 'bottom',
+      axisLabel: {
+        color: t.textSecondary,
+        fontFamily: 'Outfit, system-ui, sans-serif',
+        fontSize: 11,
+        rotate: 35,
+        interval: 0
+      },
+      axisLine: { show: false },
+      axisTick: { show: false },
+      splitArea: { show: false }
+    },
+    yAxis: {
+      type: 'category',
+      data: names,
+      axisLabel: {
+        color: t.textPrimary,
+        fontFamily: 'Outfit, system-ui, sans-serif',
+        fontSize: 12,
+        fontWeight: 500
+      },
+      axisLine: { show: false },
+      axisTick: { show: false }
+    },
+    visualMap: {
+      min: 0,
+      max: 8,
+      calculable: false,
+      orient: 'horizontal',
+      left: 'center',
+      bottom: 0,
+      inRange: {
+        color: [t.borderSubtle, '#d4a85340', '#d4a85380', '#d4a853cc', '#d4a853']
+      },
+      textStyle: {
+        color: t.textTertiary,
+        fontFamily: 'JetBrains Mono, monospace',
+        fontSize: 10
+      }
+    },
+    series: [{
+      type: 'heatmap',
+      data: data,
+      label: {
+        show: true,
+        formatter: function(p) {
+          return p.value[2] > 0 ? p.value[2] : '';
+        },
+        color: t.textPrimary,
+        fontFamily: 'JetBrains Mono, monospace',
+        fontSize: 12,
+        fontWeight: 600
+      },
+      itemStyle: {
+        borderColor: t.bgElevated,
+        borderWidth: 3,
+        borderRadius: 4
+      },
+      emphasis: {
+        itemStyle: {
+          shadowBlur: 10,
+          shadowColor: 'rgba(212, 168, 83, 0.4)'
+        }
+      }
+    }],
+    animationDuration: 600,
+    animationEasing: 'cubicOut'
+  });
+
+  window.addEventListener('resize', () => chart.resize());
+  return chart;
+}
+
+// ── INIT ──
+document.addEventListener('DOMContentLoaded', function() {
+  renderStackedBar();
+  renderSparklines();
+  renderHeatmap();
+});
+
+// Re-render on theme change
+if (window.matchMedia) {
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function() {
+    document.getElementById('chart-stacked-bar').innerHTML = '';
+    document.getElementById('chart-sparklines').innerHTML = '';
+    document.getElementById('chart-heatmap').innerHTML = '';
+    renderStackedBar();
+    renderSparklines();
+    renderHeatmap();
+  });
+}
+</script>
+</body>
+</html>

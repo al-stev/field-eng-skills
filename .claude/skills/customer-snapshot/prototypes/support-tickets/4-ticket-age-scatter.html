@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Active Ticket Age Analysis — Isomorphic Labs</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #1F1F1F;
+    color: #E0E0E0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    min-height: 100vh;
+  }
+
+  .page-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    padding: 24px 32px;
+    max-width: 1440px;
+    margin: 0 auto;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .header-left .logo {
+    width: 36px;
+    height: 36px;
+    background: #FFCC00;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 18px;
+    color: #1F1F1F;
+    flex-shrink: 0;
+  }
+
+  .header-left h1 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #FFFFFF;
+    letter-spacing: -0.3px;
+  }
+
+  .header-left h1 span {
+    color: #FFCC00;
+  }
+
+  .header-right {
+    font-size: 13px;
+    color: #888;
+    text-align: right;
+  }
+
+  /* Metric strip */
+  .metrics-strip {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+
+  .metric-card {
+    background: #2A2A2A;
+    border: 1px solid #333;
+    border-radius: 10px;
+    padding: 16px 22px;
+    flex: 1;
+    min-width: 160px;
+  }
+
+  .metric-card .label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: #888;
+    margin-bottom: 6px;
+  }
+
+  .metric-card .value {
+    font-size: 28px;
+    font-weight: 700;
+    color: #FFF;
+  }
+
+  .metric-card .value.yellow { color: #FFCC00; }
+  .metric-card .value.red { color: #FF6B6B; }
+  .metric-card .value.amber { color: #FFA726; }
+  .metric-card .value.green { color: #66BB6A; }
+
+  .metric-card .sub {
+    font-size: 12px;
+    color: #777;
+    margin-top: 4px;
+  }
+
+  /* Main layout: chart + sidebar */
+  .main-layout {
+    display: flex;
+    gap: 24px;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .chart-container {
+    flex: 1;
+    background: #2A2A2A;
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 20px;
+    min-height: 480px;
+    position: relative;
+  }
+
+  #scatter-chart {
+    width: 100%;
+    height: 100%;
+    min-height: 440px;
+  }
+
+  /* Sidebar */
+  .sidebar {
+    width: 300px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .sidebar-card {
+    background: #2A2A2A;
+    border: 1px solid #333;
+    border-radius: 10px;
+    padding: 18px;
+  }
+
+  .sidebar-card h3 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: #FFCC00;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .sidebar-card h3 .badge {
+    background: #FF6B6B;
+    color: #FFF;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 10px;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  .stale-ticket {
+    padding: 10px 0;
+    border-bottom: 1px solid #333;
+    cursor: pointer;
+    transition: background 0.15s;
+    border-radius: 6px;
+    padding-left: 8px;
+    padding-right: 8px;
+    margin-left: -8px;
+    margin-right: -8px;
+  }
+
+  .stale-ticket:last-child { border-bottom: none; }
+
+  .stale-ticket:hover {
+    background: #333;
+  }
+
+  .stale-ticket .ticket-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+  }
+
+  .stale-ticket .jira-id {
+    font-size: 12px;
+    font-weight: 600;
+    color: #FFCC00;
+  }
+
+  .stale-ticket .age-badge {
+    font-size: 11px;
+    font-weight: 600;
+    color: #FF6B6B;
+    background: rgba(255, 107, 107, 0.15);
+    padding: 2px 8px;
+    border-radius: 8px;
+  }
+
+  .stale-ticket .subject {
+    font-size: 12px;
+    color: #AAA;
+    line-height: 1.4;
+  }
+
+  /* Zone legend */
+  .zone-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .zone-legend .zone-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+  }
+
+  .zone-legend .zone-color {
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+
+  .zone-legend .zone-label {
+    color: #CCC;
+  }
+
+  .zone-legend .zone-range {
+    color: #777;
+    font-size: 11px;
+    margin-left: auto;
+  }
+
+  /* Staleness score breakdown */
+  .score-bar-container {
+    margin-top: 12px;
+  }
+
+  .score-bar {
+    height: 8px;
+    border-radius: 4px;
+    background: #333;
+    overflow: hidden;
+    display: flex;
+  }
+
+  .score-bar .segment {
+    height: 100%;
+    transition: width 0.5s ease;
+  }
+
+  .score-breakdown {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+    font-size: 11px;
+    color: #777;
+  }
+
+  /* Footer */
+  .footer {
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid #333;
+    font-size: 11px;
+    color: #555;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .main-layout {
+      flex-direction: column;
+    }
+    .sidebar {
+      width: 100%;
+      flex-direction: row;
+      flex-wrap: wrap;
+    }
+    .sidebar-card {
+      flex: 1;
+      min-width: 250px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-wrapper">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-left">
+      <div class="logo">W</div>
+      <h1>Active Ticket Age Analysis <span>— Isomorphic Labs</span></h1>
+    </div>
+    <div class="header-right">
+      Snapshot: 2026-03-24<br>
+      8 active hold tickets
+    </div>
+  </div>
+
+  <!-- Metrics strip -->
+  <div class="metrics-strip">
+    <div class="metric-card">
+      <div class="label">Total Active Tickets</div>
+      <div class="value">8</div>
+      <div class="sub">All priority: high</div>
+    </div>
+    <div class="metric-card">
+      <div class="label">Staleness Score</div>
+      <div class="value yellow" id="staleness-score">—</div>
+      <div class="sub">Weighted average age (days)</div>
+    </div>
+    <div class="metric-card">
+      <div class="label">Fresh (&lt;30d)</div>
+      <div class="value green" id="fresh-count">—</div>
+      <div class="sub">Tickets in green zone</div>
+    </div>
+    <div class="metric-card">
+      <div class="label">Aging (30-90d)</div>
+      <div class="value amber" id="aging-count">—</div>
+      <div class="sub">Tickets in amber zone</div>
+    </div>
+    <div class="metric-card">
+      <div class="label">Stale (90+d)</div>
+      <div class="value red" id="stale-count">—</div>
+      <div class="sub">Tickets in red zone</div>
+    </div>
+  </div>
+
+  <!-- Main layout -->
+  <div class="main-layout">
+
+    <!-- Chart -->
+    <div class="chart-container">
+      <div id="scatter-chart"></div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+
+      <!-- Stale tickets callout -->
+      <div class="sidebar-card">
+        <h3>Stale Tickets <span class="badge" id="stale-badge">—</span></h3>
+        <div id="stale-list"></div>
+      </div>
+
+      <!-- Zone legend -->
+      <div class="sidebar-card">
+        <h3>Age Zones</h3>
+        <div class="zone-legend">
+          <div class="zone-item">
+            <div class="zone-color" style="background: rgba(102, 187, 106, 0.25);"></div>
+            <span class="zone-label">Fresh</span>
+            <span class="zone-range">0 — 30 days</span>
+          </div>
+          <div class="zone-item">
+            <div class="zone-color" style="background: rgba(255, 167, 38, 0.18);"></div>
+            <span class="zone-label">Aging</span>
+            <span class="zone-range">30 — 90 days</span>
+          </div>
+          <div class="zone-item">
+            <div class="zone-color" style="background: rgba(255, 107, 107, 0.15);"></div>
+            <span class="zone-label">Stale</span>
+            <span class="zone-range">90+ days</span>
+          </div>
+        </div>
+        <div class="score-bar-container">
+          <div class="score-bar" id="score-bar"></div>
+          <div class="score-breakdown" id="score-breakdown"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <span>W&B Field Engineering — Ticket Age Analysis</span>
+    <span>Generated 2026-03-24 | Data source: Zendesk + Jira</span>
+  </div>
+
+</div>
+
+<script>
+(function() {
+  // ── Ticket Data ──────────────────────────────────────────────
+  const tickets = [
+    { id: 113975, subject: '"run not found" error in search',            priority: 'high', created: '2026-03-17', age: 7,   jira: 'WB-32236' },
+    { id: 113204, subject: 'Hide stop button from jobs',                 priority: 'high', created: '2026-03-05', age: 19,  jira: 'WB-23409' },
+    { id: 113193, subject: 'Fields repopulating with resume=\'must\'',   priority: 'high', created: '2026-03-05', age: 19,  jira: 'WB-31994' },
+    { id: 111811, subject: 'Full text search request',                   priority: 'high', created: '2026-02-16', age: 36,  jira: 'WB-31379' },
+    { id: 111810, subject: 'Sort "running" at top mode',                 priority: 'high', created: '2026-02-16', age: 36,  jira: 'WB-31636' },
+    { id: 106240, subject: 'Charts not appearing in reports',            priority: 'high', created: '2025-11-21', age: 123, jira: 'WB-29479' },
+    { id: 101611, subject: 'Stop button in groups request',              priority: 'high', created: '2025-09-15', age: 190, jira: 'WB-27695' },
+    { id: 97155,  subject: 'Latest logs display improvement',            priority: 'high', created: '2025-07-14', age: 253, jira: 'WB-26336' }
+  ];
+
+  const JIRA_BASE = 'https://wandb.atlassian.net/browse/';
+
+  // ── Priority mapping (y-axis numeric) ────────────────────────
+  const priorityMap = { urgent: 4, high: 3, normal: 2, low: 1 };
+  const priorityLabels = ['', 'Low', 'Normal', 'High', 'Urgent'];
+
+  // ── Zone classification ──────────────────────────────────────
+  function getZone(age) {
+    if (age < 30) return 'fresh';
+    if (age < 90) return 'aging';
+    return 'stale';
+  }
+
+  function getZoneColor(zone) {
+    return { fresh: '#66BB6A', aging: '#FFA726', stale: '#FF6B6B' }[zone];
+  }
+
+  // ── Compute metrics ──────────────────────────────────────────
+  const freshTickets = tickets.filter(t => getZone(t.age) === 'fresh');
+  const agingTickets = tickets.filter(t => getZone(t.age) === 'aging');
+  const staleTickets = tickets.filter(t => getZone(t.age) === 'stale');
+
+  const totalAge = tickets.reduce((sum, t) => sum + t.age, 0);
+  const stalenessScore = Math.round(totalAge / tickets.length);
+
+  // ── Populate metric cards ────────────────────────────────────
+  document.getElementById('staleness-score').textContent = stalenessScore;
+  document.getElementById('fresh-count').textContent = freshTickets.length;
+  document.getElementById('aging-count').textContent = agingTickets.length;
+  document.getElementById('stale-count').textContent = staleTickets.length;
+  document.getElementById('stale-badge').textContent = staleTickets.length + ' tickets';
+
+  // ── Populate stale list ──────────────────────────────────────
+  const staleListEl = document.getElementById('stale-list');
+  staleTickets.sort((a, b) => b.age - a.age).forEach(t => {
+    const div = document.createElement('div');
+    div.className = 'stale-ticket';
+    div.onclick = function() { window.open(JIRA_BASE + t.jira, '_blank'); };
+    div.innerHTML = `
+      <div class="ticket-row">
+        <span class="jira-id">${t.jira}</span>
+        <span class="age-badge">${t.age}d</span>
+      </div>
+      <div class="subject">${t.subject}</div>
+    `;
+    staleListEl.appendChild(div);
+  });
+
+  // ── Score bar ────────────────────────────────────────────────
+  const scoreBar = document.getElementById('score-bar');
+  const total = tickets.length;
+  scoreBar.innerHTML = `
+    <div class="segment" style="width:${(freshTickets.length/total)*100}%;background:#66BB6A;"></div>
+    <div class="segment" style="width:${(agingTickets.length/total)*100}%;background:#FFA726;"></div>
+    <div class="segment" style="width:${(staleTickets.length/total)*100}%;background:#FF6B6B;"></div>
+  `;
+  document.getElementById('score-breakdown').innerHTML =
+    `<span>${freshTickets.length} fresh</span><span>${agingTickets.length} aging</span><span>${staleTickets.length} stale</span>`;
+
+  // ── ECharts scatter plot ─────────────────────────────────────
+  const chart = echarts.init(document.getElementById('scatter-chart'), null, { renderer: 'canvas' });
+
+  // Scatter data: [age, priorityNumeric, ticketIndex]
+  const scatterData = tickets.map((t, i) => ({
+    value: [t.age, priorityMap[t.priority], i],
+    itemStyle: {
+      color: getZoneColor(getZone(t.age)),
+      borderColor: '#FFF',
+      borderWidth: 1.5,
+      shadowBlur: 8,
+      shadowColor: getZoneColor(getZone(t.age)) + '66'
+    }
+  }));
+
+  const maxAge = 260;
+
+  const option = {
+    backgroundColor: 'transparent',
+    animation: true,
+    animationDuration: 800,
+    animationEasing: 'cubicOut',
+    grid: {
+      left: 80,
+      right: 30,
+      top: 50,
+      bottom: 60
+    },
+    xAxis: {
+      name: 'Ticket Age (days)',
+      nameLocation: 'middle',
+      nameGap: 35,
+      nameTextStyle: { color: '#999', fontSize: 13, fontWeight: 600 },
+      type: 'value',
+      min: 0,
+      max: maxAge,
+      splitLine: { show: false },
+      axisLine: { lineStyle: { color: '#444' } },
+      axisTick: { lineStyle: { color: '#444' } },
+      axisLabel: {
+        color: '#999',
+        formatter: function(v) { return v + 'd'; }
+      }
+    },
+    yAxis: {
+      name: 'Priority',
+      nameLocation: 'middle',
+      nameGap: 55,
+      nameTextStyle: { color: '#999', fontSize: 13, fontWeight: 600 },
+      type: 'value',
+      min: 0.5,
+      max: 4.5,
+      interval: 1,
+      splitLine: { show: false },
+      axisLine: { lineStyle: { color: '#444' } },
+      axisTick: { show: false },
+      axisLabel: {
+        color: '#999',
+        formatter: function(v) {
+          return priorityLabels[v] || '';
+        }
+      }
+    },
+    tooltip: {
+      trigger: 'item',
+      backgroundColor: '#2A2A2A',
+      borderColor: '#FFCC00',
+      borderWidth: 1,
+      textStyle: { color: '#E0E0E0', fontSize: 13 },
+      formatter: function(params) {
+        var t = tickets[params.value[2]];
+        var zone = getZone(t.age);
+        var zoneLabel = zone.charAt(0).toUpperCase() + zone.slice(1);
+        var zoneColor = getZoneColor(zone);
+        return [
+          '<div style="font-weight:700;font-size:14px;margin-bottom:6px;color:#FFCC00;">' + t.jira + '</div>',
+          '<div style="margin-bottom:8px;color:#CCC;line-height:1.4;">' + t.subject + '</div>',
+          '<div style="display:flex;gap:16px;font-size:12px;">',
+          '  <span style="color:#888;">Age:</span> <span style="color:' + zoneColor + ';font-weight:600;">' + t.age + ' days</span>',
+          '</div>',
+          '<div style="display:flex;gap:16px;font-size:12px;">',
+          '  <span style="color:#888;">Zone:</span> <span style="color:' + zoneColor + ';">' + zoneLabel + '</span>',
+          '</div>',
+          '<div style="display:flex;gap:16px;font-size:12px;">',
+          '  <span style="color:#888;">Created:</span> <span>' + t.created + '</span>',
+          '</div>',
+          '<div style="display:flex;gap:16px;font-size:12px;">',
+          '  <span style="color:#888;">Ticket:</span> <span>#' + t.id + '</span>',
+          '</div>',
+          '<div style="margin-top:8px;font-size:11px;color:#666;">Click to open in Jira</div>'
+        ].join('');
+      }
+    },
+    series: [
+      // Background zone: Fresh (0-30)
+      {
+        type: 'scatter',
+        silent: true,
+        data: [],
+        markArea: {
+          silent: true,
+          itemStyle: { color: 'rgba(102, 187, 106, 0.06)' },
+          data: [[
+            { xAxis: 0, yAxis: 0.5 },
+            { xAxis: 30, yAxis: 4.5 }
+          ]]
+        }
+      },
+      // Background zone: Aging (30-90)
+      {
+        type: 'scatter',
+        silent: true,
+        data: [],
+        markArea: {
+          silent: true,
+          itemStyle: { color: 'rgba(255, 167, 38, 0.06)' },
+          data: [[
+            { xAxis: 30, yAxis: 0.5 },
+            { xAxis: 90, yAxis: 4.5 }
+          ]]
+        }
+      },
+      // Background zone: Stale (90+)
+      {
+        type: 'scatter',
+        silent: true,
+        data: [],
+        markArea: {
+          silent: true,
+          itemStyle: { color: 'rgba(255, 107, 107, 0.06)' },
+          data: [[
+            { xAxis: 90, yAxis: 0.5 },
+            { xAxis: maxAge, yAxis: 4.5 }
+          ]]
+        }
+      },
+      // Actual scatter data
+      {
+        type: 'scatter',
+        data: scatterData,
+        symbolSize: function(val) {
+          // Slightly vary size by age for visual interest
+          return Math.max(16, Math.min(28, 14 + val[0] * 0.05));
+        },
+        emphasis: {
+          itemStyle: {
+            borderColor: '#FFCC00',
+            borderWidth: 3,
+            shadowBlur: 20,
+            shadowColor: '#FFCC0066'
+          },
+          scale: 1.4
+        },
+        markLine: {
+          silent: true,
+          symbol: 'none',
+          lineStyle: { type: 'dashed', width: 1.5 },
+          label: {
+            fontSize: 12,
+            fontWeight: 600,
+            padding: [4, 8],
+            borderRadius: 4
+          },
+          data: [
+            {
+              xAxis: 30,
+              lineStyle: { color: '#FFA72688' },
+              label: {
+                formatter: '30d',
+                position: 'start',
+                color: '#FFA726',
+                backgroundColor: 'rgba(255, 167, 38, 0.1)'
+              }
+            },
+            {
+              xAxis: 90,
+              lineStyle: { color: '#FF6B6B88' },
+              label: {
+                formatter: '90d',
+                position: 'start',
+                color: '#FF6B6B',
+                backgroundColor: 'rgba(255, 107, 107, 0.1)'
+              }
+            }
+          ]
+        }
+      },
+      // Zone labels as scatter with markPoint
+      {
+        type: 'scatter',
+        silent: true,
+        data: [],
+        markPoint: {
+          symbol: 'rect',
+          symbolSize: 0,
+          label: {
+            show: true,
+            fontSize: 11,
+            fontWeight: 600,
+            offset: [0, 0]
+          },
+          data: [
+            {
+              coord: [15, 4.3],
+              label: { color: 'rgba(102, 187, 106, 0.5)', formatter: 'FRESH' }
+            },
+            {
+              coord: [60, 4.3],
+              label: { color: 'rgba(255, 167, 38, 0.5)', formatter: 'AGING' }
+            },
+            {
+              coord: [175, 4.3],
+              label: { color: 'rgba(255, 107, 107, 0.5)', formatter: 'STALE' }
+            }
+          ]
+        }
+      }
+    ]
+  };
+
+  chart.setOption(option);
+
+  // ── Click handler: open Jira ─────────────────────────────────
+  chart.on('click', function(params) {
+    if (params.seriesIndex === 3 && params.value) {
+      var t = tickets[params.value[2]];
+      if (t) {
+        window.open(JIRA_BASE + t.jira, '_blank');
+      }
+    }
+  });
+
+  // ── Cursor on hover ──────────────────────────────────────────
+  chart.getZr().on('mousemove', function(params) {
+    var el = chart.getZr().painter.getViewportRoot();
+    el.style.cursor = 'default';
+  });
+  chart.on('mouseover', function(params) {
+    if (params.seriesIndex === 3) {
+      chart.getZr().painter.getViewportRoot().style.cursor = 'pointer';
+    }
+  });
+  chart.on('mouseout', function() {
+    chart.getZr().painter.getViewportRoot().style.cursor = 'default';
+  });
+
+  // ── Resize ───────────────────────────────────────────────────
+  window.addEventListener('resize', function() {
+    chart.resize();
+  });
+
+})();
+</script>
+
+</body>
+</html>

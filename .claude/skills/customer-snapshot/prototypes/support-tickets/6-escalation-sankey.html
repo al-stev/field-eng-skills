@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Support Escalation Pipeline — Isomorphic Labs</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #1F1F1F;
+            color: #E0E0E0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            min-height: 100vh;
+            padding: 32px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            margin-bottom: 32px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #FFFFFF;
+            margin-bottom: 6px;
+        }
+
+        .header h1 span {
+            color: #FFCC00;
+        }
+
+        .header .subtitle {
+            font-size: 14px;
+            color: #888;
+            letter-spacing: 0.5px;
+        }
+
+        .header .customer-badge {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 4px 14px;
+            background: rgba(255, 204, 0, 0.1);
+            border: 1px solid rgba(255, 204, 0, 0.25);
+            border-radius: 20px;
+            font-size: 13px;
+            color: #FFCC00;
+            font-weight: 500;
+        }
+
+        /* Sankey chart */
+        #sankey-chart {
+            width: 100%;
+            height: 480px;
+            background: #2A2A2A;
+            border-radius: 12px;
+            border: 1px solid #3A3A3A;
+        }
+
+        /* Metrics row */
+        .metrics-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-top: 24px;
+        }
+
+        .metric-card {
+            background: #2A2A2A;
+            border: 1px solid #3A3A3A;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            transition: border-color 0.2s;
+        }
+
+        .metric-card:hover {
+            border-color: rgba(255, 204, 0, 0.4);
+        }
+
+        .metric-value {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .metric-value.green { color: #4ADE80; }
+        .metric-value.yellow { color: #FFCC00; }
+        .metric-value.blue { color: #60A5FA; }
+        .metric-value.purple { color: #C084FC; }
+
+        .metric-label {
+            font-size: 13px;
+            color: #999;
+            line-height: 1.4;
+        }
+
+        /* Insight banner */
+        .insight-banner {
+            margin-top: 24px;
+            background: linear-gradient(135deg, rgba(74, 222, 128, 0.08) 0%, rgba(255, 204, 0, 0.08) 100%);
+            border: 1px solid rgba(74, 222, 128, 0.2);
+            border-radius: 10px;
+            padding: 18px 24px;
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+        }
+
+        .insight-icon {
+            flex-shrink: 0;
+            width: 28px;
+            height: 28px;
+            background: rgba(74, 222, 128, 0.15);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            margin-top: 1px;
+        }
+
+        .insight-text {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #C8C8C8;
+        }
+
+        .insight-text strong {
+            color: #4ADE80;
+        }
+
+        /* Legend */
+        .legend {
+            margin-top: 20px;
+            display: flex;
+            gap: 24px;
+            justify-content: center;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: #888;
+        }
+
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 3px;
+        }
+
+        .legend-dot.green { background: #4ADE80; }
+        .legend-dot.amber { background: #FBBF24; }
+        .legend-dot.blue { background: #60A5FA; }
+
+        /* Footer */
+        .footer {
+            margin-top: 32px;
+            padding-top: 16px;
+            border-top: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: #555;
+        }
+
+        @media (max-width: 768px) {
+            body { padding: 16px; }
+            .metrics-row { grid-template-columns: repeat(2, 1fr); }
+            #sankey-chart { height: 400px; }
+            .header h1 { font-size: 22px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>Support Escalation Pipeline <span>|</span> Sankey</h1>
+            <div class="subtitle">Ticket flow from submission channel through resolution status and Jira linkage</div>
+            <div class="customer-badge">Isomorphic Labs &mdash; 30 tickets</div>
+        </div>
+
+        <!-- Sankey Chart -->
+        <div id="sankey-chart"></div>
+
+        <!-- Legend -->
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-dot green"></div>
+                Resolved flow
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot amber"></div>
+                Active / Hold flow
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot blue"></div>
+                Jira-linked flow
+            </div>
+        </div>
+
+        <!-- Pipeline Metrics -->
+        <div class="metrics-row">
+            <div class="metric-card">
+                <div class="metric-value green">73%</div>
+                <div class="metric-label">Resolution Rate<br>22 of 30 tickets resolved</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value yellow">100%</div>
+                <div class="metric-label">Jira Coverage<br>All active tickets linked</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value blue">73%</div>
+                <div class="metric-label">Direct Resolution<br>Resolved without Jira</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value purple">1.3</div>
+                <div class="metric-label">Avg Pipeline Depth<br>Hops from submit to close</div>
+            </div>
+        </div>
+
+        <!-- Insight Banner -->
+        <div class="insight-banner">
+            <div class="insight-icon">&#10003;</div>
+            <div class="insight-text">
+                <strong>All 8 active tickets have Jira engineering links</strong> &mdash; no orphaned support issues.
+                The API channel dominates submission volume (83%), and the majority of tickets resolve directly
+                without requiring engineering escalation. Hold tickets are well-tracked with full Jira coverage.
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <span>Generated 2026-03-24 &bull; W&amp;B Field Engineering</span>
+            <span>ECharts 5.5.1 &bull; Prototype #6</span>
+        </div>
+    </div>
+
+    <script>
+        var chart = echarts.init(document.getElementById('sankey-chart'));
+
+        var option = {
+            tooltip: {
+                trigger: 'item',
+                triggerOn: 'mousemove',
+                backgroundColor: '#2A2A2A',
+                borderColor: '#444',
+                textStyle: { color: '#E0E0E0', fontSize: 13 },
+                formatter: function (params) {
+                    if (params.dataType === 'edge') {
+                        return '<b>' + params.data.source + '</b> \u2192 <b>' + params.data.target + '</b><br/>' +
+                               params.data.value + ' tickets';
+                    }
+                    return '<b>' + params.name + '</b><br/>' + params.value + ' tickets';
+                }
+            },
+            series: [{
+                type: 'sankey',
+                layout: 'none',
+                top: 40,
+                bottom: 30,
+                left: 40,
+                right: 40,
+                nodeWidth: 22,
+                nodeGap: 14,
+                draggable: true,
+                emphasis: {
+                    focus: 'adjacency'
+                },
+                lineStyle: {
+                    curveness: 0.45,
+                    color: 'gradient',
+                    opacity: 0.35
+                },
+                label: {
+                    color: '#E0E0E0',
+                    fontSize: 13,
+                    fontWeight: 500,
+                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                },
+                data: [
+                    // Left: Channels
+                    { name: 'API', itemStyle: { color: '#FFCC00' } },
+                    { name: 'Email', itemStyle: { color: '#F59E0B' } },
+                    { name: 'Web', itemStyle: { color: '#D97706' } },
+                    // Middle: Outcome
+                    { name: 'Resolved', itemStyle: { color: '#4ADE80' } },
+                    { name: 'Active / Hold', itemStyle: { color: '#FBBF24' } },
+                    // Right: Resolution detail
+                    { name: 'Closed', itemStyle: { color: '#22C55E' } },
+                    { name: 'Solved', itemStyle: { color: '#86EFAC' } },
+                    { name: 'Has Jira Link', itemStyle: { color: '#60A5FA' } }
+                ],
+                links: [
+                    // Channel -> Outcome
+                    // API: 25 total -> 18 resolved, 7 hold
+                    { source: 'API', target: 'Resolved', value: 18, lineStyle: { color: 'gradient', opacity: 0.3 } },
+                    { source: 'API', target: 'Active / Hold', value: 7, lineStyle: { color: 'gradient', opacity: 0.35 } },
+                    // Email: 3 total -> 2 resolved, 1 hold
+                    { source: 'Email', target: 'Resolved', value: 2, lineStyle: { color: 'gradient', opacity: 0.3 } },
+                    { source: 'Email', target: 'Active / Hold', value: 1, lineStyle: { color: 'gradient', opacity: 0.35 } },
+                    // Web: 2 total -> 2 resolved, 0 hold
+                    { source: 'Web', target: 'Resolved', value: 2, lineStyle: { color: 'gradient', opacity: 0.3 } },
+
+                    // Resolved -> Close type
+                    { source: 'Resolved', target: 'Closed', value: 21, lineStyle: { color: 'gradient', opacity: 0.3 } },
+                    { source: 'Resolved', target: 'Solved', value: 1, lineStyle: { color: 'gradient', opacity: 0.3 } },
+
+                    // Active/Hold -> Jira linkage
+                    { source: 'Active / Hold', target: 'Has Jira Link', value: 8, lineStyle: { color: 'gradient', opacity: 0.4 } }
+                ]
+            }]
+        };
+
+        chart.setOption(option);
+
+        window.addEventListener('resize', function () {
+            chart.resize();
+        });
+    </script>
+</body>
+</html>

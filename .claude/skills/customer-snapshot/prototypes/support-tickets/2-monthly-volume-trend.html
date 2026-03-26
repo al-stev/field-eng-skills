@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Support Ticket Volume Trend — Isomorphic Labs</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #1F1F1F;
+    color: #E0E0E0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    min-height: 100vh;
+    padding: 32px;
+  }
+
+  .header {
+    max-width: 1200px;
+    margin: 0 auto 24px;
+  }
+
+  .header h1 {
+    font-size: 24px;
+    font-weight: 600;
+    color: #FFFFFF;
+    margin-bottom: 4px;
+  }
+
+  .header .subtitle {
+    font-size: 14px;
+    color: #888;
+  }
+
+  .header .subtitle span {
+    color: #FFCC00;
+    font-weight: 500;
+  }
+
+  .chart-container {
+    max-width: 1200px;
+    margin: 0 auto 32px;
+    background: #2A2A2A;
+    border-radius: 12px;
+    padding: 24px;
+    border: 1px solid #333;
+  }
+
+  #main-chart {
+    width: 100%;
+    height: 480px;
+  }
+
+  .stats-row {
+    max-width: 1200px;
+    margin: 0 auto 32px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  .stat-card {
+    background: #2A2A2A;
+    border-radius: 12px;
+    padding: 20px 24px;
+    border: 1px solid #333;
+    text-align: center;
+  }
+
+  .stat-card .label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #888;
+    margin-bottom: 8px;
+  }
+
+  .stat-card .value {
+    font-size: 28px;
+    font-weight: 700;
+    color: #FFFFFF;
+  }
+
+  .stat-card .detail {
+    font-size: 13px;
+    color: #999;
+    margin-top: 4px;
+  }
+
+  .stat-card.peak .value { color: #FFCC00; }
+  .stat-card.current .value { color: #E0E0E0; }
+  .stat-card.trend .value { color: #FF6B4A; }
+
+  .status-row {
+    max-width: 1200px;
+    margin: 0 auto 0;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  .status-card {
+    background: #2A2A2A;
+    border-radius: 12px;
+    padding: 16px 24px;
+    border: 1px solid #333;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .status-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .status-dot.closed { background: #4CAF50; }
+  .status-dot.hold { background: #FFB020; }
+  .status-dot.solved { background: #42A5F5; }
+
+  .status-info .status-label {
+    font-size: 13px;
+    color: #888;
+    text-transform: capitalize;
+  }
+
+  .status-info .status-count {
+    font-size: 22px;
+    font-weight: 700;
+    color: #FFF;
+  }
+
+  .status-info .status-pct {
+    font-size: 12px;
+    color: #666;
+  }
+
+  .footer {
+    max-width: 1200px;
+    margin: 32px auto 0;
+    text-align: center;
+    font-size: 11px;
+    color: #555;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Support Ticket Volume Trend</h1>
+  <div class="subtitle">
+    <span>Isomorphic Labs</span> &mdash; March 2025 to March 2026 &mdash; 30 total tickets
+  </div>
+</div>
+
+<div class="chart-container">
+  <div id="main-chart"></div>
+</div>
+
+<div class="stats-row">
+  <div class="stat-card peak">
+    <div class="label">Peak Month</div>
+    <div class="value">Nov 2025</div>
+    <div class="detail">6 tickets &mdash; 3x average</div>
+  </div>
+  <div class="stat-card current">
+    <div class="label">Current Pace</div>
+    <div class="value">4 in March</div>
+    <div class="detail">24 days into the month</div>
+  </div>
+  <div class="stat-card trend">
+    <div class="label">Trend</div>
+    <div class="value">&uarr; Increasing</div>
+    <div class="detail">3-month avg rising since Jan</div>
+  </div>
+</div>
+
+<div class="status-row" style="margin-top: 16px;">
+  <div class="status-card">
+    <div class="status-dot closed"></div>
+    <div class="status-info">
+      <div class="status-label">Closed</div>
+      <div class="status-count">21</div>
+      <div class="status-pct">70% of all tickets</div>
+    </div>
+  </div>
+  <div class="status-card">
+    <div class="status-dot hold"></div>
+    <div class="status-info">
+      <div class="status-label">Hold</div>
+      <div class="status-count">8</div>
+      <div class="status-pct">27% of all tickets</div>
+    </div>
+  </div>
+  <div class="status-card">
+    <div class="status-dot solved"></div>
+    <div class="status-info">
+      <div class="status-label">Solved</div>
+      <div class="status-count">1</div>
+      <div class="status-pct">3% of all tickets</div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  Generated 2026-03-24 &middot; W&amp;B Field Engineering &middot; Data source: Jira WB project
+</div>
+
+<script>
+(function () {
+  const months = [
+    'Mar 2025', 'Apr 2025', 'May 2025', 'Jun 2025', 'Jul 2025',
+    'Aug 2025', 'Sep 2025', 'Oct 2025', 'Nov 2025', 'Dec 2025',
+    'Jan 2026', 'Feb 2026', 'Mar 2026'
+  ];
+
+  const totals = [1, 2, 3, 1, 2, 2, 2, 2, 6, 2, 0, 3, 4];
+
+  // Proportional status split: ~70% closed, ~27% hold, ~3% solved
+  function splitStatus(total) {
+    if (total === 0) return [0, 0, 0];
+    const solved = Math.round(total * 0.03);
+    const hold = Math.round(total * 0.27);
+    const closed = total - hold - solved;
+    return [closed, hold, solved];
+  }
+
+  const closedData = [];
+  const holdData = [];
+  const solvedData = [];
+
+  totals.forEach(function (t) {
+    const s = splitStatus(t);
+    closedData.push(s[0]);
+    holdData.push(s[1]);
+    solvedData.push(s[2]);
+  });
+
+  // Cumulative active backlog: simple model
+  // Each month: new tickets arrive, closed tickets resolve (assume closed tickets resolve same month)
+  // Active backlog = running sum of (total - closed) each month
+  const backlog = [];
+  let running = 0;
+  totals.forEach(function (t, i) {
+    // New tickets minus those that end up closed = net active added
+    running += t - closedData[i];
+    // Backlog can't be negative
+    backlog.push(Math.max(0, running));
+  });
+
+  // 3-month rolling average
+  const rollingAvg = [];
+  for (let i = 0; i < totals.length; i++) {
+    if (i < 2) {
+      // Not enough data for 3-month window; use available
+      let sum = 0;
+      for (let j = 0; j <= i; j++) sum += totals[j];
+      rollingAvg.push(parseFloat((sum / (i + 1)).toFixed(1)));
+    } else {
+      const avg = (totals[i] + totals[i - 1] + totals[i - 2]) / 3;
+      rollingAvg.push(parseFloat(avg.toFixed(1)));
+    }
+  }
+
+  var chart = echarts.init(document.getElementById('main-chart'), null, { renderer: 'canvas' });
+
+  var option = {
+    backgroundColor: 'transparent',
+    tooltip: {
+      trigger: 'axis',
+      backgroundColor: '#333',
+      borderColor: '#555',
+      textStyle: { color: '#E0E0E0', fontSize: 13 },
+      axisPointer: {
+        type: 'cross',
+        crossStyle: { color: '#666' }
+      },
+      formatter: function (params) {
+        var header = '<div style="font-weight:600;margin-bottom:6px">' + params[0].axisValue + '</div>';
+        var lines = '';
+        var total = 0;
+        params.forEach(function (p) {
+          var marker = '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:' + p.color + ';margin-right:6px"></span>';
+          if (p.seriesName === 'Closed' || p.seriesName === 'Hold' || p.seriesName === 'Solved') {
+            total += p.value;
+          }
+          lines += marker + p.seriesName + ': <strong>' + p.value + '</strong><br/>';
+        });
+        return header + '<div style="font-size:12px;color:#FFCC00;margin-bottom:4px">Total: ' + total + '</div>' + lines;
+      }
+    },
+    legend: {
+      top: 4,
+      right: 0,
+      textStyle: { color: '#AAA', fontSize: 12 },
+      itemWidth: 14,
+      itemHeight: 10,
+      data: [
+        { name: 'Closed', icon: 'roundRect' },
+        { name: 'Hold', icon: 'roundRect' },
+        { name: 'Solved', icon: 'roundRect' },
+        { name: 'Active Backlog', icon: 'circle' },
+        { name: '3-mo Rolling Avg', icon: 'path://M0,5L30,5' }
+      ]
+    },
+    grid: {
+      top: 60,
+      left: 48,
+      right: 60,
+      bottom: 36,
+      containLabel: true
+    },
+    xAxis: {
+      type: 'category',
+      data: months,
+      axisLabel: {
+        color: '#888',
+        fontSize: 11,
+        rotate: 0
+      },
+      axisLine: { lineStyle: { color: '#444' } },
+      axisTick: { show: false }
+    },
+    yAxis: [
+      {
+        type: 'value',
+        name: 'Tickets',
+        nameTextStyle: { color: '#888', fontSize: 11 },
+        axisLabel: { color: '#888', fontSize: 11 },
+        splitLine: { lineStyle: { color: '#333', type: 'dashed' } },
+        axisLine: { show: false },
+        min: 0,
+        max: 8
+      },
+      {
+        type: 'value',
+        name: 'Backlog',
+        nameTextStyle: { color: '#888', fontSize: 11 },
+        axisLabel: { color: '#888', fontSize: 11 },
+        splitLine: { show: false },
+        axisLine: { show: false },
+        min: 0,
+        max: 12
+      }
+    ],
+    series: [
+      {
+        name: 'Closed',
+        type: 'bar',
+        stack: 'tickets',
+        data: closedData,
+        itemStyle: {
+          color: '#4CAF50',
+          borderRadius: [0, 0, 0, 0]
+        },
+        barWidth: '40%',
+        emphasis: { itemStyle: { color: '#66BB6A' } }
+      },
+      {
+        name: 'Hold',
+        type: 'bar',
+        stack: 'tickets',
+        data: holdData,
+        itemStyle: {
+          color: '#FFB020'
+        },
+        emphasis: { itemStyle: { color: '#FFC94D' } }
+      },
+      {
+        name: 'Solved',
+        type: 'bar',
+        stack: 'tickets',
+        data: solvedData,
+        itemStyle: {
+          color: '#42A5F5',
+          borderRadius: [3, 3, 0, 0]
+        },
+        emphasis: { itemStyle: { color: '#64B5F6' } }
+      },
+      {
+        name: 'Active Backlog',
+        type: 'line',
+        yAxisIndex: 1,
+        data: backlog,
+        smooth: true,
+        symbol: 'circle',
+        symbolSize: 6,
+        lineStyle: {
+          color: '#FFCC00',
+          width: 2,
+          type: 'solid'
+        },
+        itemStyle: { color: '#FFCC00' },
+        areaStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: 'rgba(255,204,0,0.15)' },
+            { offset: 1, color: 'rgba(255,204,0,0)' }
+          ])
+        }
+      },
+      {
+        name: '3-mo Rolling Avg',
+        type: 'line',
+        data: rollingAvg,
+        smooth: true,
+        symbol: 'none',
+        lineStyle: {
+          color: '#FF6B4A',
+          width: 2,
+          type: 'dashed'
+        },
+        itemStyle: { color: '#FF6B4A' }
+      }
+    ],
+    // November spike annotation
+    graphic: [
+      {
+        type: 'group',
+        left: 'center',
+        top: 52,
+        children: []
+      }
+    ]
+  };
+
+  // Add November spike annotation via markPoint on the Solved series (top of stack)
+  option.series[2].markPoint = {
+    symbol: 'pin',
+    symbolSize: 42,
+    itemStyle: { color: '#FF6B4A' },
+    label: {
+      formatter: '6',
+      color: '#FFF',
+      fontSize: 12,
+      fontWeight: 'bold'
+    },
+    data: [
+      {
+        name: 'Nov Spike',
+        coord: ['Nov 2025', solvedData[8] + holdData[8] + closedData[8]],
+      }
+    ]
+  };
+
+  // Also add a text annotation for the spike
+  option.graphic = [
+    {
+      type: 'text',
+      right: 320,
+      top: 68,
+      style: {
+        text: 'Nov spike: 3x avg',
+        fill: '#FF6B4A',
+        fontSize: 11,
+        fontWeight: 'bold'
+      }
+    }
+  ];
+
+  chart.setOption(option);
+
+  window.addEventListener('resize', function () {
+    chart.resize();
+  });
+})();
+</script>
+
+</body>
+</html>
