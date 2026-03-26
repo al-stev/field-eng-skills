@@ -59,7 +59,12 @@ Plans:
   2. Team Detection page shows team breakdown table with member counts and activity, per-team activity bar chart, team-by-product-area heatmap, team adoption timeline, per-team champion identification, and team growth/contraction trend -- gracefully displaying "Team data unavailable" when fields are not populated
   3. Risk Scoring page shows composite risk gauge (0-100), risk factor breakdown, risk trend line over 6 months, renewal context alongside score, risk radar chart, and AI-generated action recommendations -- with staleness banner when churn model data is old
   4. Schema validation runs successfully for `agg_weekly_user_retention_features`, team fields in `ext_daily_user_event_usage`, and `renewal_predictions` in `landing_development` before page development begins
-**Plans**: TBD
+**Plans**: 4 plans
+Plans:
+- [ ] 03-01-PLAN.md -- Phase 3 BQ queries and schema validation specs
+- [ ] 03-02-PLAN.md -- Cohort Analysis page (transform + handler + renderer)
+- [ ] 03-03-PLAN.md -- Team Detection page (transform + handler + renderer)
+- [ ] 03-04-PLAN.md -- Risk Scoring page (transform + handler + renderer)
 **UI hint**: yes
 
 ### Phase 4: Privacy-Sensitive and Exploratory Pages
@@ -83,5 +88,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 |-------|----------------|--------|-----------|
 | 1. Foundation and Template System | 0/4 | Planning complete | - |
 | 2. High-Confidence Pages | 0/TBD | Not started | - |
-| 3. Medium-Confidence Pages | 0/TBD | Not started | - |
+| 3. Medium-Confidence Pages | 0/4 | Planning complete | - |
 | 4. Privacy-Sensitive and Exploratory Pages | 0/TBD | Not started | - |
