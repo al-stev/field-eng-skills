@@ -547,6 +547,13 @@ function renderNarrative() {
 
 function renderCharts() {
   if (!PAGE_DATA.available) {
+    // Some pages (e.g., performance) handle their own descoped/unavailable state
+    var renderer = PAGE_RENDERERS[PAGE_DATA.page_type];
+    if (renderer && PAGE_DATA.reason && PAGE_DATA.reason !== 'not_implemented') {
+      document.getElementById('sampleChart').style.display = 'none';
+      renderer();
+      return;
+    }
     document.getElementById('chartSection').style.display = 'none';
     document.getElementById('emptyStateSection').innerHTML =
       renderEmptyState('chart', PAGE_DATA.reason);
@@ -2496,6 +2503,308 @@ function renderRiskScoring() {
   window.addEventListener('resize', function() { charts.forEach(function(ch) { ch.resize(); }); });
 }
 
+/* ── Performance Deep Dive page renderer ── */
+
+function renderPerformance() {
+  var grid = document.getElementById('sparklineGrid');
+  grid.style.display = 'block';
+  var c = getThemeColors();
+  var charts = [];
+  var microLabelCss = 'font-family:JetBrains Mono,monospace; font-size:11px; color:' + c.textTertiary + '; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:8px;';
+
+  // --- Descoped state check ---
+  if (PAGE_DATA.available === false && PAGE_DATA.reason) {
+    var descoped = document.createElement('div');
+    descoped.style.cssText = 'border:2px dashed ' + c.borderSubtle + '; border-radius:8px; padding:32px; background:' + c.bgSurface + '; text-align:center; margin-top:16px;';
+    var heading = document.createElement('div');
+    heading.style.cssText = 'font-family:Outfit,sans-serif; font-size:16px; font-weight:600; color:' + c.textPrimary + '; margin-bottom:12px;';
+    heading.textContent = 'Performance Deep Dive -- Data Insufficient';
+    var body = document.createElement('div');
+    body.style.cssText = 'font-family:Outfit,sans-serif; font-size:14px; color:' + c.textSecondary + '; line-height:1.5;';
+    body.textContent = 'The performance data tables (fct_application_performance, fct_onscreen_loader_latencies) do not contain sufficient data for this account. This page has been gracefully descoped. Re-run generation if data becomes available.';
+    descoped.appendChild(heading);
+    descoped.appendChild(body);
+    grid.appendChild(descoped);
+    return;
+  }
+
+  var perfIndex = PAGE_DATA.performance_index || {};
+  var slowness = PAGE_DATA.slowness_breakdown || [];
+  var errors = PAGE_DATA.error_metrics || {};
+  var latency = PAGE_DATA.latency_distribution || {};
+  var slowUsers = PAGE_DATA.slow_chart_users || [];
+
+  // ── Section 1: Performance Index Gauge + Feature Slowness Breakdown (side by side) ──
+  var topRow = document.createElement('div');
+  topRow.style.cssText = 'display:flex; gap:32px; margin-bottom:32px; flex-wrap:wrap;';
+
+  // Left: Gauge
+  var gaugeWrap = document.createElement('div');
+  gaugeWrap.style.cssText = 'min-width:300px;';
+  var gaugeLabel = document.createElement('div');
+  gaugeLabel.style.cssText = microLabelCss;
+  gaugeLabel.textContent = 'PERFORMANCE INDEX';
+  var gaugeDiv = document.createElement('div');
+  gaugeDiv.style.cssText = 'width:300px; height:300px;';
+  gaugeWrap.appendChild(gaugeLabel);
+  gaugeWrap.appendChild(gaugeDiv);
+
+  // Right: Slowness breakdown bar chart
+  var barWrap = document.createElement('div');
+  barWrap.style.cssText = 'flex:1; min-width:320px;';
+  var barLabel = document.createElement('div');
+  barLabel.style.cssText = microLabelCss;
+  barLabel.textContent = 'FEATURE SLOWNESS BREAKDOWN';
+  var barDiv = document.createElement('div');
+  barDiv.style.cssText = 'width:100%; height:400px;';
+  barWrap.appendChild(barLabel);
+  barWrap.appendChild(barDiv);
+
+  topRow.appendChild(gaugeWrap);
+  topRow.appendChild(barWrap);
+  grid.appendChild(topRow);
+
+  // Gauge chart
+  setTimeout(function() {
+    var gaugeChart = echarts.init(gaugeDiv, 'wandb');
+    var score = perfIndex.score || 0;
+    var tier = perfIndex.tier || 'poor';
+    gaugeChart.setOption({
+      series: [{
+        type: 'gauge',
+        startAngle: 200,
+        endAngle: -20,
+        min: 0,
+        max: 100,
+        axisLine: {
+          lineStyle: {
+            width: 20,
+            color: [
+              [0.49, c.red],
+              [0.79, c.amber],
+              [1, c.green]
+            ]
+          }
+        },
+        axisTick: { show: false },
+        splitLine: { show: false },
+        axisLabel: { show: false },
+        pointer: { width: 4, itemStyle: { color: 'auto' } },
+        detail: {
+          valueAnimation: true,
+          fontSize: 36,
+          fontFamily: "'Instrument Serif', Georgia, serif",
+          offsetCenter: [0, '60%'],
+          color: c.textPrimary,
+          formatter: '{value}'
+        },
+        data: [{ value: Math.round(score) }]
+      }],
+      toolbox: { feature: { saveAsImage: { title: 'Save', pixelRatio: 2, backgroundColor: c.bgElevated } }, right: 16, top: 8, iconStyle: { borderColor: c.textTertiary } }
+    });
+    charts.push(gaugeChart);
+
+    // Tier badge below gauge
+    var tierBadge = document.createElement('div');
+    var tierColor = tier === 'good' ? c.green : (tier === 'fair' ? c.amber : c.red);
+    tierBadge.style.cssText = 'text-align:center; margin-top:8px;';
+    var badge = document.createElement('span');
+    badge.style.cssText = 'display:inline-block; padding:4px 12px; border-radius:4px; font-family:JetBrains Mono,monospace; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:1px; color:' + tierColor + '; background:rgba(' + (tier === 'good' ? '74,222,128' : (tier === 'fair' ? '251,191,36' : '248,113,113')) + ',0.12); border:1px solid rgba(' + (tier === 'good' ? '74,222,128' : (tier === 'fair' ? '251,191,36' : '248,113,113')) + ',0.22);';
+    badge.textContent = tier.toUpperCase();
+    tierBadge.appendChild(badge);
+    gaugeWrap.appendChild(tierBadge);
+  }, 10);
+
+  // Slowness breakdown horizontal bar chart
+  setTimeout(function() {
+    var barChart = echarts.init(barDiv, 'wandb');
+    var featureNames = slowness.map(function(s) { return s.feature; });
+    var counts = slowness.map(function(s) { return s.count; });
+    barChart.setOption({
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: { type: 'shadow' },
+        formatter: function(params) {
+          var d = params[0];
+          var item = slowness[d.dataIndex];
+          return item.feature + ': ' + item.count + ' slow loads (' + item.pct + '% of total)';
+        }
+      },
+      grid: { left: '30%', right: '10%', top: 20, bottom: 20 },
+      xAxis: { type: 'value' },
+      yAxis: {
+        type: 'category',
+        data: featureNames.reverse(),
+        axisLabel: { fontSize: 12, fontFamily: "'Outfit', sans-serif", color: c.textSecondary }
+      },
+      series: [{
+        type: 'bar',
+        data: counts.reverse(),
+        itemStyle: { color: c.blue, borderRadius: [0, 3, 3, 0] },
+        barMaxWidth: 30
+      }],
+      toolbox: { feature: { saveAsImage: { title: 'Save', pixelRatio: 2, backgroundColor: c.bgElevated } }, right: 16, top: 8, iconStyle: { borderColor: c.textTertiary } }
+    });
+    charts.push(barChart);
+  }, 20);
+
+  // ── Section 2: Error Metrics (inline stat row) ──
+  var errorLabel = document.createElement('div');
+  errorLabel.style.cssText = microLabelCss + '; margin-top:16px;';
+  errorLabel.textContent = 'ERROR METRICS';
+  grid.appendChild(errorLabel);
+
+  var errorRow = document.createElement('div');
+  errorRow.style.cssText = 'display:flex; gap:24px; margin-bottom:32px; flex-wrap:wrap;';
+
+  var errorTrend = errors.error_trend || 0;
+  var trendArrow = errorTrend < 0 ? '\u2193' : (errorTrend > 0 ? '\u2191' : '\u2192');
+  var trendColor = errorTrend < 0 ? c.green : (errorTrend > 0 ? c.red : c.textSecondary);
+
+  var statItems = [
+    { label: 'Users Facing Errors', value: (errors.users_facing_errors || 0).toString() },
+    { label: 'Error Count', value: (errors.error_count || 0).toString() },
+    { label: 'Error Trend 30d', value: errorTrend + '%', color: trendColor, arrow: trendArrow }
+  ];
+
+  statItems.forEach(function(item) {
+    var card = document.createElement('div');
+    card.style.cssText = 'background:' + c.bgSurface + '; border-radius:8px; padding:16px 24px; min-width:160px;';
+    var val = document.createElement('div');
+    var displayColor = item.color || c.textPrimary;
+    val.style.cssText = 'font-family:"Instrument Serif",Georgia,serif; font-size:28px; color:' + displayColor + ';';
+    val.textContent = (item.arrow ? item.arrow + ' ' : '') + item.value;
+    var lbl = document.createElement('div');
+    lbl.style.cssText = 'font-family:Outfit,sans-serif; font-size:12px; color:' + c.textTertiary + '; margin-top:4px;';
+    lbl.textContent = item.label;
+    card.appendChild(val);
+    card.appendChild(lbl);
+    errorRow.appendChild(card);
+  });
+  grid.appendChild(errorRow);
+
+  // ── Section 3: Chart Load Latency Distribution ──
+  var latLabel = document.createElement('div');
+  latLabel.style.cssText = microLabelCss;
+  latLabel.textContent = 'CHART LOAD LATENCY DISTRIBUTION';
+  grid.appendChild(latLabel);
+
+  var latBins = latency.bins || [];
+  var hasLatency = latBins.some(function(b) { return b.count > 0; });
+
+  if (!hasLatency) {
+    var latEmpty = document.createElement('div');
+    latEmpty.className = 'empty-state';
+    latEmpty.textContent = 'No latency data available for this account.';
+    grid.appendChild(latEmpty);
+  } else {
+    var latDiv = document.createElement('div');
+    latDiv.style.cssText = 'width:100%; height:360px; margin-bottom:32px;';
+    grid.appendChild(latDiv);
+
+    setTimeout(function() {
+      var latChart = echarts.init(latDiv, 'wandb');
+      var binLabels = latBins.map(function(b) { return b.label; });
+      var binCounts = latBins.map(function(b) { return b.count; });
+
+      // Determine which bin contains P95 for markLine
+      var p95Val = latency.p95;
+      var p95BinIdx = 0;
+      if (typeof p95Val === 'number') {
+        for (var i = 0; i < latBins.length; i++) {
+          var edges = [[0,1000],[1000,2000],[2000,5000],[5000,10000],[10000,Infinity]];
+          if (p95Val >= edges[i][0] && p95Val < edges[i][1]) { p95BinIdx = i; break; }
+          if (i === latBins.length - 1) p95BinIdx = i;
+        }
+      }
+
+      var markLineData = [];
+      if (typeof p95Val === 'number') {
+        markLineData.push({
+          name: 'P95: ' + Math.round(p95Val) + 'ms',
+          xAxis: p95BinIdx,
+          lineStyle: { type: 'dashed', color: c.red, width: 2 },
+          label: { show: true, formatter: 'P95: ' + Math.round(p95Val) + 'ms', color: c.red, fontFamily: "'JetBrains Mono', monospace", fontSize: 11 }
+        });
+      }
+
+      latChart.setOption({
+        tooltip: {
+          trigger: 'axis',
+          axisPointer: { type: 'shadow' },
+          formatter: function(params) {
+            var d = params[0];
+            var bin = latBins[d.dataIndex];
+            return bin.label + ': ' + bin.count + ' chart loads (' + bin.pct + '% of total)';
+          }
+        },
+        grid: { left: '8%', right: '5%', top: 40, bottom: 40 },
+        xAxis: { type: 'category', data: binLabels },
+        yAxis: { type: 'value', name: 'Chart Loads' },
+        series: [{
+          type: 'bar',
+          data: binCounts,
+          itemStyle: { color: c.blue, borderRadius: [3, 3, 0, 0] },
+          barMaxWidth: 60,
+          markLine: {
+            silent: true,
+            symbol: 'none',
+            data: markLineData
+          }
+        }],
+        toolbox: { feature: { saveAsImage: { title: 'Save', pixelRatio: 2, backgroundColor: c.bgElevated } }, right: 16, top: 8, iconStyle: { borderColor: c.textTertiary } }
+      });
+      charts.push(latChart);
+    }, 30);
+  }
+
+  // ── Section 4: Slow Chart Load Users (scrollable table) ──
+  var usersLabel = document.createElement('div');
+  usersLabel.style.cssText = microLabelCss + '; margin-top:16px;';
+  usersLabel.textContent = 'SLOW CHART LOAD USERS';
+  grid.appendChild(usersLabel);
+
+  if (!slowUsers.length) {
+    var usersEmpty = document.createElement('div');
+    usersEmpty.className = 'empty-state';
+    usersEmpty.textContent = 'No slow chart load user data available for this account.';
+    grid.appendChild(usersEmpty);
+  } else {
+    var tableWrap = document.createElement('div');
+    tableWrap.style.cssText = 'max-height:400px; overflow-y:auto; margin-bottom:32px; border:1px solid ' + c.borderSubtle + '; border-radius:8px;';
+
+    var tableHtml = '<table style="width:100%; border-collapse:collapse;">';
+    tableHtml += '<thead><tr>';
+    var headers = ['USER', 'SLOW LOADS', 'TOTAL LOADS', 'SLOW %', 'LAST SEEN'];
+    var aligns = ['left', 'right', 'right', 'right', 'right'];
+    headers.forEach(function(h, i) {
+      tableHtml += '<th style="text-align:' + aligns[i] + '; padding:8px 16px; color:' + c.textTertiary + '; font-family:JetBrains Mono,monospace; font-size:11px; font-weight:400; text-transform:uppercase; position:sticky; top:0; background:' + c.bgSurface + ';">' + h + '</th>';
+    });
+    tableHtml += '</tr></thead><tbody>';
+
+    slowUsers.forEach(function(u) {
+      var pctColor = c.textSecondary;
+      if (u.slow_pct >= 50) pctColor = c.red;
+      else if (u.slow_pct >= 20) pctColor = c.amber;
+
+      tableHtml += '<tr style="border-bottom:1px solid ' + c.borderSubtle + ';">';
+      tableHtml += '<td style="padding:8px 16px; font-family:Outfit,sans-serif; font-size:14px; color:' + c.textPrimary + ';">' + (u.username || 'unknown') + '</td>';
+      tableHtml += '<td style="padding:8px 16px; font-family:Outfit,sans-serif; font-size:14px; color:' + c.textSecondary + '; text-align:right;">' + u.slow_loads + '</td>';
+      tableHtml += '<td style="padding:8px 16px; font-family:Outfit,sans-serif; font-size:14px; color:' + c.textSecondary + '; text-align:right;">' + u.total_loads + '</td>';
+      tableHtml += '<td style="padding:8px 16px; font-family:Outfit,sans-serif; font-size:14px; color:' + pctColor + '; text-align:right; font-weight:600;">' + u.slow_pct + '%</td>';
+      tableHtml += '<td style="padding:8px 16px; font-family:Outfit,sans-serif; font-size:14px; color:' + c.textSecondary + '; text-align:right;">' + u.last_seen + '</td>';
+      tableHtml += '</tr>';
+    });
+    tableHtml += '</tbody></table>';
+
+    tableWrap.innerHTML = tableHtml;
+    grid.appendChild(tableWrap);
+  }
+
+  // Unified resize handler for all charts
+  window.addEventListener('resize', function() { charts.forEach(function(ch) { ch.resize(); }); });
+}
+
 var PAGE_RENDERERS = {
   'feature-velocity': renderFeatureVelocityV4,
   'sdk-versions': renderSdkVersions,
@@ -2503,7 +2812,8 @@ var PAGE_RENDERERS = {
   'user-journey': renderUserJourney,
   'team-detection': renderTeamDetection,
   'cohort-analysis': renderCohortAnalysis,
-  'risk-scoring': renderRiskScoring
+  'risk-scoring': renderRiskScoring,
+  'performance': renderPerformance
 };
 
 /* ════════════════════════════════════════════════════════

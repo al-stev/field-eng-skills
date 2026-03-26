@@ -141,7 +141,7 @@ def _team_detection_handler(client, account_id, customer_name):
     })
 
     teams_df = run_query(client, team_detection_query(),
-                         account_id=account_id, maximum_bytes_billed=50_000_000_000)
+                         account_id=account_id, maximum_bytes_billed=100_000_000_000)
 
     # Only query champions if we have team data with org names
     champions_df = None
@@ -251,6 +251,89 @@ def _risk_scoring_handler(client, account_id, customer_name):
     )
 
 
+def _performance_handler(client, account_id, customer_name):
+    """Performance Deep Dive -- application performance from low-confidence BQ tables.
+    Includes go/no-go gate: validates schema + checks data before proceeding."""
+    from queries import performance_query, latency_distribution_query, slow_chart_users_query, account_health_query
+    from bq_client import run_query
+    from transforms.performance import PerformanceTransform
+    from schema_validator import (validate_tables, check_data_availability,
+                                   PHASE4_SCHEMA_SPECS, PHASE4_DATA_CHECKS)
+
+    transform = PerformanceTransform()
+
+    # --- GO/NO-GO GATE ---
+    # Gate 1: Schema validation -- do the tables exist with expected columns?
+    perf_table = "`wandb-production.analytics.fct_application_performance`"
+    schema_results = validate_tables(client, {
+        perf_table: PHASE4_SCHEMA_SPECS[perf_table]
+    })
+    if not schema_results[perf_table]["valid"]:
+        return transform.descoped_result("schema_error")
+
+    # Gate 2: Data availability -- does this account have rows?
+    avail = check_data_availability(client, account_id, {
+        "perf_index": PHASE4_DATA_CHECKS["perf_index"],
+    })
+    if not avail.get("perf_index", {}).get("available", False):
+        return transform.descoped_result("performance_descoped")
+
+    # --- GATE PASSED: proceed with full pipeline ---
+    perf_df = run_query(client, performance_query(),
+                        account_id=account_id, maximum_bytes_billed=50_000_000_000)
+
+    if perf_df.empty:
+        return transform.descoped_result("performance_descoped")
+
+    # Latency and slow users are best-effort (tables may not exist)
+    latency_df = None
+    try:
+        latency_table = "`wandb-production.analytics.fct_onscreen_loader_latencies`"
+        lat_schema = validate_tables(client, {
+            latency_table: PHASE4_SCHEMA_SPECS[latency_table]
+        })
+        if lat_schema[latency_table]["valid"]:
+            lat_avail = check_data_availability(client, account_id, {
+                "latency_data": PHASE4_DATA_CHECKS["latency_data"],
+            })
+            if lat_avail.get("latency_data", {}).get("available", False):
+                latency_df = run_query(client, latency_distribution_query(),
+                                       account_id=account_id, maximum_bytes_billed=50_000_000_000)
+    except Exception:
+        pass
+
+    slow_users_df = None
+    try:
+        slow_table = "`wandb-production.analytics.agg_daily_team_members_slow_chart_loads`"
+        slow_schema = validate_tables(client, {
+            slow_table: PHASE4_SCHEMA_SPECS[slow_table]
+        })
+        if slow_schema[slow_table]["valid"]:
+            slow_avail = check_data_availability(client, account_id, {
+                "slow_chart_data": PHASE4_DATA_CHECKS["slow_chart_data"],
+            })
+            if slow_avail.get("slow_chart_data", {}).get("available", False):
+                slow_users_df = run_query(client, slow_chart_users_query(),
+                                          account_id=account_id, maximum_bytes_billed=50_000_000_000)
+    except Exception:
+        pass
+
+    # Get deployment type
+    health_df = run_query(client, account_health_query(),
+                          account_id=account_id, maximum_bytes_billed=50_000_000_000)
+    deployment_type = "Unknown"
+    if not health_df.empty and "deployment_type" in health_df.columns:
+        deployment_type = str(health_df.iloc[0].get("deployment_type", "Unknown"))
+
+    return transform.transform(
+        perf_df=perf_df,
+        latency_df=latency_df if latency_df is not None else pd.DataFrame(),
+        slow_users_df=slow_users_df if slow_users_df is not None else pd.DataFrame(),
+        customer_name=customer_name,
+        deployment_type=deployment_type,
+    )
+
+
 PAGE_REGISTRY = {
     "user-journey": _user_journey_handler,
     "cohort-analysis": _cohort_analysis_handler,
@@ -260,7 +343,7 @@ PAGE_REGISTRY = {
     "risk-scoring": _risk_scoring_handler,
     "usage-correlation": _placeholder_handler,
     "sdk-versions": _sdk_versions_handler,
-    "performance": _placeholder_handler,
+    "performance": _performance_handler,
 }
 
 
