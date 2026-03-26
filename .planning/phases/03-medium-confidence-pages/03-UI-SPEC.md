@@ -619,7 +619,7 @@ Phase 3 introduces data tables for Team Detection and Risk Scoring. These follow
 | Header font-weight | 400 | NOT bold; headers are subtle micro-labels |
 | Header text-transform | uppercase | Micro-label pattern |
 | Header color | `--text-tertiary` | Subtle header labels |
-| Cell padding | 8px 12px | sm vertical, sm+xs horizontal |
+| Cell padding | 8px 16px | sm vertical, md horizontal |
 | Row border | bottom only, 1px solid `--border-subtle` | No zebra stripes (anti-pattern) |
 | Body text color | `--text-primary` for primary column, `--text-secondary` for secondary data | Hierarchy emphasis |
 | Scrollable container | `max-height: 400px; overflow-y: auto;` | Prevents page length explosion |
