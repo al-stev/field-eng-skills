@@ -1780,12 +1780,365 @@ function renderTeamDetection() {
   window.addEventListener('resize', function() { charts.forEach(function(ch) { ch.resize(); }); });
 }
 
+/* ── Cohort Analysis: retention heatmap, lifecycle, behavioral cohorts ── */
+
+function renderCohortAnalysis() {
+  var grid = document.getElementById('sparklineGrid');
+  grid.style.display = 'block';
+  var c = getThemeColors();
+  var charts = [];
+
+  var microLabelCss = 'font-family:JetBrains Mono,monospace; font-size:11px; color:' + c.textTertiary + '; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:8px;';
+
+  // --- Section 1: Retention Heatmap (CHRT-01, CHRT-02) ---
+  var heatmapLabel = document.createElement('div');
+  heatmapLabel.style.cssText = microLabelCss;
+  heatmapLabel.textContent = 'RETENTION HEATMAP';
+  grid.appendChild(heatmapLabel);
+
+  var cm = PAGE_DATA.cohort_matrix || {};
+  var cohortLabels = (cm.cohort_labels || []).map(function(label) {
+    var size = (cm.cohort_sizes || {})[label];
+    return size !== undefined ? label + '  n=' + size : label;
+  });
+  var periodLabels = cm.period_labels || [];
+  var matrixData = cm.matrix || [];
+
+  if (matrixData.length === 0) {
+    var emptyHeatmap = document.createElement('div');
+    emptyHeatmap.className = 'empty-state';
+    emptyHeatmap.textContent = 'No cohort data available. The customer may not have sufficient user activity history for retention analysis.';
+    grid.appendChild(emptyHeatmap);
+  } else {
+    var heatmapDiv = document.createElement('div');
+    heatmapDiv.id = 'cohortHeatmap';
+    heatmapDiv.style.cssText = 'width:100%; height:480px; background:' + c.bgSurface + '; border-radius:6px; margin-bottom:32px;';
+    grid.appendChild(heatmapDiv);
+
+    setTimeout(function() {
+      var heatmapChart = echarts.init(heatmapDiv, 'wandb');
+      heatmapChart.setOption({
+        tooltip: {
+          position: 'top',
+          formatter: function(p) {
+            return cohortLabels[p.value[0]] + ', Month ' + periodLabels[p.value[1]] +
+                   ': ' + p.value[2] + '% retained';
+          }
+        },
+        toolbox: { feature: { saveAsImage: { title: 'Save', pixelRatio: 2, backgroundColor: c.bgElevated } },
+                   right: 16, top: 8, iconStyle: { borderColor: c.textTertiary } },
+        grid: { left: 140, right: 60, top: 40, bottom: 60 },
+        xAxis: { type: 'category', data: periodLabels, position: 'top',
+                 axisLabel: { color: c.textTertiary, fontSize: 11, fontFamily: 'JetBrains Mono, monospace' },
+                 axisLine: { lineStyle: { color: c.borderSubtle } },
+                 axisTick: { show: false } },
+        yAxis: { type: 'category', data: cohortLabels,
+                 axisLabel: { color: c.textTertiary, fontSize: 11, fontFamily: 'JetBrains Mono, monospace' },
+                 axisLine: { lineStyle: { color: c.borderSubtle } },
+                 axisTick: { show: false } },
+        visualMap: {
+          type: 'continuous', min: 0, max: 100, calculable: true,
+          orient: 'horizontal', left: 'center', bottom: 10,
+          inRange: { color: [c.red, c.amber, c.green] },
+          textStyle: { color: c.textTertiary, fontSize: 11 }
+        },
+        series: [{
+          type: 'heatmap', data: matrixData,
+          label: { show: true, color: c.textPrimary, fontSize: 11,
+                   fontFamily: 'JetBrains Mono, monospace',
+                   formatter: function(p) { return p.value[2] + '%'; } },
+          emphasis: { itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.5)' } }
+        }]
+      });
+      charts.push(heatmapChart);
+    }, 10);
+  }
+
+  // --- Section 2: Side-by-side Retention Curve + Cohort Comparison (CHRT-03, CHRT-06) ---
+  var sideRow = document.createElement('div');
+  sideRow.style.cssText = 'display:flex; gap:32px; margin-bottom:32px; flex-wrap:wrap;';
+
+  // Left: Overall Retention Curve
+  var curveWrap = document.createElement('div');
+  curveWrap.style.cssText = 'flex:1; min-width:320px;';
+  var curveLabel = document.createElement('div');
+  curveLabel.style.cssText = microLabelCss;
+  curveLabel.textContent = 'OVERALL RETENTION CURVE';
+  var curveDiv = document.createElement('div');
+  curveDiv.id = 'retentionCurve';
+  curveDiv.style.cssText = 'width:100%; height:320px; background:' + c.bgSurface + '; border-radius:6px;';
+  curveWrap.appendChild(curveLabel);
+  curveWrap.appendChild(curveDiv);
+
+  // Right: Cohort Comparison
+  var compWrap = document.createElement('div');
+  compWrap.style.cssText = 'flex:1; min-width:320px;';
+  var compLabel = document.createElement('div');
+  compLabel.style.cssText = microLabelCss;
+  compLabel.textContent = 'COHORT COMPARISON';
+  var compDiv = document.createElement('div');
+  compDiv.id = 'cohortComparison';
+  compDiv.style.cssText = 'width:100%; height:320px; background:' + c.bgSurface + '; border-radius:6px;';
+  compWrap.appendChild(compLabel);
+  compWrap.appendChild(compDiv);
+
+  sideRow.appendChild(curveWrap);
+  sideRow.appendChild(compWrap);
+  grid.appendChild(sideRow);
+
+  // Render Retention Curve chart
+  var rc = PAGE_DATA.retention_curve || {};
+  setTimeout(function() {
+    var curveChart = echarts.init(curveDiv, 'wandb');
+    var rcPeriods = rc.periods || [];
+    var rcValues = rc.values || [];
+    curveChart.setOption({
+      tooltip: {
+        trigger: 'axis',
+        formatter: function(params) {
+          var p = params[0];
+          return p.name + ': ' + (p.value !== null ? p.value + '%' : 'N/A');
+        }
+      },
+      toolbox: { feature: { saveAsImage: { title: 'Save', pixelRatio: 2, backgroundColor: c.bgElevated } },
+                 right: 8, top: 0, iconStyle: { borderColor: c.textTertiary }, itemSize: 12 },
+      grid: { left: 48, right: 16, top: 24, bottom: 32 },
+      xAxis: {
+        type: 'category', data: rcPeriods,
+        axisLabel: { color: c.textTertiary, fontSize: 11, fontFamily: 'JetBrains Mono, monospace' },
+        axisLine: { lineStyle: { color: c.borderSubtle } },
+        axisTick: { show: false }
+      },
+      yAxis: {
+        type: 'value', min: 0, max: 100,
+        name: 'Retention %',
+        nameTextStyle: { color: c.textTertiary, fontSize: 11 },
+        axisLabel: { color: c.textTertiary, fontSize: 11, formatter: '{value}%' },
+        splitLine: { lineStyle: { color: c.borderSubtle, type: 'dashed' } }
+      },
+      series: [{
+        type: 'line', data: rcValues,
+        smooth: true,
+        symbol: 'circle', symbolSize: 8,
+        lineStyle: { color: c.blue, width: 2 },
+        itemStyle: { color: c.blue },
+        areaStyle: { color: c.blue + '22' }
+      }]
+    });
+    charts.push(curveChart);
+  }, 20);
+
+  // Render Cohort Comparison chart
+  var overlay = PAGE_DATA.cohort_overlay || {};
+  setTimeout(function() {
+    var compChart = echarts.init(compDiv, 'wandb');
+    var overlayPeriods = overlay.periods || [];
+    var overlayColors = [c.blue, c.green, c.amber, c.red];
+    var overlaySeries = (overlay.cohorts || []).map(function(coh, i) {
+      return {
+        name: coh.label,
+        type: 'line',
+        data: coh.values,
+        smooth: true,
+        symbol: 'circle', symbolSize: 5,
+        lineStyle: { color: overlayColors[i % overlayColors.length], width: 2 },
+        itemStyle: { color: overlayColors[i % overlayColors.length] }
+      };
+    });
+    compChart.setOption({
+      tooltip: {
+        trigger: 'axis',
+        formatter: function(params) {
+          var html = '<strong>' + params[0].axisValue + '</strong>';
+          params.forEach(function(p) {
+            if (p.value !== null && p.value !== undefined) {
+              html += '<br/>' + p.marker + ' ' + p.seriesName + ': ' + p.value + '%';
+            }
+          });
+          return html;
+        }
+      },
+      toolbox: { feature: { saveAsImage: { title: 'Save', pixelRatio: 2, backgroundColor: c.bgElevated } },
+                 right: 8, top: 0, iconStyle: { borderColor: c.textTertiary }, itemSize: 12 },
+      legend: {
+        bottom: 0,
+        textStyle: { color: c.textSecondary, fontSize: 11, fontFamily: 'JetBrains Mono, monospace' },
+        itemWidth: 12, itemHeight: 12
+      },
+      grid: { left: 48, right: 16, top: 24, bottom: 40 },
+      xAxis: {
+        type: 'category', data: overlayPeriods,
+        axisLabel: { color: c.textTertiary, fontSize: 11, fontFamily: 'JetBrains Mono, monospace' },
+        axisLine: { lineStyle: { color: c.borderSubtle } },
+        axisTick: { show: false }
+      },
+      yAxis: {
+        type: 'value', min: 0, max: 100,
+        axisLabel: { color: c.textTertiary, fontSize: 11, formatter: '{value}%' },
+        splitLine: { lineStyle: { color: c.borderSubtle, type: 'dashed' } }
+      },
+      series: overlaySeries
+    });
+    charts.push(compChart);
+  }, 30);
+
+  // --- Section 3: User Lifecycle (CHRT-05) ---
+  var lc = PAGE_DATA.lifecycle || {};
+  if (lc.months && lc.months.length > 0) {
+    var lcLabel = document.createElement('div');
+    lcLabel.style.cssText = microLabelCss;
+    lcLabel.textContent = 'USER LIFECYCLE';
+    grid.appendChild(lcLabel);
+
+    var lcDiv = document.createElement('div');
+    lcDiv.id = 'lifecycleChart';
+    lcDiv.style.cssText = 'width:100%; height:400px; background:' + c.bgSurface + '; border-radius:6px; margin-bottom:32px;';
+    grid.appendChild(lcDiv);
+
+    setTimeout(function() {
+      var lcChart = echarts.init(lcDiv, 'wandb');
+      var lifecycleColors = { retained: c.green, new_users: c.blue, resurrected: c.amber, churned: c.red };
+      var lifecycleNames = { retained: 'Retained', new_users: 'New', resurrected: 'Resurrected', churned: 'Churned' };
+      var lcSeries = ['retained', 'new_users', 'resurrected', 'churned'].map(function(key) {
+        return {
+          name: lifecycleNames[key],
+          type: 'line',
+          stack: 'total',
+          areaStyle: { color: lifecycleColors[key] + '33' },
+          lineStyle: { color: lifecycleColors[key], width: 2 },
+          itemStyle: { color: lifecycleColors[key] },
+          symbol: 'none',
+          data: lc[key] || [],
+          emphasis: { focus: 'series' }
+        };
+      });
+      lcChart.setOption({
+        tooltip: {
+          trigger: 'axis',
+          formatter: function(params) {
+            var html = '<strong>' + params[0].axisValue + '</strong>';
+            params.forEach(function(p) {
+              html += '<br/>' + p.marker + ' ' + p.seriesName + ': ' + p.value + ' users';
+            });
+            return html;
+          }
+        },
+        toolbox: { feature: { saveAsImage: { title: 'Save', pixelRatio: 2, backgroundColor: c.bgElevated } },
+                   right: 16, top: 8, iconStyle: { borderColor: c.textTertiary } },
+        legend: {
+          data: ['Retained', 'New', 'Resurrected', 'Churned'],
+          bottom: 0,
+          textStyle: { color: c.textSecondary, fontSize: 11, fontFamily: 'JetBrains Mono, monospace' },
+          itemWidth: 12, itemHeight: 12
+        },
+        grid: { left: 48, right: 16, top: 24, bottom: 60 },
+        dataZoom: [
+          { type: 'inside', start: 0, end: 100 },
+          { type: 'slider', start: 0, end: 100, bottom: 24, height: 16,
+            textStyle: { color: c.textTertiary, fontSize: 10 },
+            borderColor: c.borderSubtle, fillerColor: c.accent + '22',
+            handleStyle: { color: c.accent } }
+        ],
+        xAxis: {
+          type: 'category', data: lc.months,
+          axisLabel: { color: c.textTertiary, fontSize: 11, fontFamily: 'JetBrains Mono, monospace' },
+          axisLine: { lineStyle: { color: c.borderSubtle } },
+          axisTick: { show: false }
+        },
+        yAxis: {
+          type: 'value',
+          name: 'Users',
+          nameTextStyle: { color: c.textTertiary, fontSize: 11 },
+          axisLabel: { color: c.textTertiary, fontSize: 11 },
+          splitLine: { lineStyle: { color: c.borderSubtle, type: 'dashed' } }
+        },
+        series: lcSeries
+      });
+      charts.push(lcChart);
+    }, 40);
+  }
+
+  // --- Section 4: Behavioral Cohorts (CHRT-07) ---
+  var bc = PAGE_DATA.behavioral_cohorts || {};
+  var bcLabel = document.createElement('div');
+  bcLabel.style.cssText = microLabelCss;
+  bcLabel.textContent = 'BEHAVIORAL COHORTS';
+  grid.appendChild(bcLabel);
+
+  if (!bc.groups || bc.groups.length === 0) {
+    var emptyBc = document.createElement('div');
+    emptyBc.className = 'empty-state';
+    emptyBc.textContent = 'Behavioral cohort data not available. Journey data is required for first-action grouping.';
+    grid.appendChild(emptyBc);
+  } else {
+    var bcDiv = document.createElement('div');
+    bcDiv.id = 'behavioralCohorts';
+    bcDiv.style.cssText = 'width:100%; height:360px; background:' + c.bgSurface + '; border-radius:6px; margin-bottom:32px;';
+    grid.appendChild(bcDiv);
+
+    setTimeout(function() {
+      var bcChart = echarts.init(bcDiv, 'wandb');
+      var bcColors = [c.blue, c.green, c.amber, c.red, c.accent, '#9333ea', '#06b6d4'];
+      var bcSeries = bc.groups.map(function(g, i) {
+        return {
+          name: g.first_action + ' (' + (g.user_count || '?') + ' users)',
+          type: 'line',
+          data: g.values,
+          smooth: true,
+          symbol: 'circle', symbolSize: 5,
+          lineStyle: { color: bcColors[i % bcColors.length], width: 2 },
+          itemStyle: { color: bcColors[i % bcColors.length] }
+        };
+      });
+      bcChart.setOption({
+        tooltip: {
+          trigger: 'axis',
+          formatter: function(params) {
+            var html = '<strong>' + params[0].axisValue + '</strong>';
+            params.forEach(function(p) {
+              if (p.value !== null && p.value !== undefined) {
+                html += '<br/>' + p.marker + ' ' + p.seriesName + ': ' + p.value + '%';
+              }
+            });
+            return html;
+          }
+        },
+        toolbox: { feature: { saveAsImage: { title: 'Save', pixelRatio: 2, backgroundColor: c.bgElevated } },
+                   right: 8, top: 0, iconStyle: { borderColor: c.textTertiary }, itemSize: 12 },
+        legend: {
+          bottom: 0,
+          textStyle: { color: c.textSecondary, fontSize: 11, fontFamily: 'JetBrains Mono, monospace' },
+          itemWidth: 12, itemHeight: 12
+        },
+        grid: { left: 48, right: 16, top: 24, bottom: 40 },
+        xAxis: {
+          type: 'category', data: bc.periods || [],
+          axisLabel: { color: c.textTertiary, fontSize: 11, fontFamily: 'JetBrains Mono, monospace' },
+          axisLine: { lineStyle: { color: c.borderSubtle } },
+          axisTick: { show: false }
+        },
+        yAxis: {
+          type: 'value', min: 0, max: 100,
+          axisLabel: { color: c.textTertiary, fontSize: 11, formatter: '{value}%' },
+          splitLine: { lineStyle: { color: c.borderSubtle, type: 'dashed' } }
+        },
+        series: bcSeries
+      });
+      charts.push(bcChart);
+    }, 50);
+  }
+
+  // Unified resize handler for all charts
+  window.addEventListener('resize', function() { charts.forEach(function(ch) { ch.resize(); }); });
+}
+
 var PAGE_RENDERERS = {
   'feature-velocity': renderFeatureVelocityV4,
   'sdk-versions': renderSdkVersions,
   'engagement-decay': renderEngagementDecay,
   'user-journey': renderUserJourney,
-  'team-detection': renderTeamDetection
+  'team-detection': renderTeamDetection,
+  'cohort-analysis': renderCohortAnalysis
 };
 
 /* ════════════════════════════════════════════════════════
