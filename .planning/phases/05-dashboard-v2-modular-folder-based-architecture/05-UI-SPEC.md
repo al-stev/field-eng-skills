@@ -5,6 +5,7 @@ status: draft
 shadcn_initialized: false
 preset: none
 created: 2026-03-26
+revised: 2026-03-26
 ---
 
 # Phase 05 — UI Design Contract
@@ -29,7 +30,7 @@ created: 2026-03-26
 ```html
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=JetBrains+Mono:wght@400;600&family=Outfit:wght@400;600&display=swap" rel="stylesheet">
 ```
 
 **ECharts:** Bundled locally at `lib/echarts.min.js` (v5.x). No CDN dependency. Source: DASHBOARD-V2-SPEC.md architecture decision.
@@ -55,7 +56,7 @@ Exceptions:
 - Sidebar expanded width: 220px (content-driven, not grid-aligned)
 - Header min-height: 64px (aligns to 3xl token)
 - Nav item border-left: 3px accent indicator (visual weight, not spacing)
-- Badge pill padding: 2px 7px (optical balance for 10px mono text)
+- Badge pill padding: 2px 8px (grid-aligned)
 - Scrollbar width: 6px (browser convention)
 
 **Source:** Extracted from dashboard-v2.html prototype CSS (lines 112-500+). All values verified against actual usage.
@@ -64,21 +65,28 @@ Exceptions:
 
 ## Typography
 
+4 sizes, 2 weights. All previous 9 sizes consolidated into these 4 tiers.
+
 | Role | Font Family | Size | Weight | Line Height | Letter Spacing | Text Transform | Usage |
 |------|-------------|------|--------|-------------|----------------|----------------|-------|
-| Display | Instrument Serif | 24px | 400 | 1.2 | -0.3px | none | Dashboard header h1 (customer name) |
-| Heading | Instrument Serif | 22px | 400 | 1.2 | none | none | Panel placeholder titles, theme section names (clamp 16-20px) |
-| Body | Outfit | 14px | 400-500 | 1.55 | none | none | Nav labels (500), callout text, table cells, command palette results |
-| Body small | Outfit | 13px | 400 | 1.55 | none | none | Table body text, filter search input, ticket subjects |
 | Stat value | Outfit | 28px | 600 | 1.1 | none | none | KPI headline numbers in stat cards |
-| Mono label | JetBrains Mono | 10px | 500-600 | 1.4 | 1.5px | uppercase | Section headers, filter group labels, table headers, badge counts, chart axis labels |
-| Mono data | JetBrains Mono | 11px | 500 | 1.4 | 0.5-1px | varies | Header meta dates, badge pills, age badges, concern labels, Jira links, sidebar footer |
-| Mono inline | JetBrains Mono | 12px | 500 | 1.4 | none | none | Issue keys (accent-colored, linked) |
-| Command input | Outfit | 15px | 400 | 1.55 | none | none | Command palette search input |
+| Display / Heading | Instrument Serif | 24px | 400 | 1.2 | -0.3px | none | Dashboard header h1 (customer name), panel placeholder titles, theme section names |
+| Body | Outfit | 14px | 400 | 1.55 | none | none | Nav item labels, callout text, table cells, command palette input, command palette results, filter search input, ticket subjects |
+| Mono | JetBrains Mono | 11px | 400 or 600 | 1.4 | 0.5-1.5px | varies | Section headers (600, uppercase, 1.5px), table headers (600, uppercase, 1.5px), badge counts (600), header meta dates (400), badge pills (400), age badges (400), concern labels (400), Jira links (400), sidebar footer (400), issue keys (400, accent-colored), chart axis labels (600, uppercase) |
 
-**Weights used:** 400 (regular) and 500-600 (medium/semibold). The font CSS loads weights 300-700 for Outfit and 400-600 for JetBrains Mono, but the dashboard uses only 400 and 500/600.
+**Consolidation notes (from checker revision):**
+- 10px mono label, 11px mono data, 12px mono inline all collapse to **11px mono**. The 1-2px differences were imperceptible; 11px provides a consistent mono tier.
+- 13px body small, 14px body, 15px command input all collapse to **14px body**. The command palette input and table body text use the same size as primary body.
+- 22px heading and 24px display collapse to **24px display/heading**. Panel placeholder titles and theme section names use the same size as the dashboard header h1.
+- 28px stat value remains unchanged as the largest size for KPI numbers.
 
-**Source:** Extracted from dashboard-v2.html and intelligence-dashboard.html CSS declarations. Every size/weight pair traces to an actual CSS rule in the codebase.
+**Weights used:** 400 (regular) and 600 (semibold). Only two weights loaded and used.
+- **400 (regular):** Body text, secondary text, tertiary text, mono data (dates, badges, links, labels, footer), display/heading text, command palette input.
+- **600 (semibold):** Stat values, section header mono labels (uppercase), table header mono labels (uppercase), badge counts, nav item labels, chart axis labels.
+
+**Weight consolidation note:** Previous 500 (medium) weight eliminated. All uses of 500 (nav labels, mono data, concern labels) reassigned: nav labels to 600 (semibold, active element), mono data to 400 (regular, passive data display). This gives clear hierarchy: 400 for reading content, 600 for scannable anchors.
+
+**Source:** Extracted from dashboard-v2.html and intelligence-dashboard.html CSS declarations. Consolidated per checker feedback to stay within 4-size, 2-weight budget.
 
 ---
 
@@ -175,8 +183,19 @@ grid-template-columns: var(--sidebar-collapsed) 1fr /* collapsed: 56px 1fr */
 | Breakpoint | Behavior |
 |------------|----------|
 | > 900px | Full sidebar with expand/collapse toggle |
-| <= 900px | Sidebar auto-collapses to 56px icon-only, labels/badges hidden |
+| <= 900px | Sidebar auto-collapses to 56px icon-only, labels/badges hidden. Nav item interactive elements receive `aria-label="{Panel Label}"` and `title="{Panel Label}"` attributes for screen reader and mouse-hover accessibility. |
 | <= 700px | Stats strip becomes 2-col grid, two-col layout becomes single column, header wraps |
+
+### Icon-Only Sidebar Accessibility (<=900px)
+
+When the sidebar collapses to icon-only mode, labels and badge text are hidden via `opacity: 0`. To maintain accessibility:
+
+- Each nav item `<button>` or `<a>` element MUST have `aria-label="{Panel Label}"` (e.g., `aria-label="Support"`, `aria-label="Issues"`).
+- Each nav item MUST have a `title="{Panel Label}"` attribute for mouse-hover tooltips so sighted users can identify panels without expanding the sidebar.
+- The sidebar toggle button MUST have `aria-label="Expand sidebar"` when collapsed and `aria-label="Collapse sidebar"` when expanded (toggled via JS on state change).
+- Badge counts are supplementary information; when hidden in collapsed mode, the `aria-label` includes the count if non-zero: `aria-label="Support (8)"`.
+
+**Implementation:** The shell router JS updates `aria-label` attributes dynamically when toggling collapsed state. Labels are always present in the DOM (for `aria-label`) even when visually hidden.
 
 ### Reduced Motion
 
@@ -200,8 +219,8 @@ grid-template-columns: var(--sidebar-collapsed) 1fr /* collapsed: 56px 1fr */
 | Component | Location | Lines | Description |
 |-----------|----------|-------|-------------|
 | Header bar | `shell.html` | ~30 | Customer name (Instrument Serif 24px), meta date, audience toggle (internal/external) |
-| Sidebar | `shell.html` | ~80 | Toggle button (32x32px), nav items grouped by separator, footer with generation timestamp |
-| Nav item | `shell.html` | ~10 each | Icon (20x20px container, 18x18px SVG) + label (14px Outfit 500) + badge pill (10px JetBrains Mono 600) |
+| Sidebar | `shell.html` | ~80 | Toggle button (32x32px, `aria-label` toggled), nav items grouped by separator, footer with generation timestamp |
+| Nav item | `shell.html` | ~10 each | Icon (20x20px container, 18x18px SVG) + label (14px Outfit 600) + badge pill (11px JetBrains Mono 600). `aria-label` and `title` on interactive element for collapsed mode. |
 | Nav separator | `shell.html` | 1 | 1px `--border-subtle` with 8px horizontal margin |
 | Panel container | `shell.html` | ~5 | `#panel-{id}` div with `.panel` class, activated by router |
 | Command palette | `shell.html` | ~40 | Modal overlay, 520px search box with results list, keyboard-navigable |
@@ -211,18 +230,18 @@ grid-template-columns: var(--sidebar-collapsed) 1fr /* collapsed: 56px 1fr */
 | Component | Pattern | Used By |
 |-----------|---------|---------|
 | Stats strip | 4-col grid of stat cards (bg-elevated, border-subtle, radius, 20px padding) | Support, Overview, Usage |
-| Stat card | Value (28px/600) + label (10px mono uppercase) + optional sub-text (11px mono tertiary) | All panels with KPIs |
-| Section label | 10px JetBrains Mono, 500 weight, uppercase, 1.5px letter-spacing, text-tertiary, 16px margin-bottom | All panels |
+| Stat card | Value (28px/600) + label (11px mono 600 uppercase) + optional sub-text (11px mono 400 tertiary) | All panels with KPIs |
+| Section label | 11px JetBrains Mono, 600 weight, uppercase, 1.5px letter-spacing, text-tertiary, 16px margin-bottom | All panels |
 | Panel card | bg-elevated, 1px border-subtle, 6px radius, 24px padding | Charts, tables, grouped content |
 | Two-col grid | `grid-template-columns: 1fr 1fr; gap: 24px` (collapses to 1fr at 700px) | Support, Usage |
-| Data table | Mono headers (10px uppercase), body rows (13px), hover bg-hover, bottom border-subtle | Issues, Support, Actions |
-| Age badge | Pill shape (10px radius), mono 11px 500, color-coded (green/amber/red with dim bg + border) | Support tickets, Issues |
-| Priority badge | Pill shape, mono 10px 600, uppercase, color-coded by severity | Issues, Support |
-| Jira link | Mono 11px, blue color, no underline, underline on hover, 0.15s opacity transition | Issues, Support, Actions |
-| Concern label | Mono 11px, text-tertiary, bg-surface, pill shape | Support |
+| Data table | Mono headers (11px 600 uppercase), body rows (14px Outfit), hover bg-hover, bottom border-subtle | Issues, Support, Actions |
+| Age badge | Pill shape (10px radius), mono 11px 400, color-coded (green/amber/red with dim bg + border), padding 2px 8px | Support tickets, Issues |
+| Priority badge | Pill shape, mono 11px 600, uppercase, color-coded by severity, padding 2px 8px | Issues, Support |
+| Jira link | Mono 11px 400, blue color, no underline, underline on hover, 0.15s opacity transition | Issues, Support, Actions |
+| Concern label | Mono 11px 400, text-tertiary, bg-surface, pill shape | Support |
 | Filter bar | Horizontal flex, pill toggles + select dropdowns + search input + active filter badge | Issues |
 | Callout row | Left border 3px (severity-colored), bg-elevated, 12px 16px padding, count + text + action | Overview |
-| Placeholder panel | Centered flex column, 48px icon box (bg-surface, border-subtle, 12px radius), title (22px serif) + desc (14px, max-width 400px) | Empty panels |
+| Placeholder panel | Centered flex column, 48px icon box (bg-surface, border-subtle, 12px radius), title (24px serif) + desc (14px, max-width 400px) | Empty panels |
 
 ### Delight Components (Phase 1 in spec)
 
@@ -241,7 +260,7 @@ grid-template-columns: var(--sidebar-collapsed) 1fr /* collapsed: 56px 1fr */
 | Interaction | Behavior |
 |-------------|----------|
 | Click nav item | Hash changes to `#panel-id`, panel loads on demand (script tag inserted if not already), previous panel hidden, new panel shown with fade animation |
-| Click toggle button | Shell toggles `.collapsed` class, grid animates from 220px to 56px, labels/badges fade to opacity 0 |
+| Click toggle button | Shell toggles `.collapsed` class, grid animates from 220px to 56px, labels/badges fade to opacity 0, `aria-label` on toggle button updates ("Expand sidebar" / "Collapse sidebar"), nav item `aria-label` values updated to include badge counts |
 | Keyboard 1-6 | Jump to panel by order (Overview=1, Issues=2, Support=3, Usage=4, Actions=5, Slack=6) |
 | Keyboard Cmd+K | Open command palette overlay |
 | Panel with no data | Nav item not rendered (hidden from sidebar). Panel never loads. |
