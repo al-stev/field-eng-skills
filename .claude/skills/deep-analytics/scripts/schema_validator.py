@@ -72,6 +72,43 @@ PHASE3_DATA_CHECKS = {
     ),
 }
 
+PHASE4_SCHEMA_SPECS = {
+    "`wandb-production.analytics.fct_application_performance`": [
+        "account_id", "date_day", "application_performance_index",
+        "slow_charts", "slow_project_search", "slow_artifact_creating",
+        "slow_run_sidebar", "slow_workspace_settings",
+        "users_facing_errors_ct", "error_count",
+    ],
+    "`wandb-production.analytics.fct_onscreen_loader_latencies`": [
+        "account_id", "date_day", "latency_ms", "universal_user_id",
+    ],
+    "`wandb-production.analytics.agg_daily_team_members_slow_chart_loads`": [
+        "account_id", "date_day", "universal_user_id",
+        "slow_chart_loads", "total_chart_loads",
+    ],
+}
+
+PHASE4_DATA_CHECKS = {
+    "perf_index": (
+        "SELECT COUNT(*) AS cnt "
+        "FROM `wandb-production.analytics.fct_application_performance` "
+        "WHERE account_id = @account_id "
+        "AND date_day >= DATE_SUB(CURRENT_DATE(), INTERVAL 90 DAY) LIMIT 1"
+    ),
+    "latency_data": (
+        "SELECT COUNT(*) AS cnt "
+        "FROM `wandb-production.analytics.fct_onscreen_loader_latencies` "
+        "WHERE account_id = @account_id "
+        "AND date_day >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY) LIMIT 1"
+    ),
+    "slow_chart_data": (
+        "SELECT COUNT(*) AS cnt "
+        "FROM `wandb-production.analytics.agg_daily_team_members_slow_chart_loads` "
+        "WHERE account_id = @account_id "
+        "AND date_day >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY) LIMIT 1"
+    ),
+}
+
 
 def check_data_availability(
     client: bigquery.Client,
