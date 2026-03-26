@@ -113,12 +113,12 @@
 
 ### Performance
 
-- [ ] **PERF-01**: Performance index gauge chart (application_performance_index from fct_application_performance)
-- [ ] **PERF-02**: Per-feature slowness breakdown bar chart (slow_charts, slow_project_search, slow_artifact_creating, etc.)
-- [ ] **PERF-03**: Error metrics KPI cards (users_facing_errors_ct, error_count) with trend
-- [ ] **PERF-04**: Chart load latency distribution from fct_onscreen_loader_latencies
-- [ ] **PERF-05**: AI narrative with performance assessment and flagged areas of concern
-- [ ] **PERF-06**: Slow chart load user breakdown from agg_daily_team_members_slow_chart_loads
+- [x] **PERF-01**: Performance index gauge chart (application_performance_index from fct_application_performance)
+- [x] **PERF-02**: Per-feature slowness breakdown bar chart (slow_charts, slow_project_search, slow_artifact_creating, etc.)
+- [x] **PERF-03**: Error metrics KPI cards (users_facing_errors_ct, error_count) with trend
+- [x] **PERF-04**: Chart load latency distribution from fct_onscreen_loader_latencies
+- [x] **PERF-05**: AI narrative with performance assessment and flagged areas of concern
+- [x] **PERF-06**: Slow chart load user breakdown from agg_daily_team_members_slow_chart_loads
 
 ## v2 Requirements
 
@@ -222,12 +222,12 @@
 | CORR-06 | Phase 4 | Complete |
 | CORR-07 | Phase 4 | Complete |
 | CORR-08 | Phase 4 | Complete |
-| PERF-01 | Phase 4 | Pending |
-| PERF-02 | Phase 4 | Pending |
-| PERF-03 | Phase 4 | Pending |
-| PERF-04 | Phase 4 | Pending |
-| PERF-05 | Phase 4 | Pending |
-| PERF-06 | Phase 4 | Pending |
+| PERF-01 | Phase 4 | Complete |
+| PERF-02 | Phase 4 | Complete |
+| PERF-03 | Phase 4 | Complete |
+| PERF-04 | Phase 4 | Complete |
+| PERF-05 | Phase 4 | Complete |
+| PERF-06 | Phase 4 | Complete |
 
 **Coverage:**
 - v1 requirements: 82 total
