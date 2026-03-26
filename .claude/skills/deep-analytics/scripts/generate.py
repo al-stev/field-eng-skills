@@ -334,6 +334,59 @@ def _performance_handler(client, account_id, customer_name):
     )
 
 
+def _usage_correlation_handler(client, account_id, customer_name):
+    """Usage Correlation -- cross-account product co-occurrence with privacy controls."""
+    from queries import (cross_account_product_areas_query,
+                         cross_account_arr_breadth_query,
+                         product_areas_query, account_health_query)
+    from bq_client import run_query
+    from transforms.usage_correlation import UsageCorrelationTransform
+
+    # Cross-account queries: NO account_id filter, higher bytes limit (100GB)
+    cross_account_df = run_query(
+        client, cross_account_product_areas_query(),
+        maximum_bytes_billed=100_000_000_000
+    )
+
+    arr_data_df = run_query(
+        client, cross_account_arr_breadth_query(),
+        maximum_bytes_billed=100_000_000_000
+    )
+
+    # Single-account query: current account's product areas
+    current_areas_df = run_query(
+        client, product_areas_query(),
+        account_id=account_id, maximum_bytes_billed=50_000_000_000
+    )
+    current_account_areas = (
+        current_areas_df["product_area"].unique().tolist()
+        if not current_areas_df.empty else []
+    )
+
+    # Account health for expansion signals + deployment type
+    health_df = run_query(
+        client, account_health_query(),
+        account_id=account_id, maximum_bytes_billed=50_000_000_000
+    )
+    account_health = {}
+    deployment_type = "Unknown"
+    if not health_df.empty:
+        row = health_df.iloc[0]
+        account_health = row.to_dict()
+        deployment_type = str(row.get("deployment_type", "Unknown"))
+
+    transform = UsageCorrelationTransform()
+    return transform.transform(
+        cross_account=cross_account_df,
+        arr_data=arr_data_df,
+        current_account_areas=current_account_areas,
+        account_health=account_health,
+        customer_name=customer_name,
+        account_id=account_id,
+        deployment_type=deployment_type,
+    )
+
+
 PAGE_REGISTRY = {
     "user-journey": _user_journey_handler,
     "cohort-analysis": _cohort_analysis_handler,
@@ -341,7 +394,7 @@ PAGE_REGISTRY = {
     "feature-velocity": _feature_velocity_handler,
     "team-detection": _team_detection_handler,
     "risk-scoring": _risk_scoring_handler,
-    "usage-correlation": _placeholder_handler,
+    "usage-correlation": _usage_correlation_handler,
     "sdk-versions": _sdk_versions_handler,
     "performance": _performance_handler,
 }

@@ -2805,6 +2805,275 @@ function renderPerformance() {
   window.addEventListener('resize', function() { charts.forEach(function(ch) { ch.resize(); }); });
 }
 
+/* ── Usage Correlation: heatmap + scatter + privacy badge ── */
+
+function renderUsageCorrelation() {
+  var grid = document.getElementById('sparklineGrid');
+  grid.style.display = 'block';
+  var c = getThemeColors();
+  var charts = [];
+  var d = PAGE_DATA;
+
+  // ── 1. Privacy Badge (non-dismissible, first element) ──
+  var privacyBadge = document.createElement('div');
+  privacyBadge.style.cssText = 'background:rgba(248,113,113,0.10); border:1px solid rgba(248,113,113,0.22); border-radius:6px; padding:8px 16px; margin-bottom:16px; display:flex; align-items:center; gap:12px;';
+  privacyBadge.setAttribute('data-print', 'visible');
+  var badgeLabel = document.createElement('span');
+  badgeLabel.style.cssText = 'font-family:JetBrains Mono,monospace; font-size:11px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; color:' + c.red + '; white-space:nowrap;';
+  badgeLabel.textContent = 'SE-INTERNAL ONLY';
+  var badgeDesc = document.createElement('span');
+  badgeDesc.style.cssText = 'font-family:Outfit,sans-serif; font-size:14px; color:' + c.textSecondary + ';';
+  badgeDesc.textContent = 'Cross-account analysis uses anonymized, pre-aggregated data. Minimum 10-account cohort enforcement. Never share this page with customers.';
+  privacyBadge.appendChild(badgeLabel);
+  privacyBadge.appendChild(badgeDesc);
+  grid.appendChild(privacyBadge);
+
+  // ── 2. PRODUCT COMBINATION MATRIX (Heatmap) ──
+  var heatmapLabel = document.createElement('div');
+  heatmapLabel.style.cssText = 'font-family:JetBrains Mono,monospace; font-size:11px; font-weight:400; letter-spacing:1.5px; text-transform:uppercase; color:' + c.textTertiary + '; margin:24px 0 12px 0;';
+  heatmapLabel.textContent = 'PRODUCT COMBINATION MATRIX';
+  grid.appendChild(heatmapLabel);
+
+  var heatmapDiv = document.createElement('div');
+  heatmapDiv.style.cssText = 'width:100%; height:440px;';
+  grid.appendChild(heatmapDiv);
+
+  var cm = d.correlation_matrix || { product_areas: [], matrix: [] };
+  var areas = cm.product_areas || [];
+  var matrixData = cm.matrix || [];
+
+  // Build symmetric heatmap data from upper-triangle entries
+  var heatData = [];
+  matrixData.forEach(function(entry) {
+    var ri = entry[0], ci = entry[1], coOcc = entry[2], retPct = entry[3], cohort = entry[4];
+    heatData.push([ri, ci, retPct, coOcc, cohort]);
+    heatData.push([ci, ri, retPct, coOcc, cohort]);
+  });
+  // Diagonal: self (100%)
+  areas.forEach(function(a, i) { heatData.push([i, i, 100, 100, 0]); });
+
+  var heatChart = echarts.init(heatmapDiv, 'wandb');
+  heatChart.setOption({
+    tooltip: {
+      trigger: 'item',
+      formatter: function(p) {
+        var val = p.data;
+        if (val[0] === val[1]) return areas[val[0]] + ' (self)';
+        return areas[val[0]] + ' + ' + areas[val[1]] + ': ' + val[3] + '% of accounts using both have ' + val[2] + '% 6-month retention (n=' + val[4] + ' accounts)';
+      }
+    },
+    grid: { left: 140, right: 80, top: 40, bottom: 80 },
+    xAxis: {
+      type: 'category', data: areas, position: 'top',
+      axisLabel: { rotate: 45, fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: c.textSecondary, interval: 0 },
+      splitArea: { show: true, areaStyle: { color: ['transparent', 'rgba(255,255,255,0.02)'] } }
+    },
+    yAxis: {
+      type: 'category', data: areas, inverse: true,
+      axisLabel: { fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: c.textSecondary, interval: 0 }
+    },
+    visualMap: {
+      min: 0, max: 100, calculable: true, orient: 'horizontal', left: 'center', bottom: 0,
+      inRange: { color: [c.red, c.amber, c.green] },
+      textStyle: { color: c.textSecondary, fontSize: 11 },
+      text: ['High Retention', 'Low']
+    },
+    series: [{
+      type: 'heatmap', data: heatData,
+      label: { show: true, fontSize: 10, fontFamily: "'JetBrains Mono', monospace",
+        formatter: function(p) { return p.data[0] === p.data[1] ? '' : p.data[2] + '%'; }
+      },
+      emphasis: { itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.5)' } }
+    }],
+    toolbox: { feature: { saveAsImage: { title: 'Save', pixelRatio: 2, backgroundColor: c.bgElevated } }, right: 16, top: 8, iconStyle: { borderColor: c.textTertiary } }
+  });
+  charts.push(heatChart);
+
+  // ── 3. Side-by-side: ACCOUNT POSITIONING + PEER BENCHMARKING ──
+  var sideBySide1 = document.createElement('div');
+  sideBySide1.style.cssText = 'display:flex; gap:32px; flex-wrap:wrap; margin:24px 0 0 0;';
+  grid.appendChild(sideBySide1);
+
+  // Left: Account Positioning
+  var posDiv = document.createElement('div');
+  posDiv.style.cssText = 'flex:1; min-width:280px;';
+  var posLabel = document.createElement('div');
+  posLabel.style.cssText = 'font-family:JetBrains Mono,monospace; font-size:11px; font-weight:400; letter-spacing:1.5px; text-transform:uppercase; color:' + c.textTertiary + '; margin-bottom:12px;';
+  posLabel.textContent = 'ACCOUNT POSITIONING';
+  posDiv.appendChild(posLabel);
+
+  var ap = d.account_positioning || { active_areas: [], match_patterns: [] };
+  var posText = document.createElement('div');
+  posText.style.cssText = 'font-family:Outfit,sans-serif; font-size:14px; color:' + c.textSecondary + '; line-height:1.6;';
+  var posHtml = '<div style="margin-bottom:8px;"><strong style="color:' + c.textPrimary + ';">Active areas:</strong> ' + (ap.active_areas || []).join(', ') + ' (' + (ap.active_areas || []).length + ' of ' + (ap.total_areas || 0) + ')</div>';
+  (ap.match_patterns || []).forEach(function(mp) {
+    var icon = mp.match ? '<span style="color:' + c.green + ';">&#10003;</span>' : '<span style="color:' + c.amber + ';">&#9679;</span>';
+    posHtml += '<div style="margin:4px 0;">' + icon + ' ' + mp.combo + (mp.match ? ' — ' + mp.retention_boost + ' retention' : ' — missing ' + (mp.missing || '') + ' (' + mp.retention_boost + ' potential)') + '</div>';
+  });
+  posText.innerHTML = posHtml;
+  posDiv.appendChild(posText);
+  sideBySide1.appendChild(posDiv);
+
+  // Right: Peer Benchmarking (bar chart)
+  var peerDiv = document.createElement('div');
+  peerDiv.style.cssText = 'flex:1; min-width:300px;';
+  var peerLabel = document.createElement('div');
+  peerLabel.style.cssText = 'font-family:JetBrains Mono,monospace; font-size:11px; font-weight:400; letter-spacing:1.5px; text-transform:uppercase; color:' + c.textTertiary + '; margin-bottom:12px;';
+  peerLabel.textContent = 'PEER BENCHMARKING';
+  peerDiv.appendChild(peerLabel);
+
+  var pb = d.peer_benchmarking || { distribution: { labels: [], counts: [], current_bin: 0 }, account_tier: 'Unknown', breadth_percentile: 0, peer_count: 0 };
+  var peerChartDiv = document.createElement('div');
+  peerChartDiv.style.cssText = 'width:100%; height:300px;';
+  peerDiv.appendChild(peerChartDiv);
+
+  var dist = pb.distribution || { labels: [], counts: [], current_bin: 0 };
+  var barColors = dist.labels.map(function(_, i) { return i === dist.current_bin ? c.accent : c.textTertiary; });
+
+  var peerChart = echarts.init(peerChartDiv, 'wandb');
+  peerChart.setOption({
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    grid: { left: 60, right: 20, top: 20, bottom: 60 },
+    xAxis: {
+      type: 'category', data: dist.labels || [],
+      axisLabel: { fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: c.textSecondary }
+    },
+    yAxis: {
+      type: 'value', name: 'Accounts',
+      nameTextStyle: { color: c.textTertiary, fontSize: 11, fontFamily: "'JetBrains Mono', monospace" },
+      axisLabel: { fontSize: 11, color: c.textTertiary },
+      splitLine: { lineStyle: { color: c.borderSubtle } }
+    },
+    series: [{
+      type: 'bar', data: (dist.counts || []).map(function(v, i) {
+        return { value: v, itemStyle: { color: barColors[i], opacity: i === dist.current_bin ? 1.0 : 0.4 } };
+      }),
+      barWidth: '60%'
+    }]
+  });
+  charts.push(peerChart);
+
+  var peerContext = document.createElement('div');
+  peerContext.style.cssText = 'font-family:Outfit,sans-serif; font-size:14px; color:' + c.textSecondary + '; margin-top:8px; text-align:center;';
+  peerContext.innerHTML = 'This account is in the <strong style="color:' + c.accent + ';">P' + Math.round(pb.breadth_percentile) + '</strong> percentile for product breadth among ' + pb.account_tier + '-tier accounts.';
+  peerDiv.appendChild(peerContext);
+  sideBySide1.appendChild(peerDiv);
+
+  // ── 4. NEXT-BEST-ACTION RECOMMENDATIONS ──
+  var nbaLabel = document.createElement('div');
+  nbaLabel.style.cssText = 'font-family:JetBrains Mono,monospace; font-size:11px; font-weight:400; letter-spacing:1.5px; text-transform:uppercase; color:' + c.textTertiary + '; margin:24px 0 12px 0;';
+  nbaLabel.textContent = 'NEXT-BEST-ACTION RECOMMENDATIONS';
+  grid.appendChild(nbaLabel);
+
+  var nbaContainer = document.createElement('div');
+  nbaContainer.style.cssText = 'background:' + c.bgSurface + '; border-radius:6px; padding:16px;';
+  var nba = d.next_best_action || [];
+  if (nba.length === 0) {
+    nbaContainer.innerHTML = '<div style="font-family:Outfit,sans-serif; font-size:14px; color:' + c.textSecondary + ';">No expansion recommendations — this account already uses all correlated product areas.</div>';
+  } else {
+    var nbaHtml = '<ul style="margin:0; padding:0 0 0 8px; list-style:none;">';
+    nba.forEach(function(item) {
+      nbaHtml += '<li style="margin:8px 0; display:flex; align-items:flex-start; gap:8px;">';
+      nbaHtml += '<span style="background:rgba(96,165,250,0.10); border:1px solid rgba(96,165,250,0.22); border-radius:4px; padding:2px 8px; font-family:JetBrains Mono,monospace; font-size:11px; font-weight:600; color:' + c.blue + '; white-space:nowrap;">+' + item.retention_lift_pct + '%</span>';
+      nbaHtml += '<span style="font-family:Outfit,sans-serif; font-size:14px; color:' + c.textSecondary + ';">' + item.reasoning + '</span>';
+      nbaHtml += '</li>';
+    });
+    nbaHtml += '</ul>';
+    nbaContainer.innerHTML = nbaHtml;
+  }
+  grid.appendChild(nbaContainer);
+
+  // ── 5. Side-by-side: EXPANSION SIGNALS + ARR VS PRODUCT BREADTH ──
+  var sideBySide2 = document.createElement('div');
+  sideBySide2.style.cssText = 'display:flex; gap:32px; flex-wrap:wrap; margin:24px 0 0 0;';
+  grid.appendChild(sideBySide2);
+
+  // Left: Expansion Signals
+  var expDiv = document.createElement('div');
+  expDiv.style.cssText = 'flex:1; min-width:280px;';
+  var expLabel = document.createElement('div');
+  expLabel.style.cssText = 'font-family:JetBrains Mono,monospace; font-size:11px; font-weight:400; letter-spacing:1.5px; text-transform:uppercase; color:' + c.textTertiary + '; margin-bottom:12px;';
+  expLabel.textContent = 'EXPANSION SIGNALS';
+  expDiv.appendChild(expLabel);
+
+  var signals = d.expansion_signals || [];
+  if (signals.length === 0) {
+    var noSignals = document.createElement('div');
+    noSignals.style.cssText = 'font-family:Outfit,sans-serif; font-size:14px; color:' + c.textSecondary + '; padding:16px; background:' + c.bgSurface + '; border-radius:6px;';
+    noSignals.textContent = 'No expansion signals detected. Entitlement data may not be available for this account.';
+    expDiv.appendChild(noSignals);
+  } else {
+    signals.forEach(function(sig) {
+      var sigEl = document.createElement('div');
+      sigEl.style.cssText = 'margin:8px 0; display:flex; align-items:center; gap:8px;';
+      sigEl.innerHTML = '<span style="background:rgba(74,222,128,0.10); border:1px solid rgba(74,222,128,0.22); border-radius:4px; padding:2px 8px; font-family:JetBrains Mono,monospace; font-size:11px; font-weight:600; color:' + c.green + '; white-space:nowrap;">' + sig.usage_pct + '%</span>' +
+        '<span style="font-family:Outfit,sans-serif; font-size:14px; color:' + c.textSecondary + ';">' + sig.product_area + ' usage approaching contract limit (' + sig.allocation + '). Potential upsell opportunity.</span>';
+      expDiv.appendChild(sigEl);
+    });
+  }
+  sideBySide2.appendChild(expDiv);
+
+  // Right: ARR vs Product Breadth (scatter)
+  var scatterDiv = document.createElement('div');
+  scatterDiv.style.cssText = 'flex:1; min-width:320px;';
+  var scatterLabel = document.createElement('div');
+  scatterLabel.style.cssText = 'font-family:JetBrains Mono,monospace; font-size:11px; font-weight:400; letter-spacing:1.5px; text-transform:uppercase; color:' + c.textTertiary + '; margin-bottom:12px;';
+  scatterLabel.textContent = 'ARR VS PRODUCT BREADTH';
+  scatterDiv.appendChild(scatterLabel);
+
+  var scatterChartDiv = document.createElement('div');
+  scatterChartDiv.style.cssText = 'width:100%; height:400px;';
+  scatterDiv.appendChild(scatterChartDiv);
+
+  var arrScatter = d.arr_scatter || { current: { breadth: 0, arr: 0 }, peers: [] };
+  var peerData = (arrScatter.peers || []).map(function(p) { return [p.breadth, p.arr]; });
+  var currentData = [[arrScatter.current.breadth, arrScatter.current.arr]];
+  var customerName = d.customer || 'Current Account';
+
+  var scatterChart = echarts.init(scatterChartDiv, 'wandb');
+  scatterChart.setOption({
+    tooltip: {
+      trigger: 'item',
+      formatter: function(p) {
+        if (p.seriesIndex === 0) return 'Peer account: ' + p.data[0] + ' product areas, $' + Math.round(p.data[1] / 1000) + 'K ARR';
+        return customerName + ': ' + p.data[0] + ' product areas, $' + Math.round(p.data[1] / 1000) + 'K ARR';
+      }
+    },
+    grid: { left: 80, right: 40, top: 20, bottom: 60 },
+    xAxis: {
+      type: 'value', name: 'Product Breadth',
+      nameLocation: 'center', nameGap: 35,
+      nameTextStyle: { color: c.textTertiary, fontSize: 11, fontFamily: "'JetBrains Mono', monospace" },
+      axisLabel: { fontSize: 11, color: c.textTertiary },
+      splitLine: { lineStyle: { color: c.borderSubtle } }
+    },
+    yAxis: {
+      type: 'value', name: 'ARR ($)',
+      nameTextStyle: { color: c.textTertiary, fontSize: 11, fontFamily: "'JetBrains Mono', monospace" },
+      axisLabel: { fontSize: 11, color: c.textTertiary, formatter: function(v) { return '$' + Math.round(v / 1000) + 'K'; } },
+      splitLine: { lineStyle: { color: c.borderSubtle } }
+    },
+    series: [
+      {
+        type: 'scatter', name: 'Peers', data: peerData,
+        symbolSize: 6, itemStyle: { color: c.textTertiary, opacity: 0.4 }
+      },
+      {
+        type: 'scatter', name: customerName, data: currentData,
+        symbol: 'diamond', symbolSize: 12, itemStyle: { color: c.accent, opacity: 1.0 },
+        z: 10
+      }
+    ],
+    toolbox: { feature: { saveAsImage: { title: 'Save', pixelRatio: 2, backgroundColor: c.bgElevated } }, right: 16, top: 8, iconStyle: { borderColor: c.textTertiary } }
+  });
+  charts.push(scatterChart);
+
+  sideBySide2.appendChild(scatterDiv);
+
+  // ── 6. Unified resize handler ──
+  window.addEventListener('resize', function() { charts.forEach(function(ch) { ch.resize(); }); });
+}
+
 var PAGE_RENDERERS = {
   'feature-velocity': renderFeatureVelocityV4,
   'sdk-versions': renderSdkVersions,
@@ -2813,7 +3082,8 @@ var PAGE_RENDERERS = {
   'team-detection': renderTeamDetection,
   'cohort-analysis': renderCohortAnalysis,
   'risk-scoring': renderRiskScoring,
-  'performance': renderPerformance
+  'performance': renderPerformance,
+  'usage-correlation': renderUsageCorrelation
 };
 
 /* ════════════════════════════════════════════════════════
