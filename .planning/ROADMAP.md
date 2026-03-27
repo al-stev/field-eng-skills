@@ -16,6 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 2: High-Confidence Pages** - Four pages with proven data sources (User Journey, Engagement Decay, Feature Velocity, SDK Versions) built in parallel to validate the full generation pipeline
 - [ ] **Phase 3: Medium-Confidence Pages** - Three pages requiring schema validation before development (Cohort Analysis, Team Detection, Risk Scoring)
 - [ ] **Phase 4: Privacy-Sensitive and Exploratory Pages** - Cross-account correlation with privacy controls (Usage Correlation) and low-confidence data exploration (Performance Deep Dive)
+- [ ] **Phase 5: Dashboard V2 — Modular Folder-Based Architecture** - Replace the monolithic intelligence-dashboard.html with a folder-based dashboard (shell + panel JS files + data.js) that scales to 15-20+ panels with per-panel agent editing, Google Drive multi-user access, and prototype-quality visualizations
 
 ## Phase Details
 
@@ -86,7 +87,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4
+Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -94,3 +95,27 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 2. High-Confidence Pages | 0/TBD | Not started | - |
 | 3. Medium-Confidence Pages | 0/4 | Planning complete | - |
 | 4. Privacy-Sensitive and Exploratory Pages | 0/3 | Planning complete | - |
+| 5. Dashboard V2 — Modular Folder-Based Architecture | 0/6 | Planning complete | - |
+
+### Phase 5: Dashboard V2 — Modular Folder-Based Architecture
+**Goal**: Replace the monolithic 3700-line intelligence-dashboard.html with a modular, folder-based dashboard that scales to 15-20+ panels, supports Google Drive multi-user access, enables per-panel agent editing, and is delightful during cadence calls and QBR screenshares
+**Depends on**: Phase 4
+**Requirements**: DASH-01, DASH-02, DASH-03, DASH-04, DASH-05, DASH-06, DASH-07, DASH-08, DASH-09, DASH-10, DASH-11, DASH-12
+**Success Criteria** (what must be TRUE):
+  1. Running `/customer-snapshot CustomerName` produces a `customers/<name>/dashboard/` folder with `index.html` shell, `data.js`, panel JS files, and bundled lib/ — all working from file:// protocol with no server
+  2. Shell provides sidebar navigation (56px icon-only default, 220px expanded), URL hash routing (#overview, #issues, etc.), panel-on-demand loading, keyboard shortcuts (1-6 panel jump), and CSS crossfade transitions
+  3. Panel registry enforces a contract: every panel JS calls `PanelRegistry.register()` with `id`, `render()`, `getHeadlineStats()`, and `getAttentionItems()` — shell auto-discovers and renders panels from manifest
+  4. Support Tickets panel matches prototype quality: headline stats strip, monthly volume trend, concern treemap, age scatter plot with Jira links, submitter stacked bars with sparklines and heatmap — not basic bars
+  5. Actions, Usage, Slack, and Issues panels extracted from v1 monolith into individual JS files, each under 800 lines, rendering identically to v1 within the v2 shell
+  6. Overview panel aggregates `getHeadlineStats()` and `getAttentionItems()` from all panels, shows changes-since-last-generation diff, and agent-generated narrative insights
+  7. `compose.py` assembles templates + data into dashboard folder, only including panels that have data, writing `data.js` with dated history snapshots
+  8. Delight features: ambient tab indicators (customer name + stale count), contextual right-click (open in Jira/Slack), panel transitions
+**Plans**: 6 plans
+Plans:
+- [ ] 05-01-PLAN.md -- Infrastructure: shell.html, panel-registry.js, chart-helpers.js, panels.yaml, compose.py
+- [ ] 05-02-PLAN.md -- Support Tickets panel (new, from prototypes, 5 ECharts visualizations)
+- [ ] 05-03-PLAN.md -- Actions + Slack panel extraction from v1 monolith
+- [ ] 05-04-PLAN.md -- Usage panel extraction from v1 monolith (4 ECharts charts + health grid)
+- [ ] 05-05-PLAN.md -- Issues panel extraction from v1 monolith (filters, themes, analytics)
+- [ ] 05-06-PLAN.md -- Overview panel + delight features + final verification
+**UI hint**: yes

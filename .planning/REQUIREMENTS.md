@@ -120,6 +120,21 @@
 - [x] **PERF-05**: AI narrative with performance assessment and flagged areas of concern
 - [x] **PERF-06**: Slow chart load user breakdown from agg_daily_team_members_slow_chart_loads
 
+### Dashboard V2
+
+- [ ] **DASH-01**: Shell with sidebar navigation (56px collapsed/220px expanded), URL hash routing, keyboard shortcuts (1-6 panel jump, Cmd+K command palette), and on-demand panel loading via dynamic script tags
+- [ ] **DASH-02**: Panel registry contract — PanelRegistry.register() with id, render(), getHeadlineStats(), getAttentionItems() — shell auto-discovers and renders panels
+- [ ] **DASH-03**: Chart helpers shared library — ChartHelpers.createChart() with wandb theme, resizeAll(), tooltipConfig(), getColor() — centralizes ECharts setup
+- [ ] **DASH-04**: compose.py composition pipeline reading panels.yaml manifest, assembling shell + data.js + panel JS + lib into output dashboard folder
+- [ ] **DASH-05**: Support Tickets panel at prototype quality — 5 ECharts visualizations (volume trend, concern treemap, age scatter with Jira links, submitter stacked bars, submitter-concern heatmap)
+- [ ] **DASH-06**: Actions panel extracted from v1 monolith — task table with scope toggle, priority sorting, section grouping, overdue/stale flagging, Jira/Asana cross-links
+- [ ] **DASH-07**: Usage panel extracted from v1 monolith — 4 ECharts charts (seat utilization, product radar, Weave ingestion, tracked hours) + account health grid
+- [ ] **DASH-08**: Slack panel extracted from v1 monolith — sentiment score, hot threads with Slack links, internal risk signals
+- [ ] **DASH-09**: Issues panel extracted from v1 monolith — filter bar (status/type/theme/search), health summary, attention callouts, velocity chart, cadence metrics, themed collapsible issue table, Asana badge cross-links
+- [ ] **DASH-10**: Overview panel aggregating getHeadlineStats() and getAttentionItems() from all panels, changes-since-last-generation diff, agent-generated narrative insights
+- [ ] **DASH-11**: Delight features — panel crossfade transitions, ambient tab indicators (customer name + stale count), contextual right-click (Open in Jira, Copy key, Search Slack)
+- [ ] **DASH-12**: panels.yaml declarative manifest with groups, data_key for data-driven panel visibility, badge_key for nav counts, order for sidebar sort
+
 ## v2 Requirements
 
 (All differentiators promoted to v1)
@@ -228,12 +243,24 @@
 | PERF-04 | Phase 4 | Complete |
 | PERF-05 | Phase 4 | Complete |
 | PERF-06 | Phase 4 | Complete |
+| DASH-01 | Phase 5 | Pending |
+| DASH-02 | Phase 5 | Pending |
+| DASH-03 | Phase 5 | Pending |
+| DASH-04 | Phase 5 | Pending |
+| DASH-05 | Phase 5 | Pending |
+| DASH-06 | Phase 5 | Pending |
+| DASH-07 | Phase 5 | Pending |
+| DASH-08 | Phase 5 | Pending |
+| DASH-09 | Phase 5 | Pending |
+| DASH-10 | Phase 5 | Pending |
+| DASH-11 | Phase 5 | Pending |
+| DASH-12 | Phase 5 | Pending |
 
 **Coverage:**
-- v1 requirements: 82 total
-- Mapped to phases: 82
+- v1 requirements: 94 total
+- Mapped to phases: 94
 - Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-24*
-*Last updated: 2026-03-24 after roadmap creation*
+*Last updated: 2026-03-27 after Phase 5 planning*
