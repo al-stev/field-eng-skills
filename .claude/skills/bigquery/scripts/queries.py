@@ -585,6 +585,7 @@ def cohort_retention_query() -> str:
         JOIN {daily_usage} e
             ON u.universal_user_id = e.universal_user_id
         WHERE e.account_id = @account_id
+            AND e.date_day >= DATE_SUB(CURRENT_DATE(), INTERVAL 18 MONTH)
             AND e.event_count > 0
     )
     SELECT
@@ -636,18 +637,30 @@ def team_detection_query() -> str:
     """
     daily_usage = _ref("ext_daily_user_event_usage")
     return f"""
+    WITH mapped AS (
+        SELECT
+            COALESCE(org_name, 'Unknown') AS team_name,
+            universal_user_id,
+            date_day,
+            event_count,
+            is_part_of_team,
+            {PRODUCT_AREA_CASE} AS product_area
+        FROM {daily_usage}
+        WHERE account_id = @account_id
+            AND date_day >= DATE_SUB(CURRENT_DATE(), INTERVAL 12 MONTH)
+            AND event_count > 0
+    )
     SELECT
-        COALESCE(org_name, 'Unknown') AS team_name,
+        team_name,
+        product_area,
         COUNT(DISTINCT universal_user_id) AS member_count,
         SUM(event_count) AS total_events,
         MIN(date_day) AS first_active,
         MAX(date_day) AS last_active,
         COUNT(DISTINCT CASE WHEN is_part_of_team THEN universal_user_id END) AS users_with_team_flag
-    FROM {daily_usage}
-    WHERE account_id = @account_id
-        AND date_day >= DATE_SUB(CURRENT_DATE(), INTERVAL 12 MONTH)
-        AND event_count > 0
-    GROUP BY team_name
+    FROM mapped
+    WHERE product_area != 'Other'
+    GROUP BY team_name, product_area
     ORDER BY total_events DESC
     """
 

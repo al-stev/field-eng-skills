@@ -513,7 +513,12 @@ function buildNav() {
 function renderHeader() {
   document.getElementById('pageTitle').textContent = PAGE_DATA.customer;
   document.getElementById('generatedDate').textContent = 'Generated ' + PAGE_DATA.generated;
-  document.getElementById('dateRange').textContent = PAGE_DATA.period.start + ' \u2014 ' + PAGE_DATA.period.end;
+  var dr = document.getElementById('dateRange');
+  if (PAGE_DATA.period && PAGE_DATA.period.start && PAGE_DATA.period.end) {
+    dr.textContent = PAGE_DATA.period.start + ' \u2014 ' + PAGE_DATA.period.end;
+  } else {
+    dr.textContent = '';
+  }
 }
 
 function renderKPIs() {

@@ -70,6 +70,15 @@ Examples:
 - **W&B branding** -- Instrument Serif + Outfit + JetBrains Mono typography, gold accent
 - **Responsive** -- max-width 1160px, fluid spacing, single-column for screen-sharing
 
+## Dedicated Cloud Customers
+
+Dedicated cloud customers have a different BQ data model. See the bigquery skill's SKILL.md for full details (`Dedicated Cloud Data Model` section). Key points for deep analytics:
+
+- **Identity resolution**: `dim_users` returns NULLs. Use `intermediate_local_users` (JOIN on `local_user_id`) for real usernames and emails
+- **Team detection**: Entity/team names are hashed to numeric IDs (e.g., `1707861832` not `pythia`). Team structure is recoverable from `fct_local_runs` grouped by hashed entity_name + JOIN `intermediate_local_users`. Display teams as anonymous groupings with real member names.
+- **Detection**: Check `hosting_type` in `ext_daily_user_event_usage` — `local` = dedicated cloud or server, `cloud` = SaaS
+- **All other pages work** (cohort analysis, engagement decay, risk scoring, etc.) as long as identity resolution uses `intermediate_local_users` instead of `dim_users`
+
 ## Anti-Patterns
 
 - Chart.js or any non-ECharts charting library
