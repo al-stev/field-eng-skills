@@ -1,0 +1,48 @@
+groups:
+  - id: intelligence
+    label: Intelligence
+  - id: usage
+    label: Usage & Analytics
+  - id: activity
+    label: Activity & Comms
+
+panels:
+  - id: overview
+    group: intelligence
+    label: Overview
+    icon: grid
+    always_show: true
+    order: 1
+  - id: issues
+    group: intelligence
+    label: Issues
+    icon: alert-circle
+    data_key: issues
+    badge_key: issues.length
+    order: 2
+  - id: support
+    group: intelligence
+    label: Support
+    icon: headset
+    data_key: usage.support_tickets
+    badge_key: usage.support_tickets.total
+    order: 3
+  - id: usage
+    group: usage
+    label: Seats & Adoption
+    icon: trending-up
+    data_key: usage.seat_utilization
+    order: 4
+  - id: actions
+    group: activity
+    label: SE Actions
+    icon: check-square
+    data_key: actions
+    badge_key: actions.tasks.length
+    order: 5
+  - id: slack
+    group: activity
+    label: Slack
+    icon: message-circle
+    data_key: sentiment
+    order: 6
