@@ -1,48 +1,36 @@
 {
   "version": "1.0",
-  "timestamp": "2026-03-26T13:23:49.858Z",
-  "phase": "2",
-  "phase_name": "High-Confidence Pages",
-  "phase_dir": ".planning/phases/02-high-confidence-pages",
+  "timestamp": "2026-03-27T15:39:54.518Z",
+  "phase": "03",
+  "phase_name": "medium-confidence-pages",
+  "phase_dir": ".planning/phases/03-medium-confidence-pages",
   "plan": null,
   "task": null,
   "total_tasks": null,
-  "status": "complete",
+  "status": "paused",
   "completed_tasks": [
-    {"id": "phase-1", "name": "Foundation and Template System (all 4 plans)", "status": "done"},
-    {"id": "feature-velocity", "name": "Feature Velocity page — sparkline grid with momentum", "status": "done", "commit": "c2912d9"},
-    {"id": "sdk-versions", "name": "SDK Versions page — donut + stacked timeline + version table", "status": "done", "commit": "ce88aff"},
-    {"id": "engagement-decay", "name": "Engagement Decay page — per-user sparklines, licensed filter, status toggles", "status": "done", "commit": "ce88aff"},
-    {"id": "user-journey", "name": "User Journey page — Sankey from dim_users first_*_at fields", "status": "done", "commit": "5828608"}
+    {"id": "03-01", "name": "BQ queries + schema validation", "status": "done"},
+    {"id": "03-02", "name": "Cohort Analysis page", "status": "done"},
+    {"id": "03-03", "name": "Team Detection page", "status": "done"},
+    {"id": "03-04", "name": "Risk Scoring page", "status": "done"}
   ],
   "remaining_tasks": [
-    {"id": "phase-3", "name": "Medium-Confidence Pages (Cohort, Team, Risk)", "status": "in_progress_other_session"},
-    {"id": "phase-4", "name": "Exploratory Pages (Usage Correlation, Performance)", "status": "not_started"}
+    {"id": "iteration-1", "name": "Fix team detection for dedicated cloud (fct_local_runs query)", "status": "not_started"},
+    {"id": "iteration-2", "name": "Improve cohort analysis narrative", "status": "not_started"},
+    {"id": "iteration-3", "name": "Expand risk scoring support ticket detail", "status": "not_started"},
+    {"id": "iteration-4", "name": "Update identity_resolution_cte for dedicated cloud", "status": "not_started"}
   ],
-  "blockers": [],
-  "human_actions_pending": [
-    {"action": "Investigate Isomorphic Labs collaboration cliff (Jan 22 2026)", "context": "team_or_profile_viewed events dropped from 32 users to 2 overnight — customer-specific, not platform-wide", "blocking": false}
+  "blockers": [
+    {"description": "Team detection needs fct_local_runs + intermediate_local_users rewrite for dedicated cloud", "type": "technical"},
+    {"description": "Entity/team names hashed in BQ for dedicated cloud", "type": "external", "workaround": "Show anonymous groupings with real member names"}
   ],
+  "human_actions_pending": [],
   "decisions": [
-    {"decision": "Separate pages per direction (not tabs in existing reports)", "rationale": "Enables parallel prototyping, each independently deployable", "phase": "project"},
-    {"decision": "All 9 directions + all differentiators in v1 scope", "rationale": "User wants full build, 82 requirements total", "phase": "project"},
-    {"decision": "V4 sparkline design: gold bars + event count labels above + user count below in green", "rationale": "Iterated through 4 options — lines were misleading, dots were messy, numbers are cleanest", "phase": "2"},
-    {"decision": "Filter event_count > 0 in product_areas_query", "rationale": "Ghost users appeared with null events but non-null user counts", "phase": "2"},
-    {"decision": "Weave suppression via account_health_query weave_customer flag", "rationale": "Non-Weave customers showed Weave data from trials", "phase": "2"},
-    {"decision": "Cliff detection in AI narrative", "rationale": "Isomorphic Labs collaboration cliff showed need to distinguish instrumentation changes from behavior", "phase": "2"},
-    {"decision": "Always use real data for prototyping, never fake data", "rationale": "User feedback — fake data is useless for validating visualizations", "phase": "project"},
-    {"decision": "Show deployment type and data provenance on pages", "rationale": "Server deployment customers have small SaaS footprints that aren't representative", "phase": "project"},
-    {"decision": "SDK versions query: NULLIF for N/A, SPLIT for comma-separated local_version", "rationale": "Server deployments have N/A cli_version and comma-separated local_version", "phase": "2"},
-    {"decision": "Engagement decay: licensed filter defaults ON using SFDC contracted_seats", "rationale": "238 tracked users vs ~183 licensed — SE wants to focus on licensed users by default", "phase": "2"},
-    {"decision": "Engagement decay: hot-first sort, no user cap", "rationale": "Cold-first with 50 cap hid all hot/warm/cooling users", "phase": "2"},
-    {"decision": "Identity resolution: prefer username > email local-part > user-ID fallback", "rationale": "Some server deployment users have email but no username in dim_users", "phase": "2"},
-    {"decision": "User Journey: auto-suppress empty stages (license for server, weave for non-weave)", "rationale": "Empty stages add noise without information", "phase": "2"}
+    {"decision": "Dedicated cloud entity names intentionally hashed in BQ", "rationale": "Privacy feature - confirmed across 30+ tables", "phase": "03"},
+    {"decision": "intermediate_local_users for dedicated cloud identity resolution", "rationale": "dim_users returns NULLs", "phase": "03"},
+    {"decision": "Team structure recoverable via fct_local_runs grouped by hashed entity_name", "rationale": "20+ entities visible with real member names", "phase": "03"}
   ],
-  "uncommitted_files": [
-    ".planning/STATE.md",
-    ".planning/config.json",
-    "templates/customers.yaml"
-  ],
-  "next_action": "Phase 3 is being built in a parallel session. Phase 4 (Usage Correlation + Performance) needs ui-spec then plan before execution. Start with /gsd:ui-phase for Phase 4, then /gsd:plan-phase.",
-  "context_notes": "Phase 2 was built without formal GSD plans — we iterated directly against real BQ data after user pushed back on overly formal phasing. The pattern is well-established: query in queries.py -> transform class -> handler in generate.py -> renderer in base-template.html -> PAGE_RENDERERS entry. V1-V3 dead renderer code for feature velocity still in template. Phase 3 (Cohort, Team, Risk) being built in parallel session. Phase 4 tables (fct_application_performance, usage correlation cross-account) have LOW data confidence — may need descoping."
+  "uncommitted_files": [],
+  "next_action": "Fix team detection query for dedicated cloud, then iterate on page design",
+  "context_notes": "Phase 3 execution complete but pages need design iteration based on user feedback. Dedicated cloud data model documented in SKILL.md files."
 }
