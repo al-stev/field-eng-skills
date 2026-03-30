@@ -1,36 +1,32 @@
 {
   "version": "1.0",
-  "timestamp": "2026-03-27T15:39:54.518Z",
+  "timestamp": "2026-03-30T15:29:39.289Z",
   "phase": "03",
   "phase_name": "medium-confidence-pages",
   "phase_dir": ".planning/phases/03-medium-confidence-pages",
   "plan": null,
   "task": null,
   "total_tasks": null,
-  "status": "paused",
+  "status": "iteration_complete",
   "completed_tasks": [
-    {"id": "03-01", "name": "BQ queries + schema validation", "status": "done"},
-    {"id": "03-02", "name": "Cohort Analysis page", "status": "done"},
-    {"id": "03-03", "name": "Team Detection page", "status": "done"},
-    {"id": "03-04", "name": "Risk Scoring page", "status": "done"}
+    {"id": "iter-1", "name": "Identity resolution for dedicated cloud (intermediate_local_users)", "status": "done", "commit": "96ef4bb"},
+    {"id": "iter-2", "name": "Team detection via fct_local_runs for dedicated cloud", "status": "done", "commit": "d11a7dc"},
+    {"id": "iter-2b", "name": "TIMESTAMP_SUB fix for fct_local_runs query", "status": "done", "commit": "3289c03"},
+    {"id": "iter-2c", "name": "Member names visible in team table for dedicated cloud", "status": "done", "commit": "ce18edc"},
+    {"id": "iter-3", "name": "Cohort narrative quality improvements", "status": "done", "commit": "a849dee"},
+    {"id": "iter-4", "name": "Risk scoring actionable recommendations", "status": "done", "commit": "a849dee"}
   ],
-  "remaining_tasks": [
-    {"id": "iteration-1", "name": "Fix team detection for dedicated cloud (fct_local_runs query)", "status": "not_started"},
-    {"id": "iteration-2", "name": "Improve cohort analysis narrative", "status": "not_started"},
-    {"id": "iteration-3", "name": "Expand risk scoring support ticket detail", "status": "not_started"},
-    {"id": "iteration-4", "name": "Update identity_resolution_cte for dedicated cloud", "status": "not_started"}
-  ],
-  "blockers": [
-    {"description": "Team detection needs fct_local_runs + intermediate_local_users rewrite for dedicated cloud", "type": "technical"},
-    {"description": "Entity/team names hashed in BQ for dedicated cloud", "type": "external", "workaround": "Show anonymous groupings with real member names"}
-  ],
+  "remaining_tasks": [],
+  "blockers": [],
   "human_actions_pending": [],
   "decisions": [
-    {"decision": "Dedicated cloud entity names intentionally hashed in BQ", "rationale": "Privacy feature - confirmed across 30+ tables", "phase": "03"},
-    {"decision": "intermediate_local_users for dedicated cloud identity resolution", "rationale": "dim_users returns NULLs", "phase": "03"},
-    {"decision": "Team structure recoverable via fct_local_runs grouped by hashed entity_name", "rationale": "20+ entities visible with real member names", "phase": "03"}
+    {"decision": "identity_resolution_cte accepts deployment_type param, routes to intermediate_local_users for dedicated-cloud/server", "rationale": "dim_users returns NULLs for dedicated cloud", "phase": "03"},
+    {"decision": "team_detection_query_dedicated uses fct_local_runs grouped by entity_name", "rationale": "org_name only shows 2 hashed orgs; fct_local_runs shows 26 real entity groupings", "phase": "03"},
+    {"decision": "team_members_query_dedicated returns per-team member lists for SE team identification", "rationale": "Entity names are hashed; SEs identify teams by their members", "phase": "03"},
+    {"decision": "Cohort narrative skips Experiments insight, adds retention trend comparison", "rationale": "Experiments is core product — everyone starts there, not insightful", "phase": "03"},
+    {"decision": "Risk recommendations are concrete SE actions not generic advice", "rationale": "Previous narrative raised questions without answering them", "phase": "03"}
   ],
   "uncommitted_files": [],
-  "next_action": "Fix team detection query for dedicated cloud, then iterate on page design",
-  "context_notes": "Phase 3 execution complete but pages need design iteration based on user feedback. Dedicated cloud data model documented in SKILL.md files."
+  "next_action": "Phase 3 iteration complete. Phase 5 plans 01-04 already done in parallel session. Resume Phase 5 plans 05-06 via /gsd:execute-phase 5",
+  "context_notes": "All 4 Phase 3 iteration items completed and validated against live Isomorphic Labs data. 274 tests passing. Phase 5 (Dashboard V2) is being executed in a separate session — plans 01-04 already committed."
 }
