@@ -726,7 +726,7 @@ def team_detection_query_dedicated() -> str:
             MAX(DATE(r.created_at)) AS last_active
         FROM {fct_runs} r
         WHERE r.account_id = @account_id
-            AND r.created_at >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 12 MONTH)
+            AND r.created_at >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 365 DAY)
         GROUP BY team_name, r.local_user_id
     ),
     with_names AS (
