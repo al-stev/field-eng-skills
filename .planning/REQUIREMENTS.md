@@ -126,7 +126,7 @@
 - [x] **DASH-02**: Panel registry contract — PanelRegistry.register() with id, render(), getHeadlineStats(), getAttentionItems() — shell auto-discovers and renders panels
 - [x] **DASH-03**: Chart helpers shared library — ChartHelpers.createChart() with wandb theme, resizeAll(), tooltipConfig(), getColor() — centralizes ECharts setup
 - [x] **DASH-04**: compose.py composition pipeline reading panels.yaml manifest, assembling shell + data.js + panel JS + lib into output dashboard folder
-- [ ] **DASH-05**: Support Tickets panel at prototype quality — 5 ECharts visualizations (volume trend, concern treemap, age scatter with Jira links, submitter stacked bars, submitter-concern heatmap)
+- [x] **DASH-05**: Support Tickets panel at prototype quality — 5 ECharts visualizations (volume trend, concern treemap, age scatter with Jira links, submitter stacked bars, submitter-concern heatmap)
 - [x] **DASH-06**: Actions panel extracted from v1 monolith — task table with scope toggle, priority sorting, section grouping, overdue/stale flagging, Jira/Asana cross-links
 - [x] **DASH-07**: Usage panel extracted from v1 monolith — 4 ECharts charts (seat utilization, product radar, Weave ingestion, tracked hours) + account health grid
 - [x] **DASH-08**: Slack panel extracted from v1 monolith — sentiment score, hot threads with Slack links, internal risk signals
@@ -247,7 +247,7 @@
 | DASH-02 | Phase 5 | Complete |
 | DASH-03 | Phase 5 | Complete |
 | DASH-04 | Phase 5 | Complete |
-| DASH-05 | Phase 5 | Pending |
+| DASH-05 | Phase 5 | Complete |
 | DASH-06 | Phase 5 | Complete |
 | DASH-07 | Phase 5 | Complete |
 | DASH-08 | Phase 5 | Complete |
