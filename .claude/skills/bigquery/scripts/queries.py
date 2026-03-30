@@ -49,23 +49,39 @@ PRODUCT_AREA_CASE = """CASE
     END"""
 
 
-def identity_resolution_cte(table_alias: str = "src") -> str:
+def identity_resolution_cte(table_alias: str = "src", deployment_type: str = "cloud") -> str:
     """
-    Returns a SQL CTE that resolves user identity for server deployments.
+    Returns a SQL CTE that resolves user identity across deployment types.
 
-    Server deployments do not populate username/email in ext_daily_user_event_usage.
-    This CTE LEFT JOINs dim_users to resolve local_username and local_user_email.
+    SaaS (cloud) deployments use dim_users (JOIN on universal_user_id).
+    Dedicated cloud and server deployments use intermediate_local_users
+    (JOIN on local_user_id) because dim_users returns NULLs for these.
 
     The source query must have columns: universal_user_id, username, email.
+    For dedicated-cloud/server, it must also have local_user_id.
     The enclosing query must have @account_id parameter bound.
 
     Args:
-        table_alias: Alias for the source table/CTE that has universal_user_id,
-                     username, and email columns.
+        table_alias: Alias for the source table/CTE.
+        deployment_type: One of 'cloud', 'dedicated-cloud', 'server'.
+                         Defaults to 'cloud' for backwards compatibility.
 
     Returns:
         SQL string for a CTE named 'resolved_users' with columns:
         universal_user_id, resolved_username, resolved_email
+    """
+    if deployment_type in ("dedicated-cloud", "server"):
+        local_users = _ref("intermediate_local_users")
+        return f"""
+    resolved_users AS (
+        SELECT
+            {table_alias}.universal_user_id,
+            COALESCE({table_alias}.username, lu.local_username) AS resolved_username,
+            COALESCE({table_alias}.email, lu.local_user_email) AS resolved_email
+        FROM {table_alias}
+        LEFT JOIN {local_users} lu
+            ON {table_alias}.local_user_id = lu.local_user_id
+    )
     """
     dim_users = _ref("dim_users")
     return f"""
@@ -242,20 +258,23 @@ def product_areas_query() -> str:
     """
 
 
-def power_users_query() -> str:
+def power_users_query(deployment_type: str = "cloud") -> str:
     """
     Top power users by event count with product area breakdown.
 
     Returns top 20 users with their most-used product areas.
-    Joins dim_users to resolve local/server user identities (username, email)
-    that are NULL in ext_daily_user_event_usage for server deployments.
+    Joins dim_users (SaaS) or intermediate_local_users (dedicated cloud/server)
+    to resolve user identities that are NULL in ext_daily_user_event_usage.
+
+    Args:
+        deployment_type: 'cloud', 'dedicated-cloud', or 'server'.
     """
     daily_usage = _ref("ext_daily_user_event_usage")
-    dim_users = _ref("dim_users")
     return f"""
     WITH activity AS (
         SELECT
             universal_user_id,
+            local_user_id,
             username,
             email,
             SUM(event_count) AS total_events,
@@ -279,23 +298,23 @@ def power_users_query() -> str:
         WHERE account_id = @account_id
             AND date_day >= DATE_SUB(CURRENT_DATE(), INTERVAL 6 MONTH)
             AND event_count > 0
-        GROUP BY universal_user_id, username, email
+        GROUP BY universal_user_id, local_user_id, username, email
         ORDER BY total_events DESC
         LIMIT 20
-    )
+    ),
+    {identity_resolution_cte(table_alias="activity", deployment_type=deployment_type)}
     SELECT
-        a.universal_user_id,
-        COALESCE(a.username, du.local_username) AS username,
-        COALESCE(a.email, du.local_user_email) AS email,
-        a.total_events,
-        a.last_activity,
-        a.active_weeks,
-        a.product_areas
-    FROM activity a
-    LEFT JOIN {dim_users} du
-        ON a.universal_user_id = du.universal_user_id
-        AND du.account_id = @account_id
-    ORDER BY a.total_events DESC
+        activity.universal_user_id,
+        ru.resolved_username AS username,
+        ru.resolved_email AS email,
+        activity.total_events,
+        activity.last_activity,
+        activity.active_weeks,
+        activity.product_areas
+    FROM activity
+    LEFT JOIN resolved_users ru
+        ON activity.universal_user_id = ru.universal_user_id
+    ORDER BY activity.total_events DESC
     """
 
 
@@ -478,14 +497,39 @@ def sdk_versions_query() -> str:
     """
 
 
-def user_journey_query() -> str:
+def user_journey_query(deployment_type: str = "cloud") -> str:
     """
     Per-user adoption stage data from dim_users first_*_at fields.
 
     Returns one row per user with timestamps for each adoption milestone.
     Used to build Sankey diagrams showing the adoption funnel.
+
+    dim_users is always the source for first_*_at milestone timestamps.
+    For dedicated cloud/server, username/email come from intermediate_local_users
+    since dim_users returns NULLs for those fields.
+
+    Args:
+        deployment_type: 'cloud', 'dedicated-cloud', or 'server'.
     """
     dim_users = _ref("dim_users")
+    if deployment_type in ("dedicated-cloud", "server"):
+        local_users = _ref("intermediate_local_users")
+        return f"""
+    SELECT
+        du.universal_user_id,
+        COALESCE(du.local_username, lu.local_username) AS local_username,
+        COALESCE(du.local_user_email, lu.local_user_email) AS local_user_email,
+        du.first_telemetry_at,
+        du.first_run_at,
+        du.first_sweep_at,
+        du.first_table_created_at,
+        du.first_weave_call_at,
+        du.first_license_created_at
+    FROM {dim_users} du
+    LEFT JOIN {local_users} lu
+        ON du.local_user_id = lu.local_user_id
+    WHERE du.account_id = @account_id
+    """
     return f"""
     SELECT
         universal_user_id,
@@ -502,19 +546,22 @@ def user_journey_query() -> str:
     """
 
 
-def engagement_decay_query() -> str:
+def engagement_decay_query(deployment_type: str = "cloud") -> str:
     """
     Per-user weekly activity for engagement decay analysis.
 
     Returns weekly event counts per user over 12 months, with identity resolution
-    for server deployments. Used to detect activity decline (cooling/cold users).
+    for all deployment types. Used to detect activity decline (cooling/cold users).
+
+    Args:
+        deployment_type: 'cloud', 'dedicated-cloud', or 'server'.
     """
     daily_usage = _ref("ext_daily_user_event_usage")
-    dim_users = _ref("dim_users")
     return f"""
     WITH user_weekly AS (
         SELECT
             universal_user_id,
+            local_user_id,
             username,
             email,
             DATE_TRUNC(date_day, WEEK(MONDAY)) AS week,
@@ -523,30 +570,20 @@ def engagement_decay_query() -> str:
         WHERE account_id = @account_id
             AND date_day >= DATE_SUB(CURRENT_DATE(), INTERVAL 12 MONTH)
             AND event_count > 0
-        GROUP BY universal_user_id, username, email, week
+        GROUP BY universal_user_id, local_user_id, username, email, week
     ),
-    -- Resolve identity for server deployments
-    resolved AS (
-        SELECT
-            uw.universal_user_id,
-            COALESCE(uw.username, du.local_username) AS username,
-            COALESCE(uw.email, du.local_user_email) AS email,
-            uw.week,
-            uw.events
-        FROM user_weekly uw
-        LEFT JOIN {dim_users} du
-            ON uw.universal_user_id = du.universal_user_id
-            AND du.account_id = @account_id
-    )
+    {identity_resolution_cte(table_alias="user_weekly", deployment_type=deployment_type)}
     SELECT
-        universal_user_id,
-        MAX(username) AS username,
-        MAX(email) AS email,
-        week,
-        SUM(events) AS events
-    FROM resolved
-    GROUP BY universal_user_id, week
-    ORDER BY universal_user_id, week
+        user_weekly.universal_user_id,
+        MAX(ru.resolved_username) AS username,
+        MAX(ru.resolved_email) AS email,
+        user_weekly.week,
+        SUM(user_weekly.events) AS events
+    FROM user_weekly
+    LEFT JOIN resolved_users ru
+        ON user_weekly.universal_user_id = ru.universal_user_id
+    GROUP BY user_weekly.universal_user_id, user_weekly.week
+    ORDER BY user_weekly.universal_user_id, user_weekly.week
     """
 
 
@@ -665,24 +702,23 @@ def team_detection_query() -> str:
     """
 
 
-def team_champions_query() -> str:
+def team_champions_query(deployment_type: str = "cloud") -> str:
     """
-    Most active user per team with identity resolution for server deployments.
+    Most active user per team with identity resolution for all deployment types.
 
     Returns one row per team: the user with the highest total event count.
     Uses ROW_NUMBER() window function to pick the top user per org_name.
-    Joins dim_users for server deployment identity resolution.
 
-    Returns:
-        SQL string with @account_id parameter placeholder
+    Args:
+        deployment_type: 'cloud', 'dedicated-cloud', or 'server'.
     """
     daily_usage = _ref("ext_daily_user_event_usage")
-    dim_users = _ref("dim_users")
     return f"""
     WITH team_activity AS (
         SELECT
             org_name,
             universal_user_id,
+            local_user_id,
             username,
             email,
             SUM(event_count) AS total_events,
@@ -692,32 +728,33 @@ def team_champions_query() -> str:
             AND date_day >= DATE_SUB(CURRENT_DATE(), INTERVAL 12 MONTH)
             AND org_name IS NOT NULL
             AND event_count > 0
-        GROUP BY org_name, universal_user_id, username, email
+        GROUP BY org_name, universal_user_id, local_user_id, username, email
     ),
     ranked AS (
         SELECT
             org_name AS team_name,
             universal_user_id,
+            local_user_id,
             username,
             email,
             total_events,
             last_active,
             ROW_NUMBER() OVER (PARTITION BY org_name ORDER BY total_events DESC) AS rn
         FROM team_activity
-    )
+    ),
+    {identity_resolution_cte(table_alias="ranked", deployment_type=deployment_type)}
     SELECT
-        r.team_name,
-        r.universal_user_id,
-        COALESCE(r.username, du.local_username) AS username,
-        COALESCE(r.email, du.local_user_email) AS email,
-        r.total_events,
-        r.last_active
-    FROM ranked r
-    LEFT JOIN {dim_users} du
-        ON r.universal_user_id = du.universal_user_id
-        AND du.account_id = @account_id
-    WHERE r.rn = 1
-    ORDER BY r.total_events DESC
+        ranked.team_name,
+        ranked.universal_user_id,
+        ru.resolved_username AS username,
+        ru.resolved_email AS email,
+        ranked.total_events,
+        ranked.last_active
+    FROM ranked
+    LEFT JOIN resolved_users ru
+        ON ranked.universal_user_id = ru.universal_user_id
+    WHERE ranked.rn = 1
+    ORDER BY ranked.total_events DESC
     """
 
 
@@ -861,9 +898,41 @@ def latency_distribution_query() -> str:
     """
 
 
-def slow_chart_users_query() -> str:
-    """Slow chart load breakdown per user from agg_daily_team_members_slow_chart_loads."""
+def slow_chart_users_query(deployment_type: str = "cloud") -> str:
+    """Slow chart load breakdown per user from agg_daily_team_members_slow_chart_loads.
+
+    Args:
+        deployment_type: 'cloud', 'dedicated-cloud', or 'server'.
+    """
     slow = _ref("agg_daily_team_members_slow_chart_loads")
+    if deployment_type in ("dedicated-cloud", "server"):
+        local_users = _ref("intermediate_local_users")
+        return f"""
+    WITH user_slow AS (
+        SELECT
+            universal_user_id,
+            local_user_id,
+            SUM(slow_chart_loads) AS slow_loads,
+            SUM(total_chart_loads) AS total_loads,
+            MAX(date_day) AS last_seen
+        FROM {slow}
+        WHERE account_id = @account_id
+            AND date_day >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)
+        GROUP BY universal_user_id, local_user_id
+    )
+    SELECT
+        us.universal_user_id,
+        COALESCE(lu.local_username, 'unknown') AS username,
+        us.slow_loads,
+        us.total_loads,
+        SAFE_DIVIDE(us.slow_loads, us.total_loads) * 100 AS slow_pct,
+        us.last_seen
+    FROM user_slow us
+    LEFT JOIN {local_users} lu
+        ON us.local_user_id = lu.local_user_id
+    WHERE us.total_loads > 0
+    ORDER BY slow_pct DESC
+    """
     dim_users = _ref("dim_users")
     return f"""
     WITH user_slow AS (

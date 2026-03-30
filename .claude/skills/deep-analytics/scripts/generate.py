@@ -74,17 +74,34 @@ def _feature_velocity_handler(client, account_id, customer_name):
     return transform.transform(product_areas=df, customer_name=customer_name, weave_customer=weave_customer)
 
 
+def _get_deployment_type(client, account_id):
+    """Extract deployment type from account_health_query. Returns (health_df, deployment_type)."""
+    from queries import account_health_query
+    from bq_client import run_query
+
+    health_df = run_query(client, account_health_query(),
+                          account_id=account_id, maximum_bytes_billed=50_000_000_000)
+    deployment_type = "cloud"
+    if not health_df.empty and "deployment_type" in health_df.columns:
+        raw = str(health_df.iloc[0].get("deployment_type", ""))
+        if "dedicated" in raw.lower():
+            deployment_type = "dedicated-cloud"
+        elif raw.lower() in ("server", "local"):
+            deployment_type = "server"
+    return health_df, deployment_type
+
+
 def _user_journey_handler(client, account_id, customer_name):
     """User Journey — adoption funnel Sankey from dim_users first_*_at fields."""
-    from queries import user_journey_query, account_health_query
+    from queries import user_journey_query
     from bq_client import run_query
     from transforms.user_journey import UserJourneyTransform
 
-    sql = user_journey_query()
+    health_df, deployment_type = _get_deployment_type(client, account_id)
+
+    sql = user_journey_query(deployment_type=deployment_type)
     df = run_query(client, sql, account_id=account_id, maximum_bytes_billed=100_000_000_000)
 
-    # Check Weave status
-    health_df = run_query(client, account_health_query(), account_id=account_id, maximum_bytes_billed=50_000_000_000)
     weave_customer = False
     if not health_df.empty and "weave_customer" in health_df.columns:
         weave_customer = bool(health_df.iloc[0].get("weave_customer", False))
@@ -95,15 +112,15 @@ def _user_journey_handler(client, account_id, customer_name):
 
 def _engagement_decay_handler(client, account_id, customer_name):
     """Engagement Decay — per-user activity decline detection."""
-    from queries import engagement_decay_query, account_health_query
+    from queries import engagement_decay_query
     from bq_client import run_query
     from transforms.engagement_decay import EngagementDecayTransform
 
-    sql = engagement_decay_query()
+    health_df, deployment_type = _get_deployment_type(client, account_id)
+
+    sql = engagement_decay_query(deployment_type=deployment_type)
     df = run_query(client, sql, account_id=account_id, maximum_bytes_billed=50_000_000_000)
 
-    # Get contracted seats for licensed-user filtering
-    health_df = run_query(client, account_health_query(), account_id=account_id, maximum_bytes_billed=50_000_000_000)
     contracted_seats = None
     if not health_df.empty:
         contracted_seats = health_df.iloc[0].get("total_contracted_seats")
@@ -129,10 +146,12 @@ def _sdk_versions_handler(client, account_id, customer_name):
 
 def _team_detection_handler(client, account_id, customer_name):
     """Team Detection -- organizational structure from org_name fields."""
-    from queries import team_detection_query, team_champions_query, account_health_query
+    from queries import team_detection_query, team_champions_query
     from bq_client import run_query
     from transforms.team_detection import TeamDetectionTransform
     from schema_validator import check_data_availability, PHASE3_DATA_CHECKS
+
+    health_df, deployment_type = _get_deployment_type(client, account_id)
 
     # Check team data availability before running expensive queries
     avail = check_data_availability(client, account_id, {
@@ -147,22 +166,18 @@ def _team_detection_handler(client, account_id, customer_name):
     champions_df = None
     if avail.get("team_org_names", {}).get("available", False):
         try:
-            champions_df = run_query(client, team_champions_query(),
+            champions_df = run_query(client, team_champions_query(deployment_type=deployment_type),
                                      account_id=account_id, maximum_bytes_billed=50_000_000_000)
         except Exception:
             pass
 
-    # Get deployment type for data provenance
-    health_df = run_query(client, account_health_query(),
-                          account_id=account_id, maximum_bytes_billed=50_000_000_000)
-    deployment_type = "Unknown"
-    if not health_df.empty and "deployment_type" in health_df.columns:
-        deployment_type = str(health_df.iloc[0].get("deployment_type", "Unknown"))
+    # Map to display string for the transform
+    display_type = str(health_df.iloc[0].get("deployment_type", "Unknown")) if not health_df.empty else "Unknown"
 
     transform = TeamDetectionTransform()
     return transform.transform(
         teams=teams_df, champions=champions_df,
-        customer_name=customer_name, deployment_type=deployment_type
+        customer_name=customer_name, deployment_type=display_type
     )
 
 
@@ -254,7 +269,7 @@ def _risk_scoring_handler(client, account_id, customer_name):
 def _performance_handler(client, account_id, customer_name):
     """Performance Deep Dive -- application performance from low-confidence BQ tables.
     Includes go/no-go gate: validates schema + checks data before proceeding."""
-    from queries import performance_query, latency_distribution_query, slow_chart_users_query, account_health_query
+    from queries import performance_query, latency_distribution_query, slow_chart_users_query
     from bq_client import run_query
     from transforms.performance import PerformanceTransform
     from schema_validator import (validate_tables, check_data_availability,
@@ -279,6 +294,9 @@ def _performance_handler(client, account_id, customer_name):
         return transform.descoped_result("performance_descoped")
 
     # --- GATE PASSED: proceed with full pipeline ---
+    health_df, dt = _get_deployment_type(client, account_id)
+    display_type = str(health_df.iloc[0].get("deployment_type", "Unknown")) if not health_df.empty else "Unknown"
+
     perf_df = run_query(client, performance_query(),
                         account_id=account_id, maximum_bytes_billed=50_000_000_000)
 
@@ -313,24 +331,17 @@ def _performance_handler(client, account_id, customer_name):
                 "slow_chart_data": PHASE4_DATA_CHECKS["slow_chart_data"],
             })
             if slow_avail.get("slow_chart_data", {}).get("available", False):
-                slow_users_df = run_query(client, slow_chart_users_query(),
+                slow_users_df = run_query(client, slow_chart_users_query(deployment_type=dt),
                                           account_id=account_id, maximum_bytes_billed=50_000_000_000)
     except Exception:
         pass
-
-    # Get deployment type
-    health_df = run_query(client, account_health_query(),
-                          account_id=account_id, maximum_bytes_billed=50_000_000_000)
-    deployment_type = "Unknown"
-    if not health_df.empty and "deployment_type" in health_df.columns:
-        deployment_type = str(health_df.iloc[0].get("deployment_type", "Unknown"))
 
     return transform.transform(
         perf_df=perf_df,
         latency_df=latency_df if latency_df is not None else pd.DataFrame(),
         slow_users_df=slow_users_df if slow_users_df is not None else pd.DataFrame(),
         customer_name=customer_name,
-        deployment_type=deployment_type,
+        deployment_type=display_type,
     )
 
 
@@ -364,10 +375,7 @@ def _usage_correlation_handler(client, account_id, customer_name):
     )
 
     # Account health for expansion signals + deployment type
-    health_df = run_query(
-        client, account_health_query(),
-        account_id=account_id, maximum_bytes_billed=50_000_000_000
-    )
+    health_df, _ = _get_deployment_type(client, account_id)
     account_health = {}
     deployment_type = "Unknown"
     if not health_df.empty:

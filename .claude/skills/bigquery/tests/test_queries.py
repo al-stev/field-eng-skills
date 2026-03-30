@@ -193,6 +193,56 @@ class TestIdentityResolutionCte:
         expected_ref = _ref("dim_users")  # `wandb-production.analytics.dim_users`
         assert expected_ref in sql
 
+    def test_dedicated_cloud_uses_intermediate_local_users(self):
+        """identity_resolution_cte(deployment_type='dedicated-cloud') JOINs intermediate_local_users on local_user_id."""
+        from queries import identity_resolution_cte
+
+        sql = identity_resolution_cte(deployment_type="dedicated-cloud")
+        assert "intermediate_local_users" in sql
+        assert "local_user_id" in sql
+        assert "dim_users" not in sql
+
+    def test_server_uses_intermediate_local_users(self):
+        """identity_resolution_cte(deployment_type='server') also uses intermediate_local_users."""
+        from queries import identity_resolution_cte
+
+        sql = identity_resolution_cte(deployment_type="server")
+        assert "intermediate_local_users" in sql
+        assert "local_user_id" in sql
+
+    def test_cloud_uses_dim_users(self):
+        """identity_resolution_cte(deployment_type='cloud') uses dim_users (default behavior)."""
+        from queries import identity_resolution_cte
+
+        sql = identity_resolution_cte(deployment_type="cloud")
+        assert "dim_users" in sql
+        assert "universal_user_id" in sql
+        assert "intermediate_local_users" not in sql
+
+    def test_default_deployment_type_is_cloud(self):
+        """Default deployment_type uses dim_users (backwards compatible)."""
+        from queries import identity_resolution_cte
+
+        sql_default = identity_resolution_cte()
+        sql_cloud = identity_resolution_cte(deployment_type="cloud")
+        assert sql_default == sql_cloud
+
+    def test_dedicated_cloud_output_columns_match(self):
+        """Dedicated cloud CTE produces same output columns: resolved_username, resolved_email."""
+        from queries import identity_resolution_cte
+
+        sql = identity_resolution_cte(deployment_type="dedicated-cloud")
+        assert "resolved_username" in sql
+        assert "resolved_email" in sql
+        assert "resolved_users AS (" in sql
+
+    def test_dedicated_cloud_table_alias(self):
+        """Dedicated cloud respects table_alias parameter."""
+        from queries import identity_resolution_cte
+
+        sql = identity_resolution_cte(table_alias="activity", deployment_type="dedicated-cloud")
+        assert "activity.local_user_id" in sql
+
 
 class TestCohortRetentionQuery:
     """Verify cohort_retention_query() builds correct SQL for cohort analysis."""
