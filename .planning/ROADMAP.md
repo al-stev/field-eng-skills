@@ -114,8 +114,8 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 Plans:
 - [x] 05-01-PLAN.md -- Infrastructure: shell.html, panel-registry.js, chart-helpers.js, panels.yaml, compose.py
 - [ ] 05-02-PLAN.md -- Support Tickets panel (new, from prototypes, 5 ECharts visualizations)
-- [ ] 05-03-PLAN.md -- Actions + Slack panel extraction from v1 monolith
-- [ ] 05-04-PLAN.md -- Usage panel extraction from v1 monolith (4 ECharts charts + health grid)
+- [x] 05-03-PLAN.md -- Actions + Slack panel extraction from v1 monolith
+- [x] 05-04-PLAN.md -- Usage panel extraction from v1 monolith (4 ECharts charts + health grid)
 - [ ] 05-05-PLAN.md -- Issues panel extraction from v1 monolith (filters, themes, analytics)
 - [ ] 05-06-PLAN.md -- Overview panel + delight features + final verification
 **UI hint**: yes

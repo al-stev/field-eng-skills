@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: Ready to execute
-stopped_at: Completed 05-01-PLAN.md
-last_updated: "2026-03-30T14:09:12.601Z"
+stopped_at: Completed 05-03-PLAN.md
+last_updated: "2026-03-30T15:24:41.468Z"
 progress:
   total_phases: 5
   completed_phases: 3
   total_plans: 17
-  completed_plans: 12
+  completed_plans: 14
 ---
 
 # Project State
@@ -24,7 +24,7 @@ See: .planning/PROJECT.md (updated 2026-03-24)
 ## Current Position
 
 Phase: 05 (dashboard-v2-modular-folder-based-architecture) — EXECUTING
-Plan: 2 of 6
+Plan: 4 of 6
 
 ## Performance Metrics
 
@@ -57,6 +57,8 @@ Plan: 2 of 6
 | Phase 04 P02 | 5min | 2 tasks | 4 files |
 | Phase 04 P03 | 5min | 2 tasks | 4 files |
 | Phase 05 P01 | 10min | 3 tasks | 6 files |
+| Phase 05 P03 | 5min | 2 tasks | 2 files |
+| Phase 05 P04 | 5min | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -84,6 +86,10 @@ Recent decisions affecting current work:
 - [Phase 04]: Privacy enforcement in transform layer not query layer — account_id needed for grouping then stripped
 - [Phase 04]: renderCharts updated to allow page renderers to handle their own descoped/unavailable state
 - [Phase 05]: Font weights 400+600 only per UI-SPEC; panel containers created dynamically by JS; compose.py uses Path(__file__).resolve().parent anchoring; echarts.min.js graceful skip with warning
+- [Phase 05]: Scope toggle uses closure-based renderInner() pattern for encapsulated panel state
+- [Phase 05]: Local helper functions duplicated inside Usage panel IIFE for isolation rather than shared globally
+- [Phase 05]: Multi-chart panel pattern: sub-renderers return ECharts instances, render() collects into charts array for resize handling
+- [Phase 05]: escapeHtml() helper in each panel for XSS prevention on user-supplied content
 
 ### Roadmap Evolution
 
@@ -100,6 +106,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-30T14:09:12.598Z
-Stopped at: Completed 05-01-PLAN.md
+Last session: 2026-03-30T15:24:41.464Z
+Stopped at: Completed 05-03-PLAN.md
 Resume file: None
