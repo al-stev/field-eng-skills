@@ -374,14 +374,46 @@ class CohortAnalysisTransform(BaseTransform):
                 "ensure users see results from Experiments, Sweeps, or Artifacts within 90 days."
             )
 
-        # Behavioral cohort recommendation
+        # Behavioral cohort recommendation — skip obvious patterns
         if behavioral_cohorts["groups"]:
-            group_names = [g["first_action"] for g in behavioral_cohorts["groups"]]
-            if "Experiments" in group_names:
+            groups = behavioral_cohorts["groups"]
+            # Only highlight non-Experiments first actions (Experiments is the default, not insightful)
+            non_default = [g for g in groups if g["first_action"] != "Experiments"]
+            if non_default:
+                for g in non_default[:2]:
+                    recommendations.append(
+                        f"Users who start with {g['first_action']} are a distinct adoption path. "
+                        f"Investigate whether these users have different retention than the Experiments-first cohort."
+                    )
+            elif len(groups) == 1 and groups[0]["first_action"] == "Experiments":
                 recommendations.append(
-                    "Users who start with Experiments show the strongest retention pattern. "
-                    "Guide new users to run their first experiment during onboarding."
+                    "All users enter through Experiments only. Consider promoting Artifacts, Sweeps, "
+                    "or Weave earlier in onboarding to diversify adoption paths and increase stickiness."
                 )
+
+        # Retention trend across cohorts (are recent cohorts retaining better or worse?)
+        if cohort_matrix["matrix"] and len(sizes) >= 3:
+            # Compare 1-month retention of recent vs older cohorts
+            retention_by_cohort = {}
+            for entry in cohort_matrix["matrix"]:
+                if entry[1] == 1:  # 1-month offset
+                    label = cohort_matrix["cohort_labels"][entry[0]]
+                    retention_by_cohort[label] = entry[2]
+            if len(retention_by_cohort) >= 3:
+                sorted_labels = sorted(retention_by_cohort.keys())
+                recent_avg = sum(retention_by_cohort[l] for l in sorted_labels[-3:]) / 3
+                older_avg = sum(retention_by_cohort[l] for l in sorted_labels[:3]) / 3
+                diff = recent_avg - older_avg
+                if diff > 10:
+                    highlights.append(
+                        f"Retention is improving: recent cohorts retain {recent_avg:.0f}% at 1 month "
+                        f"vs {older_avg:.0f}% for older cohorts (+{diff:.0f}pp)."
+                    )
+                elif diff < -10:
+                    recommendations.append(
+                        f"Retention is declining: recent cohorts retain {recent_avg:.0f}% at 1 month "
+                        f"vs {older_avg:.0f}% for older cohorts ({diff:.0f}pp). Investigate what changed."
+                    )
 
         if not recommendations:
             recommendations.append(

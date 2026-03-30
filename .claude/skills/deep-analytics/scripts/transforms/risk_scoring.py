@@ -552,33 +552,62 @@ class RiskScoringTransform(BaseTransform):
         if not highlights:
             highlights.append("All risk factors are within normal ranges.")
 
-        # Recommendations based on risk profile
+        # Recommendations: specific, actionable next steps for the SE
         if tier == "high":
-            recommendations.append(
-                "Schedule executive QBR within 2 weeks to address risk signals."
-            )
+            if isinstance(days, int) and days < 90:
+                recommendations.append(
+                    f"URGENT: Renewal in {days} days with high risk score. "
+                    f"Schedule executive alignment call this week. Prepare a value realization "
+                    f"deck showing ROI from their W&B usage to counter churn signals."
+                )
+            else:
+                recommendations.append(
+                    "Schedule executive QBR within 2 weeks. Frame it around their team's "
+                    "usage patterns and upcoming product roadmap items relevant to their workflows."
+                )
+
         if factors["engagement_trend"]["normalized"] is not None and factors["engagement_trend"]["normalized"] > 50:
-            recommendations.append(
-                "Run targeted enablement workshop to reverse engagement decline."
-            )
+            if engagement_trend_pct < -20:
+                recommendations.append(
+                    f"Engagement dropped {abs(engagement_trend_pct):.0f}% in 6 months. "
+                    f"Identify the 2-3 users who went cold (check Engagement Decay page) "
+                    f"and reach out individually — a champion may have left or changed roles."
+                )
+            else:
+                recommendations.append(
+                    "Engagement is trending down. Run a 30-min 'What's New' session covering "
+                    "recent W&B features relevant to their use cases to re-engage inactive users."
+                )
+
         if factors["seat_utilization"]["normalized"] is not None and factors["seat_utilization"]["normalized"] > 60:
             recommendations.append(
-                f"Seat utilization is {seat_utilization_pct:.0%} -- "
-                f"identify adoption blockers and run onboarding for inactive seats."
-            )
-        if support_ticket_count > 3:
-            recommendations.append(
-                "Review support ticket backlog with account team -- "
-                f"{support_ticket_count} tickets in 90 days is above average."
-            )
-        if isinstance(days, int) and days < 90:
-            recommendations.append(
-                f"Renewal in {days} days -- initiate renewal prep and stakeholder alignment."
+                f"Only {seat_utilization_pct:.0%} of contracted seats are active. "
+                f"Ask the champion which teams haven't onboarded yet and offer "
+                f"team-specific onboarding sessions. Low utilization weakens the renewal case."
             )
 
-        if not recommendations:
+        if support_ticket_count > 5:
             recommendations.append(
-                "Risk profile is healthy. Continue regular cadence and monitor for changes."
+                f"{support_ticket_count} support tickets in 90 days signals friction. "
+                f"Pull the ticket list from Jira, identify recurring themes, and bring "
+                f"a resolution summary to the next cadence call. Unresolved tickets erode trust."
+            )
+        elif support_ticket_count > 2:
+            recommendations.append(
+                f"{support_ticket_count} support tickets in 90 days. Review in Jira for any "
+                f"stale or high-priority items and add FE-UPDATEs before the next cadence."
+            )
+
+        if isinstance(days, int) and days < 90 and tier != "high":
+            recommendations.append(
+                f"Renewal in {days} days. Start building the renewal narrative: "
+                f"compile usage growth, team expansion, and feature adoption highlights."
+            )
+
+        if tier == "low" and not recommendations:
+            recommendations.append(
+                "Risk profile is healthy. Use this window to expand: propose new use cases "
+                "(Weave, Artifacts) or additional team onboarding to deepen platform adoption."
             )
 
         return {
