@@ -754,6 +754,31 @@ def team_detection_query_dedicated() -> str:
     """
 
 
+def team_members_query_dedicated() -> str:
+    """
+    Per-team member list for dedicated cloud using fct_local_runs + intermediate_local_users.
+
+    Returns (team_name, member_name, run_count) for all members across all teams.
+    The handler groups these into a member list per team so the SE can recognize
+    teams by their people (since entity names are hashed).
+    """
+    fct_runs = _ref("fct_local_runs")
+    local_users = _ref("intermediate_local_users")
+    return f"""
+    SELECT
+        COALESCE(r.entity_name, 'Unknown') AS team_name,
+        COALESCE(lu.local_username, CAST(r.local_user_id AS STRING)) AS member_name,
+        COUNT(*) AS run_count
+    FROM {fct_runs} r
+    LEFT JOIN {local_users} lu
+        ON r.local_user_id = lu.local_user_id
+    WHERE r.account_id = @account_id
+        AND r.created_at >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 365 DAY)
+    GROUP BY team_name, member_name
+    ORDER BY team_name, run_count DESC
+    """
+
+
 def team_champions_query(deployment_type: str = "cloud") -> str:
     """
     Most active user per team with identity resolution for all deployment types.

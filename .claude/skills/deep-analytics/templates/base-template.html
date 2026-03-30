@@ -1439,7 +1439,15 @@ function renderTeamDetection() {
 
   (PAGE_DATA.teams || []).forEach(function(t) {
     tableHtml += '<tr style="border-bottom:1px solid ' + c.borderSubtle + ';">';
-    tableHtml += '<td style="padding:8px 16px; color:' + c.textPrimary + '; font-weight:500;">' + t.name + '</td>';
+    // Team name cell — show member names below hash if available
+    var nameCell = '<td style="padding:8px 16px; color:' + c.textPrimary + '; font-weight:500;">' + t.name;
+    if (t.members && t.members.length > 0) {
+      var memberNames = t.members.slice(0, 5).map(function(m) { return m.name; }).join(', ');
+      if (t.members.length > 5) memberNames += ' +' + (t.members.length - 5) + ' more';
+      nameCell += '<div style="font-size:12px; font-weight:400; color:' + c.textTertiary + '; margin-top:2px;">' + memberNames + '</div>';
+    }
+    nameCell += '</td>';
+    tableHtml += nameCell;
     tableHtml += '<td style="padding:8px 16px; text-align:right; color:' + c.textSecondary + ';">' + t.member_count + '</td>';
     tableHtml += '<td style="padding:8px 16px; text-align:right; color:' + c.textSecondary + ';">' + (t.total_events || 0).toLocaleString() + '</td>';
     tableHtml += '<td style="padding:8px 16px; color:' + c.textSecondary + ';">' + (t.top_product || '--') + '</td>';

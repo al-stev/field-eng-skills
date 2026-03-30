@@ -25,7 +25,7 @@ class TeamDetectionTransform(BaseTransform):
         champions, growth, KPIs, and narrative.
     """
 
-    def transform(self, teams: pd.DataFrame, champions: pd.DataFrame = None, **kwargs: Any) -> dict[str, Any]:
+    def transform(self, teams: pd.DataFrame, champions: pd.DataFrame = None, members: pd.DataFrame = None, **kwargs: Any) -> dict[str, Any]:
         if teams.empty:
             return self.empty_result("no_data")
 
@@ -74,7 +74,7 @@ class TeamDetectionTransform(BaseTransform):
         team_top_product = self._top_product_per_team(real_teams)
 
         # Build teams list sorted by total_events descending
-        teams_list = self._build_teams_list(team_agg, team_top_product, champions)
+        teams_list = self._build_teams_list(team_agg, team_top_product, champions, members)
 
         # Team activity (TEAM-02)
         team_activity = self._build_team_activity(teams_list)
@@ -165,8 +165,9 @@ class TeamDetectionTransform(BaseTransform):
         team_agg: pd.DataFrame,
         top_product: dict[str, str],
         champions: pd.DataFrame | None,
+        members: pd.DataFrame | None = None,
     ) -> list[dict]:
-        """Build the teams list with champion data merged in."""
+        """Build the teams list with champion and member data merged in."""
         # Build champion lookup
         champion_map: dict[str, dict] = {}
         if champions is not None and not champions.empty:
@@ -183,6 +184,21 @@ class TeamDetectionTransform(BaseTransform):
                     "events": int(row["total_events"]),
                 }
 
+        # Build members lookup (team_name -> list of {name, runs} sorted by runs desc)
+        members_map: dict[str, list[dict]] = {}
+        if members is not None and not members.empty:
+            for team_name, group in members.groupby("team_name"):
+                team_members = []
+                for _, mrow in group.iterrows():
+                    member_name = safe_value(mrow.get("member_name"))
+                    if member_name is None:
+                        continue
+                    team_members.append({
+                        "name": member_name,
+                        "runs": int(mrow.get("run_count", 0)),
+                    })
+                members_map[str(team_name)] = team_members[:10]  # top 10 per team
+
         teams_list = []
         for _, row in team_agg.iterrows():
             name = row["team_name"]
@@ -194,6 +210,7 @@ class TeamDetectionTransform(BaseTransform):
                 "first_active": format_date(row["first_active"]),
                 "last_active": format_date(row["last_active"]),
                 "champion": champion_map.get(name),
+                "members": members_map.get(str(name), []),
             }
             teams_list.append(team)
 

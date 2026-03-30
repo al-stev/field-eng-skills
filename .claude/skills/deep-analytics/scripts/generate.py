@@ -146,7 +146,8 @@ def _sdk_versions_handler(client, account_id, customer_name):
 
 def _team_detection_handler(client, account_id, customer_name):
     """Team Detection -- organizational structure, deployment-aware query routing."""
-    from queries import team_detection_query, team_detection_query_dedicated, team_champions_query
+    from queries import (team_detection_query, team_detection_query_dedicated,
+                         team_members_query_dedicated, team_champions_query)
     from bq_client import run_query
     from transforms.team_detection import TeamDetectionTransform
     from schema_validator import check_data_availability, PHASE3_DATA_CHECKS
@@ -154,17 +155,21 @@ def _team_detection_handler(client, account_id, customer_name):
     health_df, deployment_type = _get_deployment_type(client, account_id)
     display_type = str(health_df.iloc[0].get("deployment_type", "Unknown")) if not health_df.empty else "Unknown"
 
-    # Route to dedicated cloud query when appropriate
+    members_df = None
+    champions_df = None
+
     if deployment_type in ("dedicated-cloud", "server"):
         teams_df = run_query(client, team_detection_query_dedicated(),
                              account_id=account_id, maximum_bytes_billed=100_000_000_000)
+        # Get member names so SE can identify teams by their people
+        try:
+            members_df = run_query(client, team_members_query_dedicated(),
+                                   account_id=account_id, maximum_bytes_billed=100_000_000_000)
+        except Exception:
+            pass
     else:
         teams_df = run_query(client, team_detection_query(),
                              account_id=account_id, maximum_bytes_billed=100_000_000_000)
-
-    # Champions query -- only for SaaS where org_name data is meaningful
-    champions_df = None
-    if deployment_type == "cloud":
         avail = check_data_availability(client, account_id, {
             "team_org_names": PHASE3_DATA_CHECKS["team_org_names"],
         })
@@ -177,7 +182,7 @@ def _team_detection_handler(client, account_id, customer_name):
 
     transform = TeamDetectionTransform()
     return transform.transform(
-        teams=teams_df, champions=champions_df,
+        teams=teams_df, champions=champions_df, members=members_df,
         customer_name=customer_name, deployment_type=display_type
     )
 
