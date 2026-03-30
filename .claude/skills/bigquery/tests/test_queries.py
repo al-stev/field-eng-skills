@@ -351,6 +351,52 @@ class TestTeamDetectionQuery:
         assert "SELECT *" not in sql
 
 
+class TestTeamDetectionQueryDedicated:
+    """Verify team_detection_query_dedicated() for dedicated cloud using fct_local_runs."""
+
+    def test_uses_fct_local_runs(self):
+        """Query uses fct_local_runs for team structure."""
+        from queries import team_detection_query_dedicated
+        sql = team_detection_query_dedicated()
+        assert "fct_local_runs" in sql
+
+    def test_uses_intermediate_local_users(self):
+        """Query JOINs intermediate_local_users for real member names."""
+        from queries import team_detection_query_dedicated
+        sql = team_detection_query_dedicated()
+        assert "intermediate_local_users" in sql
+
+    def test_groups_by_entity_name(self):
+        """Query groups by entity_name (hashed team identifier)."""
+        from queries import team_detection_query_dedicated
+        sql = team_detection_query_dedicated()
+        assert "entity_name" in sql
+
+    def test_contains_account_id_param(self):
+        """Query uses @account_id parameter."""
+        from queries import team_detection_query_dedicated
+        sql = team_detection_query_dedicated()
+        assert "@account_id" in sql
+
+    def test_returns_team_name_column(self):
+        """Query aliases entity_name as team_name for compatibility with transform."""
+        from queries import team_detection_query_dedicated
+        sql = team_detection_query_dedicated()
+        assert "team_name" in sql
+
+    def test_returns_member_count(self):
+        """Query returns member_count."""
+        from queries import team_detection_query_dedicated
+        sql = team_detection_query_dedicated()
+        assert "member_count" in sql
+
+    def test_no_select_star(self):
+        """Query does NOT use SELECT *."""
+        from queries import team_detection_query_dedicated
+        sql = team_detection_query_dedicated()
+        assert "SELECT *" not in sql
+
+
 class TestTeamChampionsQuery:
     """Verify team_champions_query() builds correct SQL for per-team top users."""
 

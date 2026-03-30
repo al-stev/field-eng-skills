@@ -702,6 +702,58 @@ def team_detection_query() -> str:
     """
 
 
+def team_detection_query_dedicated() -> str:
+    """
+    Team breakdown for dedicated cloud using fct_local_runs + intermediate_local_users.
+
+    Dedicated cloud entity names are hashed in BQ but team structure is recoverable
+    by grouping fct_local_runs by entity_name and JOINing intermediate_local_users
+    for real member names. Produces the same output shape as team_detection_query()
+    so the transform layer works unchanged.
+
+    Note: fct_local_runs does not have event-level product_area data, so product_area
+    is set to 'Runs' for all rows. The run count is used as total_events.
+    """
+    fct_runs = _ref("fct_local_runs")
+    local_users = _ref("intermediate_local_users")
+    return f"""
+    WITH team_runs AS (
+        SELECT
+            COALESCE(r.entity_name, 'Unknown') AS team_name,
+            r.local_user_id,
+            COUNT(*) AS run_count,
+            MIN(DATE(r.created_at)) AS first_active,
+            MAX(DATE(r.created_at)) AS last_active
+        FROM {fct_runs} r
+        WHERE r.account_id = @account_id
+            AND r.created_at >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 12 MONTH)
+        GROUP BY team_name, r.local_user_id
+    ),
+    with_names AS (
+        SELECT
+            tr.team_name,
+            lu.local_username AS member_name,
+            tr.run_count,
+            tr.first_active,
+            tr.last_active
+        FROM team_runs tr
+        LEFT JOIN {local_users} lu
+            ON tr.local_user_id = lu.local_user_id
+    )
+    SELECT
+        team_name,
+        'Runs' AS product_area,
+        COUNT(DISTINCT member_name) AS member_count,
+        SUM(run_count) AS total_events,
+        MIN(first_active) AS first_active,
+        MAX(last_active) AS last_active,
+        0 AS users_with_team_flag
+    FROM with_names
+    GROUP BY team_name
+    ORDER BY total_events DESC
+    """
+
+
 def team_champions_query(deployment_type: str = "cloud") -> str:
     """
     Most active user per team with identity resolution for all deployment types.

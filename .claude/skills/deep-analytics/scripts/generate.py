@@ -145,34 +145,35 @@ def _sdk_versions_handler(client, account_id, customer_name):
 
 
 def _team_detection_handler(client, account_id, customer_name):
-    """Team Detection -- organizational structure from org_name fields."""
-    from queries import team_detection_query, team_champions_query
+    """Team Detection -- organizational structure, deployment-aware query routing."""
+    from queries import team_detection_query, team_detection_query_dedicated, team_champions_query
     from bq_client import run_query
     from transforms.team_detection import TeamDetectionTransform
     from schema_validator import check_data_availability, PHASE3_DATA_CHECKS
 
     health_df, deployment_type = _get_deployment_type(client, account_id)
-
-    # Check team data availability before running expensive queries
-    avail = check_data_availability(client, account_id, {
-        "team_org_names": PHASE3_DATA_CHECKS["team_org_names"],
-        "team_flags": PHASE3_DATA_CHECKS["team_flags"],
-    })
-
-    teams_df = run_query(client, team_detection_query(),
-                         account_id=account_id, maximum_bytes_billed=100_000_000_000)
-
-    # Only query champions if we have team data with org names
-    champions_df = None
-    if avail.get("team_org_names", {}).get("available", False):
-        try:
-            champions_df = run_query(client, team_champions_query(deployment_type=deployment_type),
-                                     account_id=account_id, maximum_bytes_billed=50_000_000_000)
-        except Exception:
-            pass
-
-    # Map to display string for the transform
     display_type = str(health_df.iloc[0].get("deployment_type", "Unknown")) if not health_df.empty else "Unknown"
+
+    # Route to dedicated cloud query when appropriate
+    if deployment_type in ("dedicated-cloud", "server"):
+        teams_df = run_query(client, team_detection_query_dedicated(),
+                             account_id=account_id, maximum_bytes_billed=100_000_000_000)
+    else:
+        teams_df = run_query(client, team_detection_query(),
+                             account_id=account_id, maximum_bytes_billed=100_000_000_000)
+
+    # Champions query -- only for SaaS where org_name data is meaningful
+    champions_df = None
+    if deployment_type == "cloud":
+        avail = check_data_availability(client, account_id, {
+            "team_org_names": PHASE3_DATA_CHECKS["team_org_names"],
+        })
+        if avail.get("team_org_names", {}).get("available", False):
+            try:
+                champions_df = run_query(client, team_champions_query(deployment_type=deployment_type),
+                                         account_id=account_id, maximum_bytes_billed=50_000_000_000)
+            except Exception:
+                pass
 
     transform = TeamDetectionTransform()
     return transform.transform(
