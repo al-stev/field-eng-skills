@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Milestone complete
-stopped_at: Completed 04-03-PLAN.md
-last_updated: "2026-03-26T14:56:10.781Z"
+status: Ready to execute
+stopped_at: Completed 05-01-PLAN.md
+last_updated: "2026-03-30T14:09:12.601Z"
 progress:
-  total_phases: 4
+  total_phases: 5
   completed_phases: 3
-  total_plans: 11
-  completed_plans: 11
+  total_plans: 17
+  completed_plans: 12
 ---
 
 # Project State
@@ -19,12 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-24)
 
 **Core value:** Give SEs named-user, team-level, and trend-aware intelligence for specific, data-driven customer conversations.
-**Current focus:** Phase 04 — privacy-sensitive-and-exploratory-pages
+**Current focus:** Phase 05 — dashboard-v2-modular-folder-based-architecture
 
 ## Current Position
 
-Phase: 04
-Plan: Not started
+Phase: 05 (dashboard-v2-modular-folder-based-architecture) — EXECUTING
+Plan: 2 of 6
 
 ## Performance Metrics
 
@@ -56,6 +56,7 @@ Plan: Not started
 | Phase 03 P04 | 6min | 2 tasks | 4 files |
 | Phase 04 P02 | 5min | 2 tasks | 4 files |
 | Phase 04 P03 | 5min | 2 tasks | 4 files |
+| Phase 05 P01 | 10min | 3 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -82,6 +83,11 @@ Recent decisions affecting current work:
 - [Phase 04]: Retention proxy: median event mass as proxy for recent activity in correlation transform
 - [Phase 04]: Privacy enforcement in transform layer not query layer — account_id needed for grouping then stripped
 - [Phase 04]: renderCharts updated to allow page renderers to handle their own descoped/unavailable state
+- [Phase 05]: Font weights 400+600 only per UI-SPEC; panel containers created dynamically by JS; compose.py uses Path(__file__).resolve().parent anchoring; echarts.min.js graceful skip with warning
+
+### Roadmap Evolution
+
+- Phase 5 added: Dashboard V2 — Modular Folder-Based Architecture (replace monolithic intelligence-dashboard.html with folder-based dashboard, spec in DASHBOARD-V2-SPEC.md)
 
 ### Pending Todos
 
@@ -94,6 +100,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-26T14:47:31.446Z
-Stopped at: Completed 04-03-PLAN.md
+Last session: 2026-03-30T14:09:12.598Z
+Stopped at: Completed 05-01-PLAN.md
 Resume file: None

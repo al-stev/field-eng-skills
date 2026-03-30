@@ -112,7 +112,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
   8. Delight features: ambient tab indicators (customer name + stale count), contextual right-click (open in Jira/Slack), panel transitions
 **Plans**: 6 plans
 Plans:
-- [ ] 05-01-PLAN.md -- Infrastructure: shell.html, panel-registry.js, chart-helpers.js, panels.yaml, compose.py
+- [x] 05-01-PLAN.md -- Infrastructure: shell.html, panel-registry.js, chart-helpers.js, panels.yaml, compose.py
 - [ ] 05-02-PLAN.md -- Support Tickets panel (new, from prototypes, 5 ECharts visualizations)
 - [ ] 05-03-PLAN.md -- Actions + Slack panel extraction from v1 monolith
 - [ ] 05-04-PLAN.md -- Usage panel extraction from v1 monolith (4 ECharts charts + health grid)
