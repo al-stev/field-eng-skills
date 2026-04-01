@@ -46,7 +46,6 @@
   --radius: 6px;
   --noise-opacity: 0.025;
   --sidebar-width: 220px;
-  --sidebar-collapsed: 56px;
 
   /* Semantic chart color aliases */
   --color-positive: var(--green);
@@ -137,11 +136,6 @@ body::before {
   grid-template-rows: auto 1fr;
   grid-template-columns: var(--sidebar-width) 1fr;
   height: 100vh;
-  transition: grid-template-columns 0.25s ease-out;
-}
-
-.shell.collapsed {
-  grid-template-columns: var(--sidebar-collapsed) 1fr;
 }
 
 /* ── HEADER ── */
@@ -205,37 +199,6 @@ body::before {
   flex-direction: column;
   overflow: hidden;
   transition: width 0.25s ease-out;
-}
-
-.sidebar-toggle {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  margin: 12px 12px 8px;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius);
-  color: var(--text-tertiary);
-  cursor: pointer;
-  transition: all 0.15s ease-out;
-  flex-shrink: 0;
-}
-
-.sidebar-toggle:hover {
-  background: var(--bg-hover);
-  color: var(--text-secondary);
-}
-
-.sidebar-toggle svg {
-  width: 16px;
-  height: 16px;
-  transition: transform 0.25s ease-out;
-}
-
-.shell.collapsed .sidebar-toggle svg {
-  transform: rotate(180deg);
 }
 
 .sidebar-nav {
@@ -322,20 +285,6 @@ body::before {
   border-color: var(--accent-border);
 }
 
-/* Collapsed state: hide labels and badges */
-.shell.collapsed .nav-label,
-.shell.collapsed .nav-badge {
-  opacity: 0;
-  width: 0;
-  overflow: hidden;
-}
-
-.shell.collapsed .nav-item {
-  justify-content: center;
-  padding: 10px 0;
-  gap: 0;
-}
-
 .sidebar-footer {
   padding: 16px;
   border-top: 1px solid var(--border-subtle);
@@ -350,10 +299,6 @@ body::before {
   letter-spacing: 0.5px;
   white-space: nowrap;
   transition: opacity 0.2s ease-out;
-}
-
-.shell.collapsed .sidebar-footer-text {
-  opacity: 0;
 }
 
 /* ── CONTENT AREA ── */
@@ -526,7 +471,7 @@ body::before {
 /* ── RESPONSIVE ── */
 @media (max-width: 900px) {
   .shell {
-    grid-template-columns: var(--sidebar-collapsed) 1fr;
+    grid-template-columns: 56px 1fr;
   }
   .nav-label, .nav-badge {
     opacity: 0;
@@ -540,9 +485,6 @@ body::before {
   }
   .sidebar-footer-text {
     opacity: 0;
-  }
-  .sidebar-toggle {
-    margin: 12px auto 8px;
   }
 }
 
@@ -624,11 +566,6 @@ body::before {
 
   <!-- ── SIDEBAR ── -->
   <aside class="sidebar">
-    <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Collapse sidebar" title="Toggle sidebar">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="15 18 9 12 15 6"></polyline>
-      </svg>
-    </button>
     <nav class="sidebar-nav" id="sidebar-nav">
       <!-- Nav items built by JS from PanelRegistry -->
     </nav>
@@ -822,20 +759,6 @@ function navigateTo(panelId) {
   }
 
   currentPanel = panelId;
-}
-
-function toggleSidebar() {
-  var shell = document.getElementById('shell');
-  shell.classList.toggle('collapsed');
-  var btn = document.querySelector('.sidebar-toggle');
-  if (shell.classList.contains('collapsed')) {
-    btn.setAttribute('aria-label', 'Expand sidebar');
-  } else {
-    btn.setAttribute('aria-label', 'Collapse sidebar');
-  }
-  setTimeout(function() {
-    ChartHelpers.resizeAll();
-  }, 300);
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -1046,12 +969,6 @@ function showContextMenu(x, y, items) {
 // INIT
 // ════════════════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', function() {
-  // Ensure sidebar starts expanded (remove collapsed class if present)
-  var shell = document.getElementById('shell');
-  shell.classList.remove('collapsed');
-  var toggleBtn = document.querySelector('.sidebar-toggle');
-  if (toggleBtn) toggleBtn.setAttribute('aria-label', 'Collapse sidebar');
-
   buildSidebar();
   updateTabTitle();
 

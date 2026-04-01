@@ -267,7 +267,7 @@
           return '<strong>' + p.name + '</strong><br/>Active: ' + p.value + '<br/>Contracted: ' + seatData.contracted;
         }
       },
-      grid: { left: 48, right: 24, top: 24, bottom: 32 },
+      grid: { left: 48, right: 80, top: 36, bottom: 32 },
       xAxis: {
         type: 'category',
         data: weeks,
@@ -528,7 +528,7 @@
           return '<strong>' + p.name + '</strong><br/>Hours: ' + Math.round(p.value) + 'h';
         }
       },
-      grid: { left: 72, right: 24, top: 24, bottom: 32 },
+      grid: { left: 72, right: 24, top: 24, bottom: 64 },
       xAxis: {
         type: 'category',
         data: weeks,
