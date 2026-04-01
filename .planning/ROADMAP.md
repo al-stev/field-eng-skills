@@ -137,6 +137,6 @@ Plans:
   7. Running `/customer-snapshot CustomerName` produces the v2 folder-based dashboard (not the v1 monolith) via compose.py integration into SKILL.md
 **Plans:** 3 plans
 Plans:
-- [ ] 06-01-PLAN.md -- Split sweeps in BQ, fix chart clipping, split radar into two charts
+- [x] 06-01-PLAN.md -- Split sweeps in BQ, fix chart clipping, split radar into two charts
 - [x] 06-02-PLAN.md -- Time period labels on all chart sections, overview breadcrumb navigation
-- [ ] 06-03-PLAN.md -- SQL copy buttons with toast, wire compose.py into SKILL.md for v2 output
+- [x] 06-03-PLAN.md -- SQL copy buttons with toast, wire compose.py into SKILL.md for v2 output
