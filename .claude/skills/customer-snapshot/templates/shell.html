@@ -193,45 +193,7 @@ body::before {
   flex-shrink: 0;
 }
 
-.audience-toggle {
-  display: flex;
-  background: var(--bg-surface);
-  border-radius: var(--radius);
-  overflow: hidden;
-  border: 1px solid var(--border-subtle);
-}
-
-.audience-btn {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 600;
-  padding: 6px 14px;
-  border: none;
-  background: transparent;
-  color: var(--text-tertiary);
-  cursor: pointer;
-  transition: all 0.15s ease-out;
-  letter-spacing: 0.5px;
-}
-
-.audience-btn:hover {
-  color: var(--text-secondary);
-  background: var(--bg-hover);
-}
-
-.audience-btn.active-internal {
-  background: var(--accent-dim);
-  color: var(--accent);
-  border: 1px solid var(--accent-border);
-  margin: -1px;
-}
-
-.audience-btn.active-external {
-  background: var(--green-dim);
-  color: var(--green);
-  border: 1px solid var(--green-border);
-  margin: -1px;
-}
+/* audience-toggle removed — audience mode set at generation time via compose.py */
 
 /* ── SIDEBAR ── */
 .sidebar {
@@ -656,10 +618,7 @@ body::before {
       <span class="dash-header-meta">{{GENERATED_DATE}}</span>
     </div>
     <div class="dash-header-right">
-      <div class="audience-toggle">
-        <button class="audience-btn active-internal" id="btn-internal" onclick="setAudience('internal')">Internal</button>
-        <button class="audience-btn" id="btn-external" onclick="setAudience('external')">External</button>
-      </div>
+      <!-- Audience mode set at generation time via compose.py --internal flag -->
     </div>
   </header>
 
@@ -808,7 +767,8 @@ function buildSidebar() {
     el.setAttribute('aria-label', ariaText);
     el.setAttribute('title', panel.label);
 
-    var iconSvg = ICON_MAP[panel.icon] || ICON_MAP['grid'];
+    // panel.icon is either an ICON_MAP key (from panels.yaml) or inline SVG (from JS registration)
+    var iconSvg = (panel.icon && panel.icon.indexOf('<svg') !== -1) ? panel.icon : (ICON_MAP[panel.icon] || ICON_MAP['grid']);
     el.innerHTML =
       '<span class="nav-icon">' + iconSvg + '</span>' +
       '<span class="nav-label">' + panel.label + '</span>' +
@@ -899,23 +859,14 @@ function updateTabTitle() {
 }
 
 // ════════════════════════════════════════════════════════════════
-// AUDIENCE TOGGLE
+// AUDIENCE MODE (set at generation time via compose.py --internal)
 // ════════════════════════════════════════════════════════════════
-function setAudience(mode) {
-  var btnInt = document.getElementById('btn-internal');
-  var btnExt = document.getElementById('btn-external');
-
-  btnInt.className = 'audience-btn' + (mode === 'internal' ? ' active-internal' : '');
-  btnExt.className = 'audience-btn' + (mode === 'external' ? ' active-external' : '');
-
+function applyAudienceMode() {
+  var mode = (INTELLIGENCE_DATA.config && INTELLIGENCE_DATA.config.audience) || 'internal';
   if (mode === 'external') {
     document.body.classList.add('external-mode');
   } else {
     document.body.classList.remove('external-mode');
-  }
-
-  if (INTELLIGENCE_DATA.config) {
-    INTELLIGENCE_DATA.config.audience = mode;
   }
 }
 
@@ -959,7 +910,7 @@ function renderCmdResults(query) {
   if (cmdSelected >= filtered.length) cmdSelected = Math.max(0, filtered.length - 1);
 
   container.innerHTML = filtered.map(function(item, i) {
-    var iconSvg = ICON_MAP[item.icon] || ICON_MAP['grid'];
+    var iconSvg = (item.icon && item.icon.indexOf('<svg') !== -1) ? item.icon : (ICON_MAP[item.icon] || ICON_MAP['grid']);
     var idx = panels.indexOf(item) + 1;
     return '<div class="cmd-result' + (i === cmdSelected ? ' selected' : '') + '" data-panel="' + item.id + '" onclick="navigateTo(\'' + item.id + '\');closeCmdPalette()">' +
       '<span class="nav-icon" style="width:18px;height:18px;">' + iconSvg + '</span>' +
@@ -1108,9 +1059,8 @@ document.addEventListener('DOMContentLoaded', function() {
     navigateTo(validIds[0]);
   }
 
-  // Set initial audience state
-  var audience = (INTELLIGENCE_DATA.config && INTELLIGENCE_DATA.config.audience) || 'internal';
-  setAudience(audience);
+  // Apply audience mode from generation-time config
+  applyAudienceMode();
 });
 </script>
 </body>

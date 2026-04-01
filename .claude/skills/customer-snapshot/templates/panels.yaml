@@ -31,7 +31,7 @@ panels:
     group: usage
     label: Seats & Adoption
     icon: trending-up
-    data_key: usage.seat_utilization
+    data_key: usage
     order: 4
   - id: actions
     group: activity

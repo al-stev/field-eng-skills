@@ -65,7 +65,28 @@
     },
 
     /**
+     * Walk dot-separated path through nested objects.
+     * @param {Object} obj - Root object
+     * @param {string} dotPath - Dot-separated key path (e.g. 'usage.seat_utilization')
+     * @returns {*} Resolved value or undefined
+     */
+    _resolveKey: function(obj, dotPath) {
+      if (!obj || !dotPath) return undefined;
+      var parts = dotPath.split('.');
+      var current = obj;
+      for (var i = 0; i < parts.length; i++) {
+        if (current === null || current === undefined) return undefined;
+        if (parts[i] === 'length' && Array.isArray(current)) return current.length;
+        current = current[parts[i]];
+      }
+      return current;
+    },
+
+    /**
      * Render a panel into its container. Wraps in try/catch.
+     * Resolves the panel's dataKey against the full data object so each
+     * panel receives its own data slice (e.g. issues panel gets data.issues).
+     * Panels with no dataKey (e.g. overview) receive the full data object.
      * @param {string} id - Panel id
      * @param {HTMLElement} container - DOM element to render into
      * @param {Object} data - INTELLIGENCE_DATA
@@ -79,7 +100,12 @@
         return null;
       }
       try {
-        return panel.render(container, data, config);
+        // Resolve the panel's data slice via its dataKey
+        var panelData = data;
+        if (panel.dataKey) {
+          panelData = this._resolveKey(data, panel.dataKey);
+        }
+        return panel.render(container, panelData, config);
       } catch (err) {
         console.error('[PanelRegistry] Error rendering panel ' + id + ':', err);
         container.innerHTML = '<div class="placeholder-panel">' +
