@@ -116,6 +116,6 @@ Plans:
 - [x] 05-02-PLAN.md -- Support Tickets panel (new, from prototypes, 5 ECharts visualizations)
 - [x] 05-03-PLAN.md -- Actions + Slack panel extraction from v1 monolith
 - [x] 05-04-PLAN.md -- Usage panel extraction from v1 monolith (4 ECharts charts + health grid)
-- [ ] 05-05-PLAN.md -- Issues panel extraction from v1 monolith (filters, themes, analytics)
+- [x] 05-05-PLAN.md -- Issues panel extraction from v1 monolith (filters, themes, analytics)
 - [ ] 05-06-PLAN.md -- Overview panel + delight features + final verification
 **UI hint**: yes

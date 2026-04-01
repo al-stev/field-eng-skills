@@ -130,7 +130,7 @@
 - [x] **DASH-06**: Actions panel extracted from v1 monolith — task table with scope toggle, priority sorting, section grouping, overdue/stale flagging, Jira/Asana cross-links
 - [x] **DASH-07**: Usage panel extracted from v1 monolith — 4 ECharts charts (seat utilization, product radar, Weave ingestion, tracked hours) + account health grid
 - [x] **DASH-08**: Slack panel extracted from v1 monolith — sentiment score, hot threads with Slack links, internal risk signals
-- [ ] **DASH-09**: Issues panel extracted from v1 monolith — filter bar (status/type/theme/search), health summary, attention callouts, velocity chart, cadence metrics, themed collapsible issue table, Asana badge cross-links
+- [x] **DASH-09**: Issues panel extracted from v1 monolith — filter bar (status/type/theme/search), health summary, attention callouts, velocity chart, cadence metrics, themed collapsible issue table, Asana badge cross-links
 - [ ] **DASH-10**: Overview panel aggregating getHeadlineStats() and getAttentionItems() from all panels, changes-since-last-generation diff, agent-generated narrative insights
 - [ ] **DASH-11**: Delight features — panel crossfade transitions, ambient tab indicators (customer name + stale count), contextual right-click (Open in Jira, Copy key, Search Slack)
 - [x] **DASH-12**: panels.yaml declarative manifest with groups, data_key for data-driven panel visibility, badge_key for nav counts, order for sidebar sort
@@ -251,7 +251,7 @@
 | DASH-06 | Phase 5 | Complete |
 | DASH-07 | Phase 5 | Complete |
 | DASH-08 | Phase 5 | Complete |
-| DASH-09 | Phase 5 | Pending |
+| DASH-09 | Phase 5 | Complete |
 | DASH-10 | Phase 5 | Pending |
 | DASH-11 | Phase 5 | Pending |
 | DASH-12 | Phase 5 | Complete |
