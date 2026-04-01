@@ -149,9 +149,30 @@ Additionally compute trending metrics:
 
 Aim for 5-10 themes. Theme names should be short, recognizable product areas. Some Uncategorized issues are expected -- the analysis section flags this as a metric.
 
-### Step 7: Build INTELLIGENCE_DATA object
+### Step 7: Assemble INTELLIGENCE_DATA
 
-Transform all gathered data into the INTELLIGENCE_DATA constant:
+Save each data source output from prior steps to temporary JSON files, then run assemble.py:
+
+```bash
+uv run --project .claude/skills/customer-snapshot python \
+    .claude/skills/customer-snapshot/templates/assemble.py \
+    --customer "<CustomerName>" \
+    --jira /tmp/snapshot-jira.json \
+    --bq /tmp/snapshot-bq.json \
+    --asana /tmp/snapshot-asana.json \
+    --sentiment /tmp/snapshot-sentiment.json \
+    --days 14 --months 6 --audience internal \
+    --output /tmp/customer-snapshot-data.json
+```
+
+Omit any --flag for data sources that were not fetched (e.g., skip --bq if BigQuery
+was unavailable). assemble.py handles missing sources gracefully.
+
+The script applies component/parent normalization, assigns themes, computes trending
+metrics, and transforms Asana tasks. Output is the complete INTELLIGENCE_DATA JSON
+ready for compose.py in Step 8.
+
+#### Schema Reference
 
 ```javascript
 const INTELLIGENCE_DATA = {
