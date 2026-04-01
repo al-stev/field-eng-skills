@@ -16,7 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 2: High-Confidence Pages** - Four pages with proven data sources (User Journey, Engagement Decay, Feature Velocity, SDK Versions) built in parallel to validate the full generation pipeline
 - [ ] **Phase 3: Medium-Confidence Pages** - Three pages requiring schema validation before development (Cohort Analysis, Team Detection, Risk Scoring)
 - [ ] **Phase 4: Privacy-Sensitive and Exploratory Pages** - Cross-account correlation with privacy controls (Usage Correlation) and low-confidence data exploration (Performance Deep Dive)
-- [ ] **Phase 5: Dashboard V2 — Modular Folder-Based Architecture** - Replace the monolithic intelligence-dashboard.html with a folder-based dashboard (shell + panel JS files + data.js) that scales to 15-20+ panels with per-panel agent editing, Google Drive multi-user access, and prototype-quality visualizations
+- [x] **Phase 5: Dashboard V2 — Modular Folder-Based Architecture** - Replace the monolithic intelligence-dashboard.html with a folder-based dashboard (shell + panel JS files + data.js) that scales to 15-20+ panels with per-panel agent editing, Google Drive multi-user access, and prototype-quality visualizations (completed 2026-04-01)
 
 ## Phase Details
 
@@ -95,7 +95,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 2. High-Confidence Pages | 0/TBD | Not started | - |
 | 3. Medium-Confidence Pages | 0/4 | Planning complete | - |
 | 4. Privacy-Sensitive and Exploratory Pages | 0/3 | Planning complete | - |
-| 5. Dashboard V2 — Modular Folder-Based Architecture | 0/6 | Planning complete | - |
+| 5. Dashboard V2 — Modular Folder-Based Architecture | 6/6 | Complete   | 2026-04-01 |
 
 ### Phase 5: Dashboard V2 — Modular Folder-Based Architecture
 **Goal**: Replace the monolithic 3700-line intelligence-dashboard.html with a modular, folder-based dashboard that scales to 15-20+ panels, supports Google Drive multi-user access, enables per-panel agent editing, and is delightful during cadence calls and QBR screenshares
@@ -117,5 +117,5 @@ Plans:
 - [x] 05-03-PLAN.md -- Actions + Slack panel extraction from v1 monolith
 - [x] 05-04-PLAN.md -- Usage panel extraction from v1 monolith (4 ECharts charts + health grid)
 - [x] 05-05-PLAN.md -- Issues panel extraction from v1 monolith (filters, themes, analytics)
-- [ ] 05-06-PLAN.md -- Overview panel + delight features + final verification
+- [x] 05-06-PLAN.md -- Overview panel + delight features + final verification
 **UI hint**: yes
