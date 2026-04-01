@@ -538,6 +538,32 @@ body::before {
   margin: 4px 8px;
 }
 
+/* ── BREADCRUMB BAR ── */
+.breadcrumb-bar {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0 16px 0;
+  margin-bottom: 8px;
+}
+.breadcrumb-bar.visible {
+  display: flex;
+}
+.breadcrumb-link {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  cursor: pointer;
+  text-decoration: none;
+  transition: opacity 0.15s;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.breadcrumb-link:hover {
+  opacity: 0.7;
+}
+
 /* ── REDUCED MOTION ── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -724,11 +750,16 @@ function buildSidebar() {
     var section = document.createElement('section');
     section.className = 'panel';
     section.id = 'panel-' + panel.id;
+    // Prepend breadcrumb bar (hidden by default, shown when navigating from overview)
+    var breadcrumbBar = document.createElement('div');
+    breadcrumbBar.className = 'breadcrumb-bar';
+    breadcrumbBar.innerHTML = '<a class="breadcrumb-link" onclick="navigateTo(\'overview\')">&larr; Overview</a>';
+    section.appendChild(breadcrumbBar);
     content.appendChild(section);
   });
 }
 
-function navigateTo(panelId) {
+function navigateTo(panelId, fromOverview) {
   // Update hash without scroll
   history.replaceState(null, '', '#' + panelId);
 
@@ -757,6 +788,16 @@ function navigateTo(panelId) {
       ChartHelpers.resizeAll();
     }, 50);
   }
+
+  // Show/hide breadcrumb bar based on navigation source
+  var breadcrumbs = document.querySelectorAll('.breadcrumb-bar');
+  breadcrumbs.forEach(function(b) {
+    if (fromOverview && panelId !== 'overview') {
+      b.classList.add('visible');
+    } else {
+      b.classList.remove('visible');
+    }
+  });
 
   currentPanel = panelId;
 }

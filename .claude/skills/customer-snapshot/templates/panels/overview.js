@@ -475,8 +475,8 @@
       for (var ci = 0; ci < cards.length; ci++) {
         cards[ci].addEventListener('click', function() {
           var panelId = this.getAttribute('data-source-panel');
-          if (panelId) {
-            window.location.hash = '#' + panelId;
+          if (panelId && typeof navigateTo === 'function') {
+            navigateTo(panelId, true);
           }
         });
       }
@@ -488,7 +488,7 @@
           var targetId = this.getAttribute('data-target-panel');
           var filter = this.getAttribute('data-target-filter');
           if (targetId && typeof navigateTo === 'function') {
-            navigateTo(targetId);
+            navigateTo(targetId, true);
             if (filter) {
               window.dispatchEvent(new CustomEvent('panel-filter', {
                 detail: { panel: targetId, filter: filter }
