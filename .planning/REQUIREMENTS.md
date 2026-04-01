@@ -135,6 +135,16 @@
 - [x] **DASH-11**: Delight features — panel crossfade transitions, ambient tab indicators (customer name + stale count), contextual right-click (Open in Jira, Copy key, Search Slack)
 - [x] **DASH-12**: panels.yaml declarative manifest with groups, data_key for data-driven panel visibility, badge_key for nav counts, order for sidebar sort
 
+### Dashboard V2 UX Polish
+
+- [ ] **UX-01**: BQ SQL copy buttons — each data section (seat utilization, product adoption, Weave, tracked hours, support, account health) has a small SQL icon; clicking copies the BigQuery query to clipboard with toast notification
+- [ ] **UX-02**: Split product adoption radar — two side-by-side radar charts (Events and Users) replacing the single overlaid chart
+- [ ] **UX-03**: Time period labels — every chart section displays its time period (e.g., "Last 12 months", "Last 30 days")
+- [ ] **UX-04**: Overview breadcrumb — clicking a key metric card on Overview navigates to the panel AND shows a "← Overview" breadcrumb for easy return
+- [ ] **UX-05**: Sweeps created vs viewed — product adoption data distinguishes between sweeps created and sweeps viewed via PRODUCT_AREA_CASE split
+- [ ] **UX-06**: Chart clipping fixes — seat utilization top labels and tracked hours bottom x-axis date labels render without clipping
+- [ ] **UX-07**: Wire compose.py into SKILL.md — /customer-snapshot produces v2 folder-based dashboard via compose.py instead of v1 monolith
+
 ## v2 Requirements
 
 (All differentiators promoted to v1)
@@ -255,12 +265,19 @@
 | DASH-10 | Phase 5 | Complete |
 | DASH-11 | Phase 5 | Complete |
 | DASH-12 | Phase 5 | Complete |
+| UX-01 | Phase 6 | Pending |
+| UX-02 | Phase 6 | Pending |
+| UX-03 | Phase 6 | Pending |
+| UX-04 | Phase 6 | Pending |
+| UX-05 | Phase 6 | Pending |
+| UX-06 | Phase 6 | Pending |
+| UX-07 | Phase 6 | Pending |
 
 **Coverage:**
-- v1 requirements: 94 total
-- Mapped to phases: 94
+- v1 requirements: 101 total
+- Mapped to phases: 101
 - Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-24*
-*Last updated: 2026-03-27 after Phase 5 planning*
+*Last updated: 2026-04-01 after Phase 6 planning*

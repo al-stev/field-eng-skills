@@ -17,6 +17,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 3: Medium-Confidence Pages** - Three pages requiring schema validation before development (Cohort Analysis, Team Detection, Risk Scoring)
 - [ ] **Phase 4: Privacy-Sensitive and Exploratory Pages** - Cross-account correlation with privacy controls (Usage Correlation) and low-confidence data exploration (Performance Deep Dive)
 - [x] **Phase 5: Dashboard V2 — Modular Folder-Based Architecture** - Replace the monolithic intelligence-dashboard.html with a folder-based dashboard (shell + panel JS files + data.js) that scales to 15-20+ panels with per-panel agent editing, Google Drive multi-user access, and prototype-quality visualizations (completed 2026-04-01)
+- [ ] **Phase 6: Dashboard V2 UX Polish** - Data provenance (BQ SQL copy buttons), split radar charts, time period labels, breadcrumb navigation, sweeps granularity, chart clipping fixes, compose.py wiring into SKILL.md
 
 ## Phase Details
 
@@ -87,7 +88,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
+Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -96,6 +97,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 3. Medium-Confidence Pages | 0/4 | Planning complete | - |
 | 4. Privacy-Sensitive and Exploratory Pages | 0/3 | Planning complete | - |
 | 5. Dashboard V2 — Modular Folder-Based Architecture | 6/6 | Complete   | 2026-04-01 |
+| 6. Dashboard V2 UX Polish | 0/3 | Planning complete | - |
 
 ### Phase 5: Dashboard V2 — Modular Folder-Based Architecture
 **Goal**: Replace the monolithic 3700-line intelligence-dashboard.html with a modular, folder-based dashboard that scales to 15-20+ panels, supports Google Drive multi-user access, enables per-panel agent editing, and is delightful during cadence calls and QBR screenshares
@@ -122,7 +124,7 @@ Plans:
 
 ### Phase 6: Dashboard V2 UX Polish — data provenance, split charts, navigation improvements
 
-**Goal:** Polish the v2 modular dashboard based on user testing feedback from Phase 05 verification. Three themes: data transparency (show where every number comes from), chart readability (split overlaid charts, label time periods), and navigation UX (breadcrumb back from metric clicks). Final deliverable: wire compose.py into generate.py so /customer-snapshot produces v2 output.
+**Goal:** Polish the v2 modular dashboard based on user testing feedback from Phase 05 verification. Three themes: data transparency (show where every number comes from), chart readability (split overlaid charts, label time periods), and navigation UX (breadcrumb back from metric clicks). Final deliverable: wire compose.py into SKILL.md so /customer-snapshot produces v2 output.
 **Requirements**: UX-01, UX-02, UX-03, UX-04, UX-05, UX-06, UX-07
 **Depends on:** Phase 5
 **Success Criteria** (what must be TRUE):
@@ -132,8 +134,9 @@ Plans:
   4. Clicking a key metric card on Overview navigates to the relevant panel AND shows a "← Overview" breadcrumb for easy return
   5. Sweeps data distinguishes between created and viewed in product adoption
   6. Seat utilization and tracked hours charts render without any label clipping (top, bottom, left, right)
-  7. Running `/customer-snapshot CustomerName` produces the v2 folder-based dashboard (not the v1 monolith) via compose.py integration into generate.py
-**Plans:** 0 plans
-
+  7. Running `/customer-snapshot CustomerName` produces the v2 folder-based dashboard (not the v1 monolith) via compose.py integration into SKILL.md
+**Plans:** 3 plans
 Plans:
-- [ ] TBD (run /gsd:plan-phase 6 to break down)
+- [ ] 06-01-PLAN.md -- Split sweeps in BQ, fix chart clipping, split radar into two charts
+- [ ] 06-02-PLAN.md -- Time period labels on all chart sections, overview breadcrumb navigation
+- [ ] 06-03-PLAN.md -- SQL copy buttons with toast, wire compose.py into SKILL.md for v2 output
