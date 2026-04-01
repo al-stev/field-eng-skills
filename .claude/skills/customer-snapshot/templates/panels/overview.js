@@ -78,6 +78,12 @@
   border: 1px solid var(--border-subtle);\
   border-radius: 6px;\
   padding: 20px;\
+  cursor: pointer;\
+  transition: border-color 0.15s, background 0.15s;\
+}\
+.stat-card:hover {\
+  border-color: var(--accent-border);\
+  background: var(--bg-hover);\
 }\
 .stat-value {\
   font-family: var(--font-body);\
@@ -347,12 +353,19 @@
       '</div>';
 
       // ── 3. Aggregated stats strip ──
+      // Map panel labels to panel IDs for click navigation
+      var sourceToPanelId = {};
+      for (var mp = 0; mp < panels.length; mp++) {
+        sourceToPanelId[panels[mp].label] = panels[mp].id;
+      }
+
       if (allStats.length > 0) {
         html += '<div class="section-label">Key Metrics</div>';
         html += '<div class="stats-strip">';
         for (var si = 0; si < allStats.length; si++) {
           var stat = allStats[si];
-          html += '<div class="stat-card">' +
+          var targetPanelId = sourceToPanelId[stat.source] || '';
+          html += '<div class="stat-card" data-source-panel="' + escapeHtml(targetPanelId) + '">' +
             '<div class="stat-value" style="color:' + stat.color + '">' + escapeHtml(stat.value) + '</div>' +
             '<div class="stat-label">' + escapeHtml(stat.label) + '</div>' +
             '<div class="stat-source">' + escapeHtml(stat.source) + '</div>' +
@@ -456,6 +469,17 @@
       }
 
       container.innerHTML = html;
+
+      // ── Wire stat card click handlers ──
+      var cards = container.querySelectorAll('.stat-card[data-source-panel]');
+      for (var ci = 0; ci < cards.length; ci++) {
+        cards[ci].addEventListener('click', function() {
+          var panelId = this.getAttribute('data-source-panel');
+          if (panelId) {
+            window.location.hash = '#' + panelId;
+          }
+        });
+      }
 
       // ── Wire attention row click handlers ──
       var rows = container.querySelectorAll('.attention-row[data-target-panel]');

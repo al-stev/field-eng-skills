@@ -369,6 +369,8 @@
         }
       },
       radar: {
+        center: ['50%', '46%'],
+        radius: '60%',
         indicator: sorted.map(function(a) {
           return { name: a.area, max: Math.round(maxEvents * 1.2) };
         }),
@@ -526,7 +528,7 @@
           return '<strong>' + p.name + '</strong><br/>Hours: ' + Math.round(p.value) + 'h';
         }
       },
-      grid: { left: 56, right: 24, top: 24, bottom: 32 },
+      grid: { left: 72, right: 24, top: 24, bottom: 32 },
       xAxis: {
         type: 'category',
         data: weeks,
@@ -717,7 +719,7 @@
       if (data.product_areas && data.product_areas.length > 0) {
         html += '<div class="usage-chart-section" id="usage-radar-section">';
         html += '<div class="chart-label">PRODUCT ADOPTION</div>';
-        html += '<div id="usage-radar-chart" style="width:100%;height:320px;"></div>';
+        html += '<div id="usage-radar-chart" style="width:100%;height:380px;"></div>';
         html += '</div>';
       }
 

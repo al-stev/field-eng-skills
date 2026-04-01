@@ -667,6 +667,7 @@ body::before {
 
 <!-- ── DEPENDENCIES (synchronous, in order) ── -->
 <script src="lib/echarts.min.js"></script>
+<script>if (typeof echarts === 'undefined') { document.write('<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"><\/script>'); }</script>
 <script src="lib/chart-helpers.js"></script>
 <script src="lib/panel-registry.js"></script>
 <script src="data.js"></script>
@@ -1045,6 +1046,12 @@ function showContextMenu(x, y, items) {
 // INIT
 // ════════════════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', function() {
+  // Ensure sidebar starts expanded (remove collapsed class if present)
+  var shell = document.getElementById('shell');
+  shell.classList.remove('collapsed');
+  var toggleBtn = document.querySelector('.sidebar-toggle');
+  if (toggleBtn) toggleBtn.setAttribute('aria-label', 'Collapse sidebar');
+
   buildSidebar();
   updateTabTitle();
 
