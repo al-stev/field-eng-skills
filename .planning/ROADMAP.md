@@ -119,3 +119,21 @@ Plans:
 - [x] 05-05-PLAN.md -- Issues panel extraction from v1 monolith (filters, themes, analytics)
 - [x] 05-06-PLAN.md -- Overview panel + delight features + final verification
 **UI hint**: yes
+
+### Phase 6: Dashboard V2 UX Polish — data provenance, split charts, navigation improvements
+
+**Goal:** Polish the v2 modular dashboard based on user testing feedback from Phase 05 verification. Three themes: data transparency (show where every number comes from), chart readability (split overlaid charts, label time periods), and navigation UX (breadcrumb back from metric clicks). Final deliverable: wire compose.py into generate.py so /customer-snapshot produces v2 output.
+**Requirements**: UX-01, UX-02, UX-03, UX-04, UX-05, UX-06, UX-07
+**Depends on:** Phase 5
+**Success Criteria** (what must be TRUE):
+  1. Each data section in the dashboard has a small SQL icon — clicking copies the BigQuery query that produced that data to the clipboard, with a toast notification confirming
+  2. Product adoption radar is split into two separate charts (Events and Users) that are independently readable
+  3. Every chart section displays its time period (e.g., "Last 12 months", "Last 30 days")
+  4. Clicking a key metric card on Overview navigates to the relevant panel AND shows a "← Overview" breadcrumb for easy return
+  5. Sweeps data distinguishes between created and viewed in product adoption
+  6. Seat utilization and tracked hours charts render without any label clipping (top, bottom, left, right)
+  7. Running `/customer-snapshot CustomerName` produces the v2 folder-based dashboard (not the v1 monolith) via compose.py integration into generate.py
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 6 to break down)

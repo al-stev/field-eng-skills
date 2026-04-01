@@ -102,6 +102,7 @@ Recent decisions affecting current work:
 ### Roadmap Evolution
 
 - Phase 5 added: Dashboard V2 — Modular Folder-Based Architecture (replace monolithic intelligence-dashboard.html with folder-based dashboard, spec in DASHBOARD-V2-SPEC.md)
+- Phase 6 added: Dashboard V2 UX Polish — data provenance (BQ SQL copy buttons), split radar charts, navigation breadcrumb, time period labels, compose.py→generate.py wiring
 
 ### Pending Todos
 
