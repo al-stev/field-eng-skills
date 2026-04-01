@@ -212,6 +212,25 @@
   margin-top: -8px;\
   margin-bottom: 12px;\
 }\
+.sql-copy-btn {\
+  display: inline-flex;\
+  align-items: center;\
+  justify-content: center;\
+  width: 20px;\
+  height: 20px;\
+  cursor: pointer;\
+  opacity: 0.4;\
+  transition: opacity 0.15s;\
+  vertical-align: middle;\
+  margin-left: 8px;\
+}\
+.sql-copy-btn:hover {\
+  opacity: 1;\
+}\
+.sql-copy-btn svg {\
+  width: 14px;\
+  height: 14px;\
+}\
 ';
 
   // --- HELPERS ---
@@ -268,6 +287,14 @@
     return '<span class="priority-badge ' + cls + '">' + label + '</span>';
   }
 
+  // --- SQL COPY BUTTON ---
+
+  var SQL_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>';
+
+  function sqlCopyBtn(queryKey) {
+    return '<span class="sql-copy-btn" data-query-key="' + queryKey + '" title="Copy BQ query to clipboard">' + SQL_ICON + '</span>';
+  }
+
   // --- REGISTRATION ---
   PanelRegistry.register({
     id: 'support',
@@ -318,7 +345,7 @@
           </div>\
         </div>\
         \
-        <div class="section-label">Volume &amp; Concerns</div>\
+        <div class="section-label">Volume &amp; Concerns ' + sqlCopyBtn('support_tickets') + '</div>\
         <div class="time-period">All time</div>\
         <div class="two-col">\
           <div class="panel-card">\
@@ -396,6 +423,22 @@
             '<td><span class="concern-label">' + humanizeConcern(t.concern || '') + '</span></td>';
           tbody.appendChild(tr);
         }
+      }
+
+      // Wire up SQL copy button click handlers
+      var sqlBtns = container.querySelectorAll('.sql-copy-btn');
+      for (var bi = 0; bi < sqlBtns.length; bi++) {
+        sqlBtns[bi].addEventListener('click', function(e) {
+          e.stopPropagation();
+          var key = this.getAttribute('data-query-key');
+          var queries = (typeof INTELLIGENCE_DATA !== 'undefined' && INTELLIGENCE_DATA.usage)
+            ? INTELLIGENCE_DATA.usage.bq_queries : null;
+          if (queries && queries[key]) {
+            navigator.clipboard.writeText(queries[key]).then(function() {
+              if (typeof showToast === 'function') showToast('Copied!');
+            });
+          }
+        });
       }
 
       // =========================================================

@@ -423,6 +423,7 @@ def build_usage_json(
     power_users_df: pd.DataFrame = None,
     support_tickets_df: pd.DataFrame = None,
     internal: bool = False,
+    include_queries: bool = False,
 ) -> dict:
     """
     Build the INTELLIGENCE_DATA.usage JSON from 4 DataFrames.
@@ -479,6 +480,18 @@ def build_usage_json(
     if all(s is None for s in [seat_util, weave, tracked, health, support_tickets]):
         return {"available": False, "reason": "no_data"}
 
+    # Build BQ query strings for data provenance (SQL copy buttons in dashboard)
+    bq_queries = None
+    if include_queries:
+        bq_queries = {
+            "seat_utilization": seat_utilization_query().strip(),
+            "weave_ingestion": weave_ingestion_query().strip(),
+            "tracked_hours": tracked_hours_query().strip(),
+            "product_areas": product_areas_query().strip(),
+            "support_tickets": support_tickets_query().strip(),
+            "account_health": account_health_query().strip(),
+        }
+
     # Compute period from available data
     today = date.today()
     period_start = today - timedelta(days=365)
@@ -496,6 +509,7 @@ def build_usage_json(
         "product_areas": product_areas,
         "power_users": power_users,
         "support_tickets": support_tickets,
+        "bq_queries": bq_queries,
     }
 
 
@@ -541,6 +555,7 @@ def main():
         result = build_usage_json(
             seat_df, weave_df, hours_df, account_df, pa_df, pu_df, tickets_df,
             internal=getattr(args, 'internal', False),
+            include_queries=True,
         )
 
     except ValueError as e:

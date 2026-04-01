@@ -196,8 +196,35 @@
     '  .usage-two-col {',
     '    grid-template-columns: 1fr;',
     '  }',
+    '}',
+    '.sql-copy-btn {',
+    '  display: inline-flex;',
+    '  align-items: center;',
+    '  justify-content: center;',
+    '  width: 20px;',
+    '  height: 20px;',
+    '  cursor: pointer;',
+    '  opacity: 0.4;',
+    '  transition: opacity 0.15s;',
+    '  vertical-align: middle;',
+    '  margin-left: 8px;',
+    '}',
+    '.sql-copy-btn:hover {',
+    '  opacity: 1;',
+    '}',
+    '.sql-copy-btn svg {',
+    '  width: 14px;',
+    '  height: 14px;',
     '}'
   ].join('\n');
+
+  // ── SQL COPY BUTTON ──
+
+  var SQL_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>';
+
+  function sqlCopyBtn(queryKey) {
+    return '<span class="sql-copy-btn" data-query-key="' + queryKey + '" title="Copy BQ query to clipboard">' + SQL_ICON + '</span>';
+  }
 
   // ── SUB-RENDERERS ──
 
@@ -660,7 +687,7 @@
       else churnColor3 = 'var(--red)';
     }
 
-    var html = '<div class="chart-label">ACCOUNT HEALTH</div>';
+    var html = '<div class="chart-label">ACCOUNT HEALTH ' + sqlCopyBtn('account_health') + '</div>';
     html += '<div class="account-health-grid">';
 
     // Renewal date
@@ -770,7 +797,7 @@
 
       // Seat utilization chart
       html += '<div class="usage-chart-section">';
-      html += '<div class="chart-label">SEAT UTILIZATION</div>';
+      html += '<div class="chart-label">SEAT UTILIZATION ' + sqlCopyBtn('seat_utilization') + '</div>';
       html += '<div class="time-period">Last 12 months (weekly)</div>';
       html += '<div id="usage-seat-chart" style="width:100%;height:280px;"></div>';
       html += '</div>';
@@ -779,12 +806,12 @@
       if (data.product_areas && data.product_areas.length > 0) {
         html += '<div class="usage-two-col">';
         html += '<div class="usage-chart-section">';
-        html += '<div class="chart-label">PRODUCT ADOPTION — EVENTS</div>';
+        html += '<div class="chart-label">PRODUCT ADOPTION — EVENTS ' + sqlCopyBtn('product_areas') + '</div>';
         html += '<div class="time-period">Last 12 months</div>';
         html += '<div id="usage-radar-events" style="width:100%;height:340px;"></div>';
         html += '</div>';
         html += '<div class="usage-chart-section">';
-        html += '<div class="chart-label">PRODUCT ADOPTION — USERS</div>';
+        html += '<div class="chart-label">PRODUCT ADOPTION — USERS ' + sqlCopyBtn('product_areas') + '</div>';
         html += '<div class="time-period">Last 12 months</div>';
         html += '<div id="usage-radar-users" style="width:100%;height:340px;"></div>';
         html += '</div>';
@@ -793,14 +820,14 @@
 
       // Weave ingestion chart (full width)
       html += '<div class="usage-chart-section">';
-      html += '<div class="chart-label">WEAVE INGESTION</div>';
+      html += '<div class="chart-label">WEAVE INGESTION ' + sqlCopyBtn('weave_ingestion') + '</div>';
       html += '<div class="time-period">Last 12 months (monthly)</div>';
       html += '<div id="usage-weave-chart" style="width:100%;height:240px;"></div>';
       html += '</div>';
 
       // Tracked hours chart
       html += '<div class="usage-chart-section">';
-      html += '<div class="chart-label">TRACKED HOURS</div>';
+      html += '<div class="chart-label">TRACKED HOURS ' + sqlCopyBtn('tracked_hours') + '</div>';
       html += '<div class="time-period">Last 12 months (weekly)</div>';
       html += '<div id="usage-hours-chart" style="width:100%;height:240px;"></div>';
       html += '</div>';
@@ -859,6 +886,21 @@
         if (healthSection) {
           renderAccountHealthGrid(healthSection, data.account_health);
         }
+      }
+
+      // Wire up SQL copy button click handlers
+      var sqlBtns = container.querySelectorAll('.sql-copy-btn');
+      for (var bi = 0; bi < sqlBtns.length; bi++) {
+        sqlBtns[bi].addEventListener('click', function(e) {
+          e.stopPropagation();
+          var key = this.getAttribute('data-query-key');
+          var queries = data.bq_queries;
+          if (queries && queries[key]) {
+            navigator.clipboard.writeText(queries[key]).then(function() {
+              if (typeof showToast === 'function') showToast('Copied!');
+            });
+          }
+        });
       }
 
       return { charts: charts };

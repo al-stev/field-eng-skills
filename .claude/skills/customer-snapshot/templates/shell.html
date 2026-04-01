@@ -564,6 +564,31 @@ body::before {
   opacity: 0.7;
 }
 
+/* ── TOAST NOTIFICATION ── */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius);
+  padding: 10px 20px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  z-index: 10001;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+  pointer-events: none;
+}
+.toast.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 /* ── REDUCED MOTION ── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -1007,6 +1032,20 @@ function showContextMenu(x, y, items) {
 }
 
 // ════════════════════════════════════════════════════════════════
+// TOAST NOTIFICATION
+// ════════════════════════════════════════════════════════════════
+function showToast(message) {
+  var toast = document.getElementById('toast');
+  if (!toast) return;
+  toast.textContent = message;
+  toast.classList.add('visible');
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(function() {
+    toast.classList.remove('visible');
+  }, 2000);
+}
+
+// ════════════════════════════════════════════════════════════════
 // INIT
 // ════════════════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', function() {
@@ -1028,5 +1067,6 @@ document.addEventListener('DOMContentLoaded', function() {
   applyAudienceMode();
 });
 </script>
+<div class="toast" id="toast"></div>
 </body>
 </html>
