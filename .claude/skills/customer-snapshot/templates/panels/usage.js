@@ -184,6 +184,14 @@
     '  grid-template-columns: 1fr 1fr;',
     '  gap: 24px;',
     '}',
+    '.time-period {',
+    '  font-family: "JetBrains Mono", monospace;',
+    '  font-size: 11px;',
+    '  font-weight: 400;',
+    '  color: var(--text-tertiary);',
+    '  margin-top: -8px;',
+    '  margin-bottom: 12px;',
+    '}',
     '@media (max-width: 700px) {',
     '  .usage-two-col {',
     '    grid-template-columns: 1fr;',
@@ -267,7 +275,7 @@
           return '<strong>' + p.name + '</strong><br/>Active: ' + p.value + '<br/>Contracted: ' + seatData.contracted;
         }
       },
-      grid: { left: 48, right: 80, top: 36, bottom: 32 },
+      grid: { left: 60, right: 24, top: 40, bottom: 40 },
       xAxis: {
         type: 'category',
         data: weeks,
@@ -309,7 +317,8 @@
             formatter: 'Contracted: ' + seatData.contracted,
             fontSize: 11,
             fontFamily: "'JetBrains Mono', monospace",
-            color: isDark() ? '#5c6370' : '#8c8c8c'
+            color: isDark() ? '#5c6370' : '#8c8c8c',
+            position: 'insideEndTop'
           },
           data: [{ yAxis: seatData.contracted }]
         }
@@ -528,7 +537,7 @@
           return '<strong>' + p.name + '</strong><br/>Hours: ' + Math.round(p.value) + 'h';
         }
       },
-      grid: { left: 72, right: 24, top: 24, bottom: 64 },
+      grid: { left: 72, right: 24, top: 24, bottom: 72 },
       xAxis: {
         type: 'category',
         data: weeks,
@@ -709,6 +718,7 @@
       // Seat utilization chart
       html += '<div class="usage-chart-section">';
       html += '<div class="chart-label">SEAT UTILIZATION</div>';
+      html += '<div class="time-period">Last 12 months (weekly)</div>';
       html += '<div id="usage-seat-chart" style="width:100%;height:280px;"></div>';
       html += '</div>';
 
@@ -719,6 +729,7 @@
       if (data.product_areas && data.product_areas.length > 0) {
         html += '<div class="usage-chart-section" id="usage-radar-section">';
         html += '<div class="chart-label">PRODUCT ADOPTION</div>';
+        html += '<div class="time-period">Last 12 months</div>';
         html += '<div id="usage-radar-chart" style="width:100%;height:380px;"></div>';
         html += '</div>';
       }
@@ -726,6 +737,7 @@
       // Weave ingestion chart
       html += '<div class="usage-chart-section">';
       html += '<div class="chart-label">WEAVE INGESTION</div>';
+      html += '<div class="time-period">Last 12 months (monthly)</div>';
       html += '<div id="usage-weave-chart" style="width:100%;height:240px;"></div>';
       html += '</div>';
 
@@ -734,6 +746,7 @@
       // Tracked hours chart
       html += '<div class="usage-chart-section">';
       html += '<div class="chart-label">TRACKED HOURS</div>';
+      html += '<div class="time-period">Last 12 months (weekly)</div>';
       html += '<div id="usage-hours-chart" style="width:100%;height:240px;"></div>';
       html += '</div>';
 

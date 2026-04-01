@@ -204,6 +204,14 @@
     grid-template-columns: 1fr;\
   }\
 }\
+.time-period {\
+  font-family: "JetBrains Mono", monospace;\
+  font-size: 11px;\
+  font-weight: 400;\
+  color: var(--text-tertiary);\
+  margin-top: -8px;\
+  margin-bottom: 12px;\
+}\
 ';
 
   // --- HELPERS ---
@@ -311,6 +319,7 @@
         </div>\
         \
         <div class="section-label">Volume &amp; Concerns</div>\
+        <div class="time-period">All time</div>\
         <div class="two-col">\
           <div class="panel-card">\
             <div id="chart-volume" style="width:100%;height:320px;"></div>\
@@ -321,6 +330,7 @@
         </div>\
         \
         <div class="section-label">Active Tickets</div>\
+        <div class="time-period">Currently open</div>\
         <div class="full-width panel-card">\
           <div id="chart-scatter" style="width:100%;height:360px;"></div>\
           <div class="scatter-detail-toggle" id="scatter-toggle">Show detail table</div>\
@@ -342,6 +352,7 @@
         </div>\
         \
         <div class="section-label">Submitter Analysis</div>\
+        <div class="time-period">All time</div>\
         <div class="two-col">\
           <div class="panel-card">\
             <div id="chart-submitters" style="width:100%;height:360px;"></div>\
