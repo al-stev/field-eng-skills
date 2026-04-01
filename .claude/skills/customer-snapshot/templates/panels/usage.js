@@ -329,26 +329,33 @@
   }
 
   /**
-   * Render product areas radar chart.
-   * @param {HTMLElement} chartEl - Chart container element
-   * @param {Object} data - usage data object
-   * @returns {Object|null} ECharts instance or null
+   * Sort product areas by total_events descending, take top 8.
+   * Shared by both radar chart renderers for consistent ordering.
+   * @param {Array} areas - product_areas array from usage data
+   * @returns {Array} sorted top-8 areas
    */
-  function renderRadarChart(chartEl, data) {
-    var areas = data.product_areas;
-    if (!areas || areas.length === 0) return null;
-
-    // Sort by total_events descending, take top 8
+  function sortedTopAreas(areas) {
     var sorted = areas.slice().sort(function(a, b) {
       return b.total_events - a.total_events;
     });
     if (sorted.length > 8) sorted = sorted.slice(0, 8);
+    return sorted;
+  }
 
+  /**
+   * Render product areas Events radar chart.
+   * @param {HTMLElement} chartEl - Chart container element
+   * @param {Object} data - usage data object
+   * @returns {Object|null} ECharts instance or null
+   */
+  function renderEventsRadar(chartEl, data) {
+    var areas = data.product_areas;
+    if (!areas || areas.length === 0) return null;
+
+    var sorted = sortedTopAreas(areas);
     var chart = ChartHelpers.createChart(chartEl);
     var maxEvents = Math.max.apply(null, sorted.map(function(a) { return a.total_events; }));
-    var maxUsers = Math.max.apply(null, sorted.map(function(a) { return a.unique_users; }));
     var blueColor = isDark() ? '#60a5fa' : '#1565a0';
-    var greenColor = isDark() ? '#4ade80' : '#1a7a4c';
 
     chart.setOption({
       tooltip: {
@@ -357,29 +364,16 @@
         borderColor: ChartHelpers.tooltipConfig().borderColor,
         textStyle: ChartHelpers.tooltipConfig().textStyle,
         formatter: function(params) {
-          var d = params.data;
-          var tip = '<strong>' + d.name + '</strong><br/>';
+          var tip = '<strong>Events</strong><br/>';
           sorted.forEach(function(a) {
-            if (d.name === 'Events') {
-              tip += a.area + ': ' + a.total_events.toLocaleString() + '<br/>';
-            } else {
-              tip += a.area + ': ' + a.unique_users + '<br/>';
-            }
+            tip += a.area + ': ' + a.total_events.toLocaleString() + '<br/>';
           });
           return tip;
         }
       },
-      legend: {
-        bottom: 0,
-        textStyle: {
-          color: isDark() ? '#8b92a0' : '#5c5c5c',
-          fontFamily: "'JetBrains Mono', monospace",
-          fontSize: 11
-        }
-      },
       radar: {
-        center: ['50%', '46%'],
-        radius: '60%',
+        center: ['50%', '50%'],
+        radius: '65%',
         indicator: sorted.map(function(a) {
           return { name: a.area, max: Math.round(maxEvents * 1.2) };
         }),
@@ -408,12 +402,71 @@
             lineStyle: { color: blueColor, width: 2 },
             itemStyle: { color: blueColor },
             areaStyle: { color: blueColor + '22' }
-          },
+          }
+        ]
+      }]
+    });
+
+    return chart;
+  }
+
+  /**
+   * Render product areas Users radar chart.
+   * @param {HTMLElement} chartEl - Chart container element
+   * @param {Object} data - usage data object
+   * @returns {Object|null} ECharts instance or null
+   */
+  function renderUsersRadar(chartEl, data) {
+    var areas = data.product_areas;
+    if (!areas || areas.length === 0) return null;
+
+    var sorted = sortedTopAreas(areas);
+    var chart = ChartHelpers.createChart(chartEl);
+    var maxUsers = Math.max.apply(null, sorted.map(function(a) { return a.unique_users; }));
+    var greenColor = isDark() ? '#4ade80' : '#1a7a4c';
+
+    chart.setOption({
+      tooltip: {
+        trigger: 'item',
+        backgroundColor: ChartHelpers.tooltipConfig().backgroundColor,
+        borderColor: ChartHelpers.tooltipConfig().borderColor,
+        textStyle: ChartHelpers.tooltipConfig().textStyle,
+        formatter: function(params) {
+          var tip = '<strong>Users</strong><br/>';
+          sorted.forEach(function(a) {
+            tip += a.area + ': ' + a.unique_users + '<br/>';
+          });
+          return tip;
+        }
+      },
+      radar: {
+        center: ['50%', '50%'],
+        radius: '65%',
+        indicator: sorted.map(function(a) {
+          return { name: a.area, max: Math.round(maxUsers * 1.2) };
+        }),
+        shape: 'polygon',
+        axisName: {
+          color: isDark() ? '#5c6370' : '#8c8c8c',
+          fontFamily: "'JetBrains Mono', monospace",
+          fontSize: 11
+        },
+        splitArea: {
+          areaStyle: { color: ['transparent'] }
+        },
+        splitLine: {
+          lineStyle: { color: isDark() ? '#1e2430' : '#e0ded9' }
+        },
+        axisLine: {
+          lineStyle: { color: isDark() ? '#2a3040' : '#d4d2ce' }
+        }
+      },
+      series: [{
+        type: 'radar',
+        data: [
           {
             name: 'Users',
-            value: sorted.map(function(a) {
-              return maxUsers > 0 ? (a.unique_users / maxUsers) * maxEvents : 0;
-            }),
+            value: sorted.map(function(a) { return a.unique_users; }),
             lineStyle: { color: greenColor, width: 2 },
             itemStyle: { color: greenColor },
             areaStyle: { color: greenColor + '22' }
@@ -722,26 +775,28 @@
       html += '<div id="usage-seat-chart" style="width:100%;height:280px;"></div>';
       html += '</div>';
 
-      // Two-column layout for radar + weave
-      html += '<div class="usage-two-col">';
-
-      // Radar chart (product areas) -- conditionally shown
+      // Product Adoption: two radars side by side
       if (data.product_areas && data.product_areas.length > 0) {
-        html += '<div class="usage-chart-section" id="usage-radar-section">';
-        html += '<div class="chart-label">PRODUCT ADOPTION</div>';
+        html += '<div class="usage-two-col">';
+        html += '<div class="usage-chart-section">';
+        html += '<div class="chart-label">PRODUCT ADOPTION — EVENTS</div>';
         html += '<div class="time-period">Last 12 months</div>';
-        html += '<div id="usage-radar-chart" style="width:100%;height:380px;"></div>';
+        html += '<div id="usage-radar-events" style="width:100%;height:340px;"></div>';
         html += '</div>';
+        html += '<div class="usage-chart-section">';
+        html += '<div class="chart-label">PRODUCT ADOPTION — USERS</div>';
+        html += '<div class="time-period">Last 12 months</div>';
+        html += '<div id="usage-radar-users" style="width:100%;height:340px;"></div>';
+        html += '</div>';
+        html += '</div>'; // end two-col
       }
 
-      // Weave ingestion chart
+      // Weave ingestion chart (full width)
       html += '<div class="usage-chart-section">';
       html += '<div class="chart-label">WEAVE INGESTION</div>';
       html += '<div class="time-period">Last 12 months (monthly)</div>';
       html += '<div id="usage-weave-chart" style="width:100%;height:240px;"></div>';
       html += '</div>';
-
-      html += '</div>'; // end two-col
 
       // Tracked hours chart
       html += '<div class="usage-chart-section">';
@@ -770,12 +825,17 @@
         if (seatChart) charts.push(seatChart);
       }
 
-      // Render radar chart (only if product areas present)
+      // Render radar charts (only if product areas present)
       if (data.product_areas && data.product_areas.length > 0) {
-        var radarEl = container.querySelector('#usage-radar-chart');
-        if (radarEl) {
-          var radarChart = renderRadarChart(radarEl, data);
-          if (radarChart) charts.push(radarChart);
+        var radarEventsEl = container.querySelector('#usage-radar-events');
+        if (radarEventsEl) {
+          var eventsChart = renderEventsRadar(radarEventsEl, data);
+          if (eventsChart) charts.push(eventsChart);
+        }
+        var radarUsersEl = container.querySelector('#usage-radar-users');
+        if (radarUsersEl) {
+          var usersChart = renderUsersRadar(radarUsersEl, data);
+          if (usersChart) charts.push(usersChart);
         }
       }
 
