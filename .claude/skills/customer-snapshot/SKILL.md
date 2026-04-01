@@ -6,7 +6,7 @@ argument-hint: "<customer-name> (required)"
 
 # Customer Snapshot
 
-Generate professional, interactive intelligence dashboards from W&B Jira data and Slack channel history for customer call prep. The output is a single self-contained HTML file with custom CSS bar charts, pill filters, collapsible theme sections, sentiment analysis, trending metrics, executive summary, internal/external audience toggle, and light/dark mode support.
+Generate professional, interactive intelligence dashboards from W&B Jira data and Slack channel history for customer call prep. The output is a folder-based dashboard with modular panels, ECharts visualizations, pill filters, collapsible theme sections, sentiment analysis, trending metrics, executive summary, internal/external audience toggle, and light/dark mode support.
 
 The dashboard is designed for a Solutions Engineer preparing for customer calls -- professional enough to screen-share or send to colleagues. The internal/external toggle allows hiding candid analysis when screen-sharing.
 
@@ -311,21 +311,38 @@ Note: trending and exec_summary are computed client-side in the template JS, not
 
 For priority mapping: use P0/P1/P2/P3 directly from Jira. If priority uses names like "Critical"/"High"/"Medium"/"Low", map to P0/P1/P2/P3 respectively.
 
-### Step 8: Generate the intelligence dashboard
+### Step 8: Generate the v2 intelligence dashboard
 
-1. Read `templates/intelligence-dashboard.html` from this skill directory
-2. Replace the sample `INTELLIGENCE_DATA` constant with the real data object
-3. Save to: `customers/<kebab-case-name>/trackers/YYYY-MM-DD-dashboard.html`
-   - Example: `customers/g-research/trackers/2026-03-17-dashboard.html`
-4. Create the directory path if it doesn't exist
-5. Open the file: `open <path>`
+1. Write the INTELLIGENCE_DATA object to a temporary JSON file:
+   ```bash
+   # Write the full INTELLIGENCE_DATA dict as JSON to a temp file
+   # e.g., /tmp/customer-snapshot-data.json
+   ```
 
-The template handles all rendering -- charts, filters, theme sections, sentiment panel, trending, exec summary, animations. You only inject the data.
+2. Call compose.py to generate the v2 folder-based dashboard:
+   ```bash
+   uv run --project .claude/skills/customer-snapshot python \
+       .claude/skills/customer-snapshot/templates/compose.py \
+       --customer "<CustomerName>" \
+       --data /tmp/customer-snapshot-data.json \
+       --output customers/<kebab-case-name>/dashboard/
+   ```
+
+3. The output directory will contain:
+   - `index.html` -- shell with sidebar navigation
+   - `data.js` -- INTELLIGENCE_DATA with all panel data
+   - `panels/` -- individual panel JS files (only panels with data)
+   - `lib/` -- echarts.min.js, chart-helpers.js, panel-registry.js
+   - `history/` -- previous data.js snapshots for diff computation
+
+4. Open the dashboard: `open customers/<kebab-case-name>/dashboard/index.html`
+
+The v1 monolithic template (`templates/intelligence-dashboard.html`) remains as a fallback reference but is no longer the default output path.
 
 ### Step 9: Present to the user
 
 Tell the user:
-- File path
+- Dashboard folder path (e.g., `customers/<name>/dashboard/`)
 - Brief summary: total issues, sentiment score (or "not configured"), backlog trajectory
 - Usage stats if available (seat utilization %, Weave ingestion %, trend direction)
 - Asana action counts if available (e.g., "8 open actions, 1 overdue")
@@ -348,11 +365,11 @@ Read `references/design-system.md` for the complete visual specification. Key pr
 
 ## Visualization
 
-- Usage panel: Apache ECharts (CDN, custom 'wandb' theme) -- seat utilization (line), product adoption (radar), weave ingestion (bar), tracked hours (bar)
+- All chart panels use Apache ECharts v5 via the modular panel architecture (usage, support, overview)
+- ECharts loaded from locally bundled `lib/echarts.min.js` (not CDN) for offline reliability
+- Custom 'wandb' theme registered via `lib/chart-helpers.js` matching design system colors (dark/light mode aware)
 - Jira/Slack panels: Custom CSS bars (unchanged from Phase 3/6)
-- Both coexist in the same template
-- ECharts loaded from `https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js`
-- Custom theme registered as `'wandb'` matching design system colors (dark/light mode aware)
+- Each data section has a SQL copy icon button for BQ query provenance (copies query to clipboard with toast notification)
 
 ## Status Mapping
 
@@ -396,13 +413,13 @@ Callouts are interactive -- clicking one filters the issue list, auto-expands ma
 ## Anti-Patterns
 
 When generating or modifying dashboards, never introduce these patterns:
-- Chart.js or any external JS charting library
 - KPI cards (big number + small label in identical card grid)
 - Gradient text, glassmorphism, neon accents
 - Inter/Roboto/Arial fonts
-- Sidebar navigation
 - Copying from the prototype at `.claude/skills/customer-tracker/` in older commits
 - LLM-based theme clustering (use Jira components/labels only)
+- Generating v1 monolithic intelligence-dashboard.html (use compose.py for v2)
+- Loading ECharts from CDN in v2 dashboards (use locally bundled lib/echarts.min.js)
 
 ## Future View Types
 
