@@ -600,6 +600,40 @@ body::before {
   }
 }
 
+/* ── CONTEXT MENU ── */
+.ctx-menu {
+  position: fixed;
+  z-index: 10000;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 4px 0;
+  min-width: 180px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  display: none;
+}
+.ctx-menu.visible { display: block; }
+.ctx-menu-item {
+  padding: 8px 16px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.1s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ctx-menu-item:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+.ctx-menu-separator {
+  height: 1px;
+  background: var(--border-subtle);
+  margin: 4px 8px;
+}
+
 /* ── REDUCED MOTION ── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -826,8 +860,6 @@ function navigateTo(panelId) {
     }, 50);
   }
 
-  // Update document title
-  document.title = INTELLIGENCE_DATA.customer + ' (' + panelId + ') -- Dashboard';
   currentPanel = panelId;
 }
 
@@ -843,6 +875,27 @@ function toggleSidebar() {
   setTimeout(function() {
     ChartHelpers.resizeAll();
   }, 300);
+}
+
+// ════════════════════════════════════════════════════════════════
+// AMBIENT TAB TITLE
+// ════════════════════════════════════════════════════════════════
+function updateTabTitle() {
+  var customer = INTELLIGENCE_DATA.customer || 'Dashboard';
+  var staleCount = 0;
+  PanelRegistry.getAll().forEach(function(panel) {
+    if (panel.id === 'overview') return;
+    try {
+      var panelData = panel.dataKey ? resolveKey(INTELLIGENCE_DATA, panel.dataKey) : null;
+      if (panelData) {
+        var items = panel.getAttentionItems(panelData);
+        staleCount += items.filter(function(i) { return i.severity === 'high'; }).length;
+      }
+    } catch(e) {}
+  });
+  document.title = staleCount > 0
+    ? customer + ' (' + staleCount + ' urgent) -- Dashboard'
+    : customer + ' -- Dashboard';
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -992,10 +1045,57 @@ window.addEventListener('resize', function() {
 });
 
 // ════════════════════════════════════════════════════════════════
+// CONTEXTUAL RIGHT-CLICK MENU
+// ════════════════════════════════════════════════════════════════
+var ctxMenu = document.createElement('div');
+ctxMenu.className = 'ctx-menu';
+ctxMenu.id = 'ctx-menu';
+document.body.appendChild(ctxMenu);
+
+document.addEventListener('click', function() { ctxMenu.classList.remove('visible'); });
+document.addEventListener('contextmenu', function(e) {
+  var jiraLink = e.target.closest('[data-jira-key]');
+  var submitterEl = e.target.closest('[data-submitter]');
+
+  if (jiraLink) {
+    e.preventDefault();
+    var key = jiraLink.dataset.jiraKey;
+    showContextMenu(e.clientX, e.clientY, [
+      { label: 'Open in Jira', action: function() { window.open('https://wandb.atlassian.net/browse/' + key, '_blank'); } },
+      { label: 'Copy issue key', action: function() { navigator.clipboard.writeText(key); } },
+      { separator: true },
+      { label: 'Search in Slack', action: function() { window.open('https://coreweave.slack.com/search/' + encodeURIComponent(key), '_blank'); } }
+    ]);
+  } else if (submitterEl) {
+    e.preventDefault();
+    var name = submitterEl.dataset.submitter;
+    showContextMenu(e.clientX, e.clientY, [
+      { label: 'Search in Slack', action: function() { window.open('https://coreweave.slack.com/search/' + encodeURIComponent(name), '_blank'); } },
+      { label: 'Copy name', action: function() { navigator.clipboard.writeText(name); } }
+    ]);
+  }
+});
+
+function showContextMenu(x, y, items) {
+  ctxMenu.innerHTML = items.map(function(item) {
+    return item.separator ? '<div class="ctx-menu-separator"></div>' :
+      '<div class="ctx-menu-item">' + item.label + '</div>';
+  }).join('');
+  var actionItems = items.filter(function(it) { return !it.separator; });
+  ctxMenu.querySelectorAll('.ctx-menu-item').forEach(function(el, i) {
+    if (actionItems[i]) el.addEventListener('click', actionItems[i].action);
+  });
+  ctxMenu.style.left = Math.min(x, window.innerWidth - 200) + 'px';
+  ctxMenu.style.top = Math.min(y, window.innerHeight - 200) + 'px';
+  ctxMenu.classList.add('visible');
+}
+
+// ════════════════════════════════════════════════════════════════
 // INIT
 // ════════════════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', function() {
   buildSidebar();
+  updateTabTitle();
 
   // Navigate to hash or default to overview
   var hash = window.location.hash.replace('#', '');

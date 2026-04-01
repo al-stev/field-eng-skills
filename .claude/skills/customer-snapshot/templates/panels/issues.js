@@ -1279,7 +1279,7 @@
         }
 
         rows += '<tr>' +
-          '<td><a class="issue-key" href="' + (iss.url || '#') + '" target="_blank" rel="noopener" data-issue-key="' + escapeHtml(iss.key) + '">' + escapeHtml(iss.key) + '</a></td>' +
+          '<td><a class="issue-key" href="' + (iss.url || '#') + '" target="_blank" rel="noopener" data-issue-key="' + escapeHtml(iss.key) + '" data-jira-key="' + escapeHtml(iss.key) + '">' + escapeHtml(iss.key) + '</a></td>' +
           '<td><span class="issue-summary" title="' + escapeHtml(iss.summary) + '">' + escapeHtml(iss.summary) + '</span></td>' +
           '<td><span class="type-badge ' + tc + '">' + (iss.type === 'Feature Request' ? 'FR' : escapeHtml(iss.type)) + '</span></td>' +
           '<td>' + priorityBadge(iss.priority) + '</td>' +

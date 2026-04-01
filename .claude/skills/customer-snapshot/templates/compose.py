@@ -58,6 +58,61 @@ def resolve_key(data, dot_path):
     return current
 
 
+def _parse_old_data(data_js_path):
+    """Parse INTELLIGENCE_DATA from an existing data.js file.
+
+    Extracts the JSON between 'const INTELLIGENCE_DATA = ' and the trailing ';'.
+    Returns the parsed dict, or None if parsing fails.
+    """
+    try:
+        content = data_js_path.read_text(encoding='utf-8')
+        prefix = 'const INTELLIGENCE_DATA = '
+        if prefix not in content:
+            return None
+        json_str = content[content.index(prefix) + len(prefix):]
+        # Strip trailing semicolon and whitespace
+        json_str = json_str.rstrip().rstrip(';')
+        return json.loads(json_str)
+    except Exception:
+        return None
+
+
+def _compute_diff(old_data, new_data):
+    """Compute shallow diff between old and new INTELLIGENCE_DATA."""
+    diff = {'previous_date': old_data.get('generated', 'unknown')}
+
+    # Issues diff
+    old_keys = {i['key'] for i in (old_data.get('issues') or [])}
+    new_keys = {i['key'] for i in (new_data.get('issues') or [])}
+    resolved = ['Done', 'Closed', 'Resolved', 'Merged']
+    new_issues_map = {i['key']: i for i in (new_data.get('issues') or [])}
+    diff['new_issues'] = sorted(new_keys - old_keys)
+    diff['resolved_issues'] = sorted(
+        k for k in old_keys
+        if k not in new_keys or new_issues_map.get(k, {}).get('status') in resolved
+    )
+
+    # Ticket diff
+    old_tickets = resolve_key(old_data, 'usage.support_tickets.total') or 0
+    new_tickets = resolve_key(new_data, 'usage.support_tickets.total') or 0
+    diff['new_tickets'] = new_tickets - old_tickets
+
+    # Seat diff
+    old_seats = resolve_key(old_data, 'usage.seat_utilization.active') or 0
+    new_seats = resolve_key(new_data, 'usage.seat_utilization.active') or 0
+    diff['seat_change'] = new_seats - old_seats
+
+    # Sentiment diff
+    old_sent = resolve_key(old_data, 'sentiment.overall.score')
+    new_sent = resolve_key(new_data, 'sentiment.overall.score')
+    if old_sent and new_sent and old_sent != new_sent:
+        diff['sentiment_change'] = f'{old_sent} -> {new_sent}'
+    else:
+        diff['sentiment_change'] = None
+
+    return diff
+
+
 def generate_dashboard(customer_name, data, output_dir, echarts_path=None):
     """Generate a dashboard folder for a customer.
 
@@ -113,9 +168,16 @@ def generate_dashboard(customer_name, data, output_dir, echarts_path=None):
     (output_dir / 'lib').mkdir(exist_ok=True)
     (output_dir / 'history').mkdir(exist_ok=True)
 
-    # 12. History snapshot: save old data.js before overwriting
+    # 12. History snapshot + diff computation
     data_js_path = output_dir / 'data.js'
     if data_js_path.exists():
+        # Parse old data for diff computation before archiving
+        old_data = _parse_old_data(data_js_path)
+        if old_data:
+            diff = _compute_diff(old_data, data)
+            data['_diff'] = diff
+
+        # Archive old data.js to history/
         history_name = f'data-{date.today().isoformat()}.js'
         history_path = output_dir / 'history' / history_name
         if not history_path.exists():  # don't overwrite same-day snapshot

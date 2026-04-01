@@ -374,7 +374,7 @@
           var age = ChartHelpers.daysBetween(t.created_at);
           var jiraUrl = t.jira_id ? 'https://wandb.atlassian.net/browse/' + t.jira_id : '';
           var jiraCell = t.jira_id
-            ? '<a class="jira-link" href="' + jiraUrl + '" target="_blank" rel="noopener">' + t.jira_id + '</a>'
+            ? '<a class="jira-link" href="' + jiraUrl + '" target="_blank" rel="noopener" data-jira-key="' + t.jira_id + '">' + t.jira_id + '</a>'
             : '—';
           var tr = document.createElement('tr');
           tr.innerHTML = '<td>' + jiraCell + '</td>' +
