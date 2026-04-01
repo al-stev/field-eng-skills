@@ -356,150 +356,129 @@
   }
 
   /**
-   * Sort product areas by total_events descending, take top 8.
-   * Shared by both radar chart renderers for consistent ordering.
-   * @param {Array} areas - product_areas array from usage data
-   * @returns {Array} sorted top-8 areas
+   * Format large numbers compactly: 15328017 → "15.3M", 157192 → "157K", 14 → "14"
    */
-  function sortedTopAreas(areas) {
+  function compactNumber(n) {
+    if (n >= 1e6) return (n / 1e6).toFixed(1).replace(/\.0$/, '') + 'M';
+    if (n >= 1e3) return (n / 1e3).toFixed(n >= 1e4 ? 0 : 1).replace(/\.0$/, '') + 'K';
+    return String(n);
+  }
+
+  /**
+   * Render product adoption as paired horizontal bar chart.
+   * Two series (Events + Users) with dual x-axes: log for events, linear for users.
+   * Sorted by users descending so adoption breadth leads the visual.
+   * @param {HTMLElement} chartEl - Chart container element
+   * @param {Object} data - usage data object
+   * @returns {Object|null} ECharts instance or null
+   */
+  function renderProductAdoptionBars(chartEl, data) {
+    var areas = data.product_areas;
+    if (!areas || areas.length === 0) return null;
+
+    // Sort by users descending, take top 10
     var sorted = areas.slice().sort(function(a, b) {
-      return b.total_events - a.total_events;
+      return a.unique_users - b.unique_users; // ascending for bottom-to-top bar layout
     });
-    if (sorted.length > 8) sorted = sorted.slice(0, 8);
-    return sorted;
-  }
+    if (sorted.length > 10) sorted = sorted.slice(sorted.length - 10);
 
-  /**
-   * Render product areas Events radar chart.
-   * @param {HTMLElement} chartEl - Chart container element
-   * @param {Object} data - usage data object
-   * @returns {Object|null} ECharts instance or null
-   */
-  function renderEventsRadar(chartEl, data) {
-    var areas = data.product_areas;
-    if (!areas || areas.length === 0) return null;
-
-    var sorted = sortedTopAreas(areas);
     var chart = ChartHelpers.createChart(chartEl);
-    var maxEvents = Math.max.apply(null, sorted.map(function(a) { return a.total_events; }));
+    var categoryNames = sorted.map(function(a) { return a.area; });
+    var eventValues = sorted.map(function(a) { return Math.max(a.total_events, 1); }); // min 1 for log
+    var userValues = sorted.map(function(a) { return a.unique_users; });
+
     var blueColor = isDark() ? '#60a5fa' : '#1565a0';
-
-    chart.setOption({
-      tooltip: {
-        trigger: 'item',
-        backgroundColor: ChartHelpers.tooltipConfig().backgroundColor,
-        borderColor: ChartHelpers.tooltipConfig().borderColor,
-        textStyle: ChartHelpers.tooltipConfig().textStyle,
-        formatter: function(params) {
-          var tip = '<strong>Events</strong><br/>';
-          sorted.forEach(function(a) {
-            tip += a.area + ': ' + a.total_events.toLocaleString() + '<br/>';
-          });
-          return tip;
-        }
-      },
-      radar: {
-        center: ['50%', '50%'],
-        radius: '65%',
-        indicator: sorted.map(function(a) {
-          return { name: a.area, max: Math.round(maxEvents * 1.2) };
-        }),
-        shape: 'polygon',
-        axisName: {
-          color: isDark() ? '#5c6370' : '#8c8c8c',
-          fontFamily: "'JetBrains Mono', monospace",
-          fontSize: 11
-        },
-        splitArea: {
-          areaStyle: { color: ['transparent'] }
-        },
-        splitLine: {
-          lineStyle: { color: isDark() ? '#1e2430' : '#e0ded9' }
-        },
-        axisLine: {
-          lineStyle: { color: isDark() ? '#2a3040' : '#d4d2ce' }
-        }
-      },
-      series: [{
-        type: 'radar',
-        data: [
-          {
-            name: 'Events',
-            value: sorted.map(function(a) { return a.total_events; }),
-            lineStyle: { color: blueColor, width: 2 },
-            itemStyle: { color: blueColor },
-            areaStyle: { color: blueColor + '22' }
-          }
-        ]
-      }]
-    });
-
-    return chart;
-  }
-
-  /**
-   * Render product areas Users radar chart.
-   * @param {HTMLElement} chartEl - Chart container element
-   * @param {Object} data - usage data object
-   * @returns {Object|null} ECharts instance or null
-   */
-  function renderUsersRadar(chartEl, data) {
-    var areas = data.product_areas;
-    if (!areas || areas.length === 0) return null;
-
-    var sorted = sortedTopAreas(areas);
-    var chart = ChartHelpers.createChart(chartEl);
-    var maxUsers = Math.max.apply(null, sorted.map(function(a) { return a.unique_users; }));
     var greenColor = isDark() ? '#4ade80' : '#1a7a4c';
+    var labelColor = isDark() ? '#5c6370' : '#8c8c8c';
+    var monoFont = "'JetBrains Mono', monospace";
 
     chart.setOption({
       tooltip: {
-        trigger: 'item',
+        trigger: 'axis',
+        axisPointer: { type: 'shadow' },
         backgroundColor: ChartHelpers.tooltipConfig().backgroundColor,
         borderColor: ChartHelpers.tooltipConfig().borderColor,
         textStyle: ChartHelpers.tooltipConfig().textStyle,
         formatter: function(params) {
-          var tip = '<strong>Users</strong><br/>';
-          sorted.forEach(function(a) {
-            tip += a.area + ': ' + a.unique_users + '<br/>';
+          var name = params[0].name;
+          var tip = '<strong>' + name + '</strong>';
+          params.forEach(function(p) {
+            var val = p.seriesName === 'Events'
+              ? p.value.toLocaleString() + ' events'
+              : p.value + ' users';
+            tip += '<br/>' + p.marker + ' ' + val;
           });
           return tip;
         }
       },
-      radar: {
-        center: ['50%', '50%'],
-        radius: '65%',
-        indicator: sorted.map(function(a) {
-          return { name: a.area, max: Math.round(maxUsers * 1.2) };
-        }),
-        shape: 'polygon',
-        axisName: {
-          color: isDark() ? '#5c6370' : '#8c8c8c',
-          fontFamily: "'JetBrains Mono', monospace",
-          fontSize: 11
-        },
-        splitArea: {
-          areaStyle: { color: ['transparent'] }
-        },
-        splitLine: {
-          lineStyle: { color: isDark() ? '#1e2430' : '#e0ded9' }
-        },
-        axisLine: {
-          lineStyle: { color: isDark() ? '#2a3040' : '#d4d2ce' }
-        }
+      legend: {
+        data: ['Events', 'Users'],
+        left: 120,
+        top: 0,
+        textStyle: { fontFamily: monoFont, fontSize: 11, color: labelColor }
       },
-      series: [{
-        type: 'radar',
-        data: [
-          {
-            name: 'Users',
-            value: sorted.map(function(a) { return a.unique_users; }),
-            lineStyle: { color: greenColor, width: 2 },
-            itemStyle: { color: greenColor },
-            areaStyle: { color: greenColor + '22' }
+      grid: { left: 120, right: 80, top: 28, bottom: 8 },
+      yAxis: {
+        type: 'category',
+        data: categoryNames,
+        axisLabel: {
+          fontFamily: monoFont,
+          fontSize: 11,
+          color: labelColor
+        },
+        axisLine: { lineStyle: { color: ChartHelpers.getColor('border-subtle') } },
+        axisTick: { show: false }
+      },
+      xAxis: [
+        {
+          type: 'log',
+          position: 'top',
+          axisLabel: { show: false },
+          splitLine: ChartHelpers.gridLine(),
+          axisLine: { show: false },
+          axisTick: { show: false }
+        },
+        {
+          type: 'value',
+          position: 'bottom',
+          show: false
+        }
+      ],
+      series: [
+        {
+          name: 'Events',
+          type: 'bar',
+          xAxisIndex: 0,
+          data: eventValues,
+          barWidth: '35%',
+          barGap: '20%',
+          itemStyle: { color: blueColor, borderRadius: [0, 3, 3, 0] },
+          label: {
+            show: true,
+            position: 'right',
+            fontFamily: monoFont,
+            fontSize: 11,
+            color: blueColor,
+            formatter: function(p) { return compactNumber(p.value); }
           }
-        ]
-      }]
+        },
+        {
+          name: 'Users',
+          type: 'bar',
+          xAxisIndex: 0,
+          data: userValues,
+          barWidth: '35%',
+          itemStyle: { color: greenColor, borderRadius: [0, 3, 3, 0] },
+          label: {
+            show: true,
+            position: 'right',
+            fontFamily: monoFont,
+            fontSize: 11,
+            color: greenColor,
+            formatter: function(p) { return p.value + ' users'; }
+          }
+        }
+      ]
     });
 
     return chart;
@@ -802,20 +781,14 @@
       html += '<div id="usage-seat-chart" style="width:100%;height:280px;"></div>';
       html += '</div>';
 
-      // Product Adoption: two radars side by side
+      // Product Adoption: paired horizontal bar chart
       if (data.product_areas && data.product_areas.length > 0) {
-        html += '<div class="usage-two-col">';
+        var barHeight = Math.max(240, data.product_areas.length * 48 + 48);
         html += '<div class="usage-chart-section">';
-        html += '<div class="chart-label">PRODUCT ADOPTION — EVENTS ' + sqlCopyBtn('product_areas') + '</div>';
-        html += '<div class="time-period">Last 12 months</div>';
-        html += '<div id="usage-radar-events" style="width:100%;height:340px;"></div>';
+        html += '<div class="chart-label">PRODUCT ADOPTION ' + sqlCopyBtn('product_areas') + '</div>';
+        html += '<div class="time-period">Last 12 months — sorted by user adoption</div>';
+        html += '<div id="usage-adoption-bars" style="width:100%;height:' + barHeight + 'px;"></div>';
         html += '</div>';
-        html += '<div class="usage-chart-section">';
-        html += '<div class="chart-label">PRODUCT ADOPTION — USERS ' + sqlCopyBtn('product_areas') + '</div>';
-        html += '<div class="time-period">Last 12 months</div>';
-        html += '<div id="usage-radar-users" style="width:100%;height:340px;"></div>';
-        html += '</div>';
-        html += '</div>'; // end two-col
       }
 
       // Weave ingestion chart (full width)
@@ -852,17 +825,12 @@
         if (seatChart) charts.push(seatChart);
       }
 
-      // Render radar charts (only if product areas present)
+      // Render product adoption bar chart
       if (data.product_areas && data.product_areas.length > 0) {
-        var radarEventsEl = container.querySelector('#usage-radar-events');
-        if (radarEventsEl) {
-          var eventsChart = renderEventsRadar(radarEventsEl, data);
-          if (eventsChart) charts.push(eventsChart);
-        }
-        var radarUsersEl = container.querySelector('#usage-radar-users');
-        if (radarUsersEl) {
-          var usersChart = renderUsersRadar(radarUsersEl, data);
-          if (usersChart) charts.push(usersChart);
+        var adoptionEl = container.querySelector('#usage-adoption-bars');
+        if (adoptionEl) {
+          var adoptionChart = renderProductAdoptionBars(adoptionEl, data);
+          if (adoptionChart) charts.push(adoptionChart);
         }
       }
 
