@@ -30,6 +30,11 @@ import sys
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
+# ── Cross-skill path setup (deep-analytics transforms + bigquery client) ──
+SKILLS_DIR = Path(__file__).resolve().parent.parent.parent  # .claude/skills/
+sys.path.insert(0, str(SKILLS_DIR / "bigquery" / "scripts"))
+sys.path.insert(0, str(SKILLS_DIR / "deep-analytics" / "scripts"))
+
 
 # ── Normalization maps (exact copies from panels/issues.js lines 56-99) ──
 
@@ -424,6 +429,375 @@ def transform_asana_tasks(asana_data):
     }
 
 
+# ── Analytics key names (all 9 deep-analytics transforms) ──
+ANALYTICS_KEYS = [
+    "journey", "cohort", "decay", "team", "velocity",
+    "sdk_versions", "correlation", "risk", "performance",
+]
+
+
+def _analytics_stubs(reason):
+    """Return a dict with all 9 analytics keys set to unavailable stubs.
+
+    Used when analytics cannot be fetched (no account_id, pipeline error, etc.).
+    """
+    return {key: {"available": False, "reason": reason} for key in ANALYTICS_KEYS}
+
+
+def _get_deployment_type(client, account_id):
+    """Extract deployment type from account_health_query. Returns (health_df, deployment_type)."""
+    from queries import account_health_query
+    from bq_client import run_query
+
+    health_df = run_query(
+        client, account_health_query(),
+        account_id=account_id, maximum_bytes_billed=50_000_000_000,
+    )
+    deployment_type = "cloud"
+    if not health_df.empty and "deployment_type" in health_df.columns:
+        raw = str(health_df.iloc[0].get("deployment_type", ""))
+        if "dedicated" in raw.lower():
+            deployment_type = "dedicated-cloud"
+        elif raw.lower() in ("server", "local"):
+            deployment_type = "server"
+    return health_df, deployment_type
+
+
+def fetch_analytics_data(customer_name, client, account_id):
+    """Fetch all 9 deep-analytics transforms and return analytics dict.
+
+    Each key maps to its transform's output dict on success, or
+    {"available": False, "reason": <error>} on failure.
+
+    Parameters:
+        customer_name: Customer display name
+        client: BigQuery client instance
+        account_id: SFDC account ID for BQ queries
+    """
+    if not account_id:
+        return _analytics_stubs("No sfdc_account_id configured in customers.yaml")
+
+    import pandas as pd
+    from bq_client import run_query
+
+    analytics = {}
+
+    # ── Shared: deployment type + health (reused by several transforms) ──
+    try:
+        health_df, deployment_type = _get_deployment_type(client, account_id)
+        weave_customer = False
+        if not health_df.empty and "weave_customer" in health_df.columns:
+            weave_customer = bool(health_df.iloc[0].get("weave_customer", False))
+        contracted_seats = None
+        if not health_df.empty:
+            contracted_seats = health_df.iloc[0].get("total_contracted_seats")
+            if contracted_seats is not None:
+                contracted_seats = int(contracted_seats)
+    except Exception as e:
+        # If we can't even get health data, stub everything
+        return _analytics_stubs(f"Health query failed: {e}")
+
+    # ── 1. User Journey ──
+    try:
+        from queries import user_journey_query
+        from transforms.user_journey import UserJourneyTransform
+
+        sql = user_journey_query(deployment_type=deployment_type)
+        df = run_query(client, sql, account_id=account_id, maximum_bytes_billed=100_000_000_000)
+        transform = UserJourneyTransform()
+        analytics["journey"] = transform.transform(
+            user_journey=df, customer_name=customer_name, weave_customer=weave_customer,
+        )
+    except Exception as e:
+        analytics["journey"] = {"available": False, "reason": str(e)}
+
+    # ── 2. Cohort Analysis ──
+    try:
+        from queries import cohort_retention_query, user_lifecycle_query, user_journey_query as uj_query
+        from transforms.cohort_analysis import CohortAnalysisTransform
+
+        retention_df = run_query(
+            client, cohort_retention_query(),
+            account_id=account_id, maximum_bytes_billed=50_000_000_000,
+        )
+        lifecycle_df = None
+        try:
+            lifecycle_df = run_query(
+                client, user_lifecycle_query(),
+                account_id=account_id, maximum_bytes_billed=50_000_000_000,
+            )
+        except Exception:
+            pass
+        journey_df = None
+        try:
+            journey_df = run_query(
+                client, uj_query(),
+                account_id=account_id, maximum_bytes_billed=100_000_000_000,
+            )
+        except Exception:
+            pass
+        transform = CohortAnalysisTransform()
+        analytics["cohort"] = transform.transform(
+            retention=retention_df, lifecycle=lifecycle_df, journey=journey_df,
+            customer_name=customer_name,
+            data_source="ext_daily_user_event_usage (activity-based cohorts)",
+        )
+    except Exception as e:
+        analytics["cohort"] = {"available": False, "reason": str(e)}
+
+    # ── 3. Engagement Decay ──
+    try:
+        from queries import engagement_decay_query
+        from transforms.engagement_decay import EngagementDecayTransform
+
+        sql = engagement_decay_query(deployment_type=deployment_type)
+        df = run_query(client, sql, account_id=account_id, maximum_bytes_billed=50_000_000_000)
+        transform = EngagementDecayTransform()
+        analytics["decay"] = transform.transform(
+            engagement=df, customer_name=customer_name, contracted_seats=contracted_seats,
+        )
+    except Exception as e:
+        analytics["decay"] = {"available": False, "reason": str(e)}
+
+    # ── 4. Team Detection ──
+    try:
+        from queries import (
+            team_detection_query, team_detection_query_dedicated,
+            team_members_query_dedicated, team_champions_query,
+        )
+        from transforms.team_detection import TeamDetectionTransform
+
+        display_type = str(health_df.iloc[0].get("deployment_type", "Unknown")) if not health_df.empty else "Unknown"
+        members_df = None
+        champions_df = None
+
+        if deployment_type in ("dedicated-cloud", "server"):
+            teams_df = run_query(
+                client, team_detection_query_dedicated(),
+                account_id=account_id, maximum_bytes_billed=100_000_000_000,
+            )
+            try:
+                members_df = run_query(
+                    client, team_members_query_dedicated(),
+                    account_id=account_id, maximum_bytes_billed=100_000_000_000,
+                )
+            except Exception:
+                pass
+        else:
+            teams_df = run_query(
+                client, team_detection_query(),
+                account_id=account_id, maximum_bytes_billed=100_000_000_000,
+            )
+            try:
+                from schema_validator import check_data_availability, PHASE3_DATA_CHECKS
+                avail = check_data_availability(client, account_id, {
+                    "team_org_names": PHASE3_DATA_CHECKS["team_org_names"],
+                })
+                if avail.get("team_org_names", {}).get("available", False):
+                    champions_df = run_query(
+                        client, team_champions_query(deployment_type=deployment_type),
+                        account_id=account_id, maximum_bytes_billed=50_000_000_000,
+                    )
+            except Exception:
+                pass
+
+        transform = TeamDetectionTransform()
+        analytics["team"] = transform.transform(
+            teams=teams_df, champions=champions_df, members=members_df,
+            customer_name=customer_name, deployment_type=display_type,
+        )
+    except Exception as e:
+        analytics["team"] = {"available": False, "reason": str(e)}
+
+    # ── 5. Feature Velocity ──
+    try:
+        from queries import product_areas_query
+        from transforms.feature_velocity import FeatureVelocityTransform
+
+        sql = product_areas_query()
+        df = run_query(client, sql, account_id=account_id, maximum_bytes_billed=50_000_000_000)
+        transform = FeatureVelocityTransform()
+        analytics["velocity"] = transform.transform(
+            product_areas=df, customer_name=customer_name, weave_customer=weave_customer,
+        )
+    except Exception as e:
+        analytics["velocity"] = {"available": False, "reason": str(e)}
+
+    # ── 6. SDK Versions ──
+    try:
+        from queries import sdk_versions_query
+        from transforms.sdk_versions import SdkVersionsTransform
+
+        sql = sdk_versions_query()
+        df = run_query(client, sql, account_id=account_id, maximum_bytes_billed=50_000_000_000)
+        transform = SdkVersionsTransform()
+        analytics["sdk_versions"] = transform.transform(
+            sdk_versions=df, customer_name=customer_name,
+        )
+    except Exception as e:
+        analytics["sdk_versions"] = {"available": False, "reason": str(e)}
+
+    # ── 7. Usage Correlation ──
+    try:
+        from queries import (
+            cross_account_product_areas_query, cross_account_arr_breadth_query,
+            product_areas_query as pa_query, account_health_query,
+        )
+        from transforms.usage_correlation import UsageCorrelationTransform
+
+        cross_account_df = run_query(
+            client, cross_account_product_areas_query(),
+            maximum_bytes_billed=100_000_000_000,
+        )
+        arr_data_df = run_query(
+            client, cross_account_arr_breadth_query(),
+            maximum_bytes_billed=100_000_000_000,
+        )
+        current_areas_df = run_query(
+            client, pa_query(),
+            account_id=account_id, maximum_bytes_billed=50_000_000_000,
+        )
+        current_account_areas = (
+            current_areas_df["product_area"].unique().tolist()
+            if not current_areas_df.empty else []
+        )
+        account_health = {}
+        corr_deployment_type = "Unknown"
+        if not health_df.empty:
+            row = health_df.iloc[0]
+            account_health = row.to_dict()
+            corr_deployment_type = str(row.get("deployment_type", "Unknown"))
+
+        transform = UsageCorrelationTransform()
+        analytics["correlation"] = transform.transform(
+            cross_account=cross_account_df, arr_data=arr_data_df,
+            current_account_areas=current_account_areas,
+            account_health=account_health, customer_name=customer_name,
+            account_id=account_id, deployment_type=corr_deployment_type,
+        )
+    except Exception as e:
+        analytics["correlation"] = {"available": False, "reason": str(e)}
+
+    # ── 8. Risk Scoring ──
+    try:
+        from queries import (
+            engagement_trend_query, risk_support_tickets_query,
+            account_health_query as ah_query, seat_utilization_query,
+        )
+        from transforms.risk_scoring import RiskScoringTransform
+
+        engagement_df = pd.DataFrame()
+        try:
+            from schema_validator import check_data_availability, PHASE3_DATA_CHECKS
+            avail = check_data_availability(client, account_id, {
+                "engagement_scores": PHASE3_DATA_CHECKS["engagement_scores"],
+            })
+            if avail.get("engagement_scores", {}).get("available", False):
+                engagement_df = run_query(
+                    client, engagement_trend_query(),
+                    account_id=account_id, maximum_bytes_billed=50_000_000_000,
+                )
+        except Exception:
+            pass
+
+        seats_df = run_query(
+            client, seat_utilization_query(),
+            account_id=account_id, maximum_bytes_billed=50_000_000_000,
+        )
+        tickets_df = pd.DataFrame()
+        try:
+            tickets_df = run_query(
+                client, risk_support_tickets_query(),
+                account_id=account_id, maximum_bytes_billed=50_000_000_000,
+            )
+        except Exception:
+            pass
+
+        transform = RiskScoringTransform()
+        analytics["risk"] = transform.transform(
+            engagement=engagement_df, health=health_df,
+            seats=seats_df, tickets=tickets_df,
+            customer_name=customer_name,
+        )
+    except Exception as e:
+        analytics["risk"] = {"available": False, "reason": str(e)}
+
+    # ── 9. Performance ──
+    try:
+        from queries import performance_query, latency_distribution_query, slow_chart_users_query
+        from transforms.performance import PerformanceTransform
+        from schema_validator import (
+            validate_tables, check_data_availability,
+            PHASE4_SCHEMA_SPECS, PHASE4_DATA_CHECKS,
+        )
+
+        transform = PerformanceTransform()
+
+        # Go/no-go gate: schema validation
+        perf_table = "`wandb-production.analytics.fct_application_performance`"
+        schema_results = validate_tables(client, {perf_table: PHASE4_SCHEMA_SPECS[perf_table]})
+        if not schema_results[perf_table]["valid"]:
+            analytics["performance"] = transform.descoped_result("schema_error")
+        else:
+            avail = check_data_availability(client, account_id, {
+                "perf_index": PHASE4_DATA_CHECKS["perf_index"],
+            })
+            if not avail.get("perf_index", {}).get("available", False):
+                analytics["performance"] = transform.descoped_result("performance_descoped")
+            else:
+                display_type = str(health_df.iloc[0].get("deployment_type", "Unknown")) if not health_df.empty else "Unknown"
+                perf_df = run_query(
+                    client, performance_query(),
+                    account_id=account_id, maximum_bytes_billed=50_000_000_000,
+                )
+                if perf_df.empty:
+                    analytics["performance"] = transform.descoped_result("performance_descoped")
+                else:
+                    latency_df = None
+                    try:
+                        latency_table = "`wandb-production.analytics.fct_onscreen_loader_latencies`"
+                        lat_schema = validate_tables(client, {latency_table: PHASE4_SCHEMA_SPECS[latency_table]})
+                        if lat_schema[latency_table]["valid"]:
+                            lat_avail = check_data_availability(client, account_id, {
+                                "latency_data": PHASE4_DATA_CHECKS["latency_data"],
+                            })
+                            if lat_avail.get("latency_data", {}).get("available", False):
+                                latency_df = run_query(
+                                    client, latency_distribution_query(),
+                                    account_id=account_id, maximum_bytes_billed=50_000_000_000,
+                                )
+                    except Exception:
+                        pass
+
+                    slow_users_df = None
+                    try:
+                        slow_table = "`wandb-production.analytics.agg_daily_team_members_slow_chart_loads`"
+                        slow_schema = validate_tables(client, {slow_table: PHASE4_SCHEMA_SPECS[slow_table]})
+                        if slow_schema[slow_table]["valid"]:
+                            slow_avail = check_data_availability(client, account_id, {
+                                "slow_chart_data": PHASE4_DATA_CHECKS["slow_chart_data"],
+                            })
+                            if slow_avail.get("slow_chart_data", {}).get("available", False):
+                                slow_users_df = run_query(
+                                    client, slow_chart_users_query(deployment_type=deployment_type),
+                                    account_id=account_id, maximum_bytes_billed=50_000_000_000,
+                                )
+                    except Exception:
+                        pass
+
+                    analytics["performance"] = transform.transform(
+                        perf_df=perf_df,
+                        latency_df=latency_df if latency_df is not None else pd.DataFrame(),
+                        slow_users_df=slow_users_df if slow_users_df is not None else pd.DataFrame(),
+                        customer_name=customer_name,
+                        deployment_type=display_type,
+                    )
+    except Exception as e:
+        analytics["performance"] = {"available": False, "reason": str(e)}
+
+    return analytics
+
+
 def assemble_intelligence_data(
     customer,
     jira_data,
@@ -474,6 +848,27 @@ def assemble_intelligence_data(
     # ── Sentiment ──
     sentiment = sentiment_data  # None if not provided
 
+    # ── Analytics (deep-analytics transforms) ──
+    analytics_enabled = config.get("analytics", True)
+    analytics = {}
+    if analytics_enabled:
+        try:
+            from bq_client import get_client, get_sfdc_account_id
+
+            # Reuse BQ data's account_id if available, or look up from customer name
+            client = get_client()
+            acct_id = bq_data.get("sfdc_account_id") if bq_data else None
+            if not acct_id:
+                try:
+                    acct_id = get_sfdc_account_id(customer)
+                except Exception:
+                    acct_id = None
+            analytics = fetch_analytics_data(customer, client, acct_id)
+        except Exception as e:
+            analytics = _analytics_stubs(f"Pipeline error: {e}")
+    else:
+        analytics = _analytics_stubs("Analytics not enabled")
+
     return {
         "customer": customer,
         "generated": date.today().isoformat(),
@@ -488,6 +883,7 @@ def assemble_intelligence_data(
         "exec_summary": None,
         "actions": actions,
         "usage": usage,
+        "analytics": analytics,
     }
 
 
@@ -517,6 +913,19 @@ def main():
         help="Audience mode (default: internal)",
     )
     parser.add_argument("--output", help="Output file path (default: stdout)")
+    parser.add_argument(
+        "--analytics",
+        action="store_true",
+        default=True,
+        dest="analytics",
+        help="Enable deep-analytics transforms (default: True)",
+    )
+    parser.add_argument(
+        "--no-analytics",
+        action="store_false",
+        dest="analytics",
+        help="Disable deep-analytics transforms",
+    )
     args = parser.parse_args()
 
     # Load data sources
@@ -540,6 +949,7 @@ def main():
         "sentiment_days": args.days,
         "trending_months": args.months,
         "audience": args.audience,
+        "analytics": args.analytics,
     }
 
     result = assemble_intelligence_data(

@@ -154,7 +154,7 @@ Aim for 5-10 themes. Theme names should be short, recognizable product areas. So
 Save each data source output from prior steps to temporary JSON files, then run assemble.py:
 
 ```bash
-uv run --project .claude/skills/customer-snapshot python \
+uv run --project .claude/skills/deep-analytics python \
     .claude/skills/customer-snapshot/templates/assemble.py \
     --customer "<CustomerName>" \
     --jira /tmp/snapshot-jira.json \
