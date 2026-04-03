@@ -158,7 +158,7 @@ Plans:
   5. Dashboard with all 15 panels loads in under 5 seconds on a standard laptop and each panel JS file stays under 800 lines
 **Plans**: 6 plans
 Plans:
-- [ ] 08-01-PLAN.md -- Data pipeline: assemble.py analytics integration, panels.yaml manifest, shell.html icons
+- [x] 08-01-PLAN.md -- Data pipeline: assemble.py analytics integration, panels.yaml manifest, shell.html icons
 - [ ] 08-02-PLAN.md -- User Intelligence panels: User Journey + Cohort Analysis
 - [ ] 08-03-PLAN.md -- User Intelligence panels: Engagement Decay + Team Detection
 - [ ] 08-04-PLAN.md -- Product Intelligence panels: Feature Velocity + SDK Versions
