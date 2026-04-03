@@ -30,13 +30,13 @@ Key activity from [channel names] in the last [N] days:
 ## Support Ticket Stats (Jira)
 
 <!-- Agent gathers from Jira via: issues.py list --customer "CustomerName" --with-comments --max-results 200 -->
-<!-- Issue URLs use https://wandb.atlassian.net/browse/WB-XXX -->
+<!-- Issue URLs use https://coreweave.atlassian.net/browse/WB-XXX -->
 
 ### Open Issues ([N] total)
 
 | Key | Summary | Type | Priority | Status | Last Activity | FE-UPDATE |
 |-----|---------|------|----------|--------|---------------|-----------|
-| [WB-XXX](https://wandb.atlassian.net/browse/WB-XXX) | [summary] | Bug | P1 | In Progress | [date] | [status from latest FE-UPDATE] |
+| [WB-XXX](https://coreweave.atlassian.net/browse/WB-XXX) | [summary] | Bug | P1 | In Progress | [date] | [status from latest FE-UPDATE] |
 
 ### Recently Closed (Last 30 Days)
 
@@ -44,7 +44,7 @@ Key activity from [channel names] in the last [N] days:
 
 | Key | Summary | Resolved Date |
 |-----|---------|---------------|
-| [WB-YYY](https://wandb.atlassian.net/browse/WB-YYY) | [summary] | [date] |
+| [WB-YYY](https://coreweave.atlassian.net/browse/WB-YYY) | [summary] | [date] |
 
 *No issues closed in the last 30 days.* <!-- Agent uses this if no results -->
 
@@ -54,7 +54,7 @@ Key activity from [channel names] in the last [N] days:
 
 | Key | Summary | Priority | Last Activity |
 |-----|---------|----------|---------------|
-| [WB-ZZZ](https://wandb.atlassian.net/browse/WB-ZZZ) | [summary] | P2 | [date] |
+| [WB-ZZZ](https://coreweave.atlassian.net/browse/WB-ZZZ) | [summary] | P2 | [date] |
 
 *No stale issues.* <!-- Agent uses this if no results -->
 

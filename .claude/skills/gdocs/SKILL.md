@@ -73,7 +73,7 @@ uv run --project .claude/skills/gdocs python .claude/skills/gdocs/scripts/docume
 # Create with Markdown formatting
 uv run --project .claude/skills/gdocs python .claude/skills/gdocs/scripts/documents.py create \
   --title "Delivery Analysis" \
-  --content "# SDK Migration Guide\n\n**Goal**: Migrate all customers to SDK v2\n\n## Timeline\n\n- Phase 1: Internal testing\n- Phase 2: Customer rollout\n\n[Jira Epic](https://wandb.atlassian.net/browse/WB-1234)" \
+  --content "# SDK Migration Guide\n\n**Goal**: Migrate all customers to SDK v2\n\n## Timeline\n\n- Phase 1: Internal testing\n- Phase 2: Customer rollout\n\n[Jira Epic](https://coreweave.atlassian.net/browse/WB-1234)" \
   --format markdown --pretty
 
 # Create with content from a file

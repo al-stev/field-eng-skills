@@ -1,6 +1,6 @@
 ---
 name: jira-check
-description: "Check on customer Jira issues and maintain FE-UPDATE comments. Use this skill when the user wants to check on stale issues, update FE-UPDATE comments, triage customer tickets, or review issue status. Activate for 'jira check', 'check on GResearch', 'update jira', 'update WB-', 'stale tickets', 'FE-UPDATE maintenance', or any Jira URL containing wandb.atlassian.net. When invoked without a customer name, runs a sweep across ALL customers in the registry. If the user pastes a URL like https://wandb.atlassian.net/browse/WB-123, extract the WB-XXX key and use this skill."
+description: "Check on customer Jira issues and maintain FE-UPDATE comments. Use this skill when the user wants to check on stale issues, update FE-UPDATE comments, triage customer tickets, or review issue status. Activate for 'jira check', 'check on GResearch', 'update jira', 'update WB-', 'stale tickets', 'FE-UPDATE maintenance', or any Jira URL containing coreweave.atlassian.net. When invoked without a customer name, runs a sweep across ALL customers in the registry. If the user pastes a URL like https://coreweave.atlassian.net/browse/WB-123, extract the WB-XXX key and use this skill."
 argument-hint: "[customer-name or WB-XXX key] (omit for all-customer sweep)"
 ---
 
@@ -15,7 +15,7 @@ The SE drives every decision. You draft, they review, enrich, and approve. This 
 | Property | Value |
 |---|---|
 | Jira project | `WB` |
-| Jira instance | `wandb.atlassian.net` |
+| Jira instance | `coreweave.atlassian.net` |
 | Customer registry | `templates/customers.yaml` |
 | FE-UPDATE convention | `.claude/rules/atlassian.md` |
 
@@ -60,7 +60,7 @@ uv run --project .claude/skills/jira python .claude/skills/jira/scripts/issues.p
 uv run --project .claude/skills/jira python .claude/skills/jira/scripts/issues.py view --key WB-XXX --pretty
 ```
 
-**URL-based**: extract the `WB-XXX` key from `wandb.atlassian.net` URLs and treat as specific-key mode.
+**URL-based**: extract the `WB-XXX` key from `coreweave.atlassian.net` URLs and treat as specific-key mode.
 
 Validate every key starts with `WB-`. Refuse non-WB keys and explain that this skill only operates on the WB project.
 

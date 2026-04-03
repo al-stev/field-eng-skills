@@ -99,9 +99,9 @@ def sample_support_tickets_df():
         "channel": ["email", "web", "api", "email", "chat", "api"],
         "jira_id": ["WB-1234", None, "WB-5678", None, "WB-9012", None],
         "jira_link": [
-            "https://wandb.atlassian.net/browse/WB-1234", None,
-            "https://wandb.atlassian.net/browse/WB-5678", None,
-            "https://wandb.atlassian.net/browse/WB-9012", None,
+            "https://coreweave.atlassian.net/browse/WB-1234", None,
+            "https://coreweave.atlassian.net/browse/WB-5678", None,
+            "https://coreweave.atlassian.net/browse/WB-9012", None,
         ],
         "jira_status": ["In Progress", None, "Done", None, "Open", None],
         "escalated_to_jira": ["yes", "no", "yes", "", "yes", None],

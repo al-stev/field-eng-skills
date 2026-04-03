@@ -9,7 +9,7 @@ requires-credentials:
   - SLACK_COOKIE
   - ASANA_TOKEN
 setup-skill: atlassian-setup
-service-url: https://wandb.atlassian.net
+service-url: https://coreweave.atlassian.net
 auto-refresh: false
 ---
 
@@ -21,7 +21,7 @@ Gather context from Jira and Slack, populate a structured agenda using the caden
 
 - **Gather everything, present once** -- collect all data from Jira and Slack before generating the document. Do not show incremental results.
 - **Facts only, never fabricate** -- every item in the agenda must come from a verifiable source (Jira issue, Slack message). If a section has no data, write "No data available" rather than guessing.
-- **Link everything** -- every Jira issue includes its `wandb.atlassian.net/browse/WB-XXX` URL. Every Slack reference includes its `coreweave.slack.com/archives/` permalink.
+- **Link everything** -- every Jira issue includes its `coreweave.atlassian.net/browse/WB-XXX` URL. Every Slack reference includes its `coreweave.slack.com/archives/` permalink.
 - **Previous docs are immutable** -- never modify previous cadence files. Always create a new file with today's date.
 - **Template-driven** -- output follows `templates/cadence-review.md` structure exactly. All sections are always generated; the SE decides what to present.
 
@@ -32,7 +32,7 @@ Gather context from Jira and Slack, populate a structured agenda using the caden
 | Output directory | `customers/<name>/calls/` |
 | Template | `templates/cadence-review.md` |
 | Customer registry | `templates/customers.yaml` |
-| Jira instance | `wandb.atlassian.net` |
+| Jira instance | `coreweave.atlassian.net` |
 | Default max results | 200 |
 
 ## Prerequisites
@@ -103,7 +103,7 @@ From the gathered data, compute:
 - **Recently resolved (within cadence window)**: issues that moved to Done/Closed/Resolved/Merged since the last cadence. These are wins to highlight — for each one, write a brief customer-facing summary of what was fixed or delivered and why it matters to them. These feed into the "What's New" section as good news to share.
 - **Recently closed (broader, last 30 days)**: key, summary, resolved date — for the support tickets summary table
 - **Stale issues**: open issues where the most recent comment (excluding SE's own FE-UPDATE comments) is older than 30 days
-- Issue URLs: `https://wandb.atlassian.net/browse/WB-XXX`
+- Issue URLs: `https://coreweave.atlassian.net/browse/WB-XXX`
 
 ### Step 2.5: Gather Asana Actions and RAID Items
 
@@ -343,7 +343,7 @@ When a customer is not in `templates/customers.yaml`:
 1. **Read-only data gathering.** All Jira and Slack operations are read-only. Never create, modify, or transition Jira issues. Never post Slack messages.
 2. **No fabrication.** Every fact in the agenda must come from Jira or Slack data fetched in this session. If a section has no data, write "No data available" -- never guess ticket IDs, statuses, or Slack conversations.
 3. **Previous docs are immutable.** Never modify, edit, or overwrite previous cadence files. Always create a new file with today's date.
-4. **Link everything.** Every Jira issue reference must include the full `https://wandb.atlassian.net/browse/WB-XXX` URL. Every Slack reference must include the full `https://coreweave.slack.com/archives/` permalink.
+4. **Link everything.** Every Jira issue reference must include the full `https://coreweave.atlassian.net/browse/WB-XXX` URL. Every Slack reference must include the full `https://coreweave.slack.com/archives/` permalink.
 5. **Respect the template.** Generate all sections from `templates/cadence-review.md`. Do not add custom sections or remove template sections. The SE decides what to present.
 6. **Handle failures gracefully.** If Jira returns no issues, note it. If Slack credentials fail, note which sections are incomplete. If carry-forward parsing fails, start fresh. Never block on a single data source failure.
 
@@ -351,11 +351,11 @@ When a customer is not in `templates/customers.yaml`:
 
 ### Jira Issue URLs
 
-Format: `https://wandb.atlassian.net/browse/WB-XXX`
+Format: `https://coreweave.atlassian.net/browse/WB-XXX`
 
 Every issue key in every table and mention must be a clickable markdown link:
 ```markdown
-[WB-123](https://wandb.atlassian.net/browse/WB-123)
+[WB-123](https://coreweave.atlassian.net/browse/WB-123)
 ```
 
 ### Slack Permalinks
@@ -385,7 +385,7 @@ These files provide customer-specific data needed during preparation:
 
 The skill publishes cadence documents to CoreWeave Confluence (coreweave.atlassian.net) as the primary persistent output. This uses separate credentials from Jira:
 
-- **Jira** (wandb.atlassian.net): `ATLASSIAN_EMAIL` / `ATLASSIAN_TOKEN`
+- **Jira** (coreweave.atlassian.net): `ATLASSIAN_EMAIL` / `ATLASSIAN_TOKEN`
 - **Confluence** (coreweave.atlassian.net): `CONFLUENCE_EMAIL` / `CONFLUENCE_TOKEN`
 
 Both are stored in `~/.tsm-ai/.env`. The Confluence skill falls back to `ATLASSIAN_*` if `CONFLUENCE_*` vars are not set.
