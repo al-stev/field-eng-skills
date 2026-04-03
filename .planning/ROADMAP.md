@@ -156,7 +156,14 @@ Plans:
   3. Overview panel aggregates headline stats and attention items from all 15 panels, giving SE a single glance at customer health across operational AND analytical dimensions
   4. Panels with unavailable data (e.g., no team fields, no renewal_predictions) render a graceful empty state with explanation rather than erroring or showing blank content
   5. Dashboard with all 15 panels loads in under 5 seconds on a standard laptop and each panel JS file stays under 800 lines
-**Plans**: TBD
+**Plans**: 6 plans
+Plans:
+- [ ] 08-01-PLAN.md -- Data pipeline: assemble.py analytics integration, panels.yaml manifest, shell.html icons
+- [ ] 08-02-PLAN.md -- User Intelligence panels: User Journey + Cohort Analysis
+- [ ] 08-03-PLAN.md -- User Intelligence panels: Engagement Decay + Team Detection
+- [ ] 08-04-PLAN.md -- Product Intelligence panels: Feature Velocity + SDK Versions
+- [ ] 08-05-PLAN.md -- Product Intelligence panels: Usage Correlation + Risk Scoring + Performance
+- [ ] 08-06-PLAN.md -- Overview aggregation update + end-to-end structural verification
 **UI hint**: yes
 
 ### Phase 9: Skill Audit and Consolidation
@@ -194,7 +201,7 @@ Phases execute in numeric order: 7 -> 8 -> 9 -> 10
 | 4. Privacy-Sensitive and Exploratory Pages | v1.0 | 3/3 | Complete | 2026-03-27 |
 | 5. Dashboard V2 -- Modular Folder-Based Architecture | v1.0 | 6/6 | Complete | 2026-04-01 |
 | 6. Dashboard V2 UX Polish | v1.0 | 3/3 | Complete | 2026-04-01 |
-| 7. Jira Instance Migration | v2.0 | 0/3 | Planned | - |
-| 8. Panel Integration | v2.0 | 0/? | Not started | - |
+| 7. Jira Instance Migration | v2.0 | 2/3 | In Progress | - |
+| 8. Panel Integration | v2.0 | 0/6 | Planned | - |
 | 9. Skill Audit and Consolidation | v2.0 | 0/? | Not started | - |
 | 10. Documentation | v2.0 | 0/? | Not started | - |
