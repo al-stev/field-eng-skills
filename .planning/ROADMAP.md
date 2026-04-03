@@ -142,8 +142,8 @@ Plans:
   5. CLAUDE.md, atlassian.md rules, credential table, and skill-composition.md all reference coreweave.atlassian.net -- no stale wandb.atlassian.net references in committed code
 **Plans**: 3 plans
 Plans:
-- [ ] 07-01-PLAN.md -- Core migration: Jira API client, health checker, rules, project docs
-- [ ] 07-02-PLAN.md -- Dashboard templates, downstream skill docs, test fixtures
+- [x] 07-01-PLAN.md -- Core migration: Jira API client, health checker, rules, project docs
+- [x] 07-02-PLAN.md -- Dashboard templates, downstream skill docs, test fixtures
 - [ ] 07-03-PLAN.md -- Live validation, custom field discovery, worktree cleanup
 
 ### Phase 8: Panel Integration
