@@ -1,30 +1,30 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: milestone
-status: Milestone complete
-stopped_at: Completed 06-03-PLAN.md
-last_updated: "2026-04-01T13:50:00.000Z"
+milestone: v2.0
+milestone_name: Dashboard Integration + Skill Consolidation
+status: Defining requirements
+stopped_at: —
+last_updated: "2026-04-03"
 progress:
-  total_phases: 6
-  completed_phases: 5
-  total_plans: 20
-  completed_plans: 20
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-24)
+See: .planning/PROJECT.md (updated 2026-04-03)
 
 **Core value:** Give SEs named-user, team-level, and trend-aware intelligence for specific, data-driven customer conversations.
-**Current focus:** Phase 06 — dashboard-v2-ux-polish-data-provenance-split-charts-navigation-improvements
+**Current focus:** Defining v2.0 requirements — dashboard integration, skill consolidation, documentation
 
 ## Current Position
 
-Phase: 06
-Plan: Not started
+Phase: Not started (defining requirements)
+Plan: —
 
 ## Performance Metrics
 
@@ -128,6 +128,7 @@ None yet.
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 260401-kd6 | Build assemble.py for customer-snapshot skill | 2026-04-01 | ec2abc7 | [260401-kd6-build-assemble-py-for-customer-snapshot-](./quick/260401-kd6-build-assemble-py-for-customer-snapshot-/) |
+| 260401-mu8 | Replace radar charts with paired horizontal bar chart | 2026-04-01 | 10b84c2 | — |
 
 ## Session Continuity
 

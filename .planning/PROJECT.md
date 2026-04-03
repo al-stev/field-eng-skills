@@ -1,37 +1,46 @@
-# BQ Deep Analytics — Usage Intelligence Expansion
+# W&B Field Engineering Skills
 
 ## What This Is
 
-A suite of 9 standalone deep-analytics HTML pages that transform raw BigQuery usage data into actionable intelligence for W&B Solutions Engineers. Each page targets a specific analytical dimension — from user adoption journeys to churn risk scoring — going far beyond the aggregate charts in the existing usage reports. Built on top of the existing BQ query factory and ECharts report ecosystem in field-eng-skills.
+A comprehensive toolkit of Claude Code skills that help W&B Solutions Engineers manage customer relationships, track engineering issues, generate data-driven intelligence dashboards, and prepare for customer meetings. Includes a modular customer intelligence dashboard with BQ analytics, Jira/Slack/Asana integration, and 35 specialized skills.
 
 ## Core Value
 
-Give SEs named-user, team-level, and trend-aware intelligence so they can have specific, data-driven conversations with customers instead of generic "usage is growing/declining" narratives.
+Give SEs named-user, team-level, and trend-aware intelligence so they can have specific, data-driven conversations with customers instead of generic "usage is growing/declining" narratives — while automating the operational overhead of customer management.
+
+## Current Milestone: v2.0 Dashboard Integration + Skill Consolidation
+
+**Goal:** Make the repo usable by any W&B SE — integrate all analytics into the dashboard, consolidate skills, and document everything.
+
+**Target features:**
+- Integrate 9 deep-analytics page types as dashboard panels (cohort, risk scoring, team detection, user journey, engagement decay, feature velocity, SDK versions, usage correlation, performance)
+- Audit and consolidate 35 skills — fold setup skills into parents, reduce surface area, remove hardcoded values
+- Getting-started guide, skill inventory, entry-point documentation
+- Ensure nothing is specific to one SE (no hardcoded GIDs, channel IDs, etc.)
+- Jira instance migration — validate skills work against new instance, investigate broken filters, update any instance-specific config
 
 ## Requirements
 
-### Validated
+### Validated (v1.0)
 
-(None yet — ship to validate)
+- [x] 9 deep-analytics page types — transforms, BQ queries, and handlers for all 9 analytical dimensions
+- [x] Modular dashboard — shell + panel registry + compose.py producing folder-based dashboards
+- [x] 6 dashboard panels — Overview, Issues, Support, Usage, Actions, Slack
+- [x] Deterministic pipeline — assemble.py → compose.py → dashboard folder
+- [x] BQ usage data — seat utilization, product adoption, Weave ingestion, tracked hours, account health
+- [x] Jira integration — issue analysis with health buckets, attention callouts, theme clustering
+- [x] Slack sentiment analysis — channel history fetch and structured scoring
+- [x] Asana action tracking — portfolio structure with Actions + RAID projects per customer
 
-### Active
+### Active (v2.0)
 
-- [ ] User Journey Analysis — adoption funnel/Sankey from dim_users first_*_at fields showing per-user progression through W&B product stages
-- [ ] Cohort Analysis — new vs established user retention comparison using retention tables, cohort heatmaps
-- [ ] Engagement Decay — individual user cold-detection with week-over-week drop-off alerting from daily event data
-- [ ] Feature Velocity — per-product-area time-series showing acceleration/deceleration trends with sparklines and momentum indicators
-- [ ] Team/Cluster Detection — group users by team fields (is_part_of_team, count_teams, org_name) and show per-team adoption patterns
-- [ ] Per-User Risk Scoring — combine renewal_predictions ML churn scores with engagement signals and revenue trends (arr_walk, mrr_walk)
-- [ ] Usage Correlation — cross-account analysis of which product combos predict retention/expansion, "next best action" recommendations
-- [ ] SDK Version Distribution — cli_version and local_version distribution per customer, version freshness, upgrade recommendations
-- [ ] Performance Deep Dive — Datadog-sourced performance signals, narrative-driven analysis of API latency, chart load, artifact perf
+See REQUIREMENTS.md (to be defined)
 
 ### Out of Scope
 
-- Modifying existing external/internal report templates — these pages are additive, not replacement
-- Real-time dashboards or live-updating pages — these are point-in-time reports generated on demand
+- Real-time dashboards or live-updating pages — point-in-time reports generated on demand
+- Automated alerting or notification systems — visualization artifacts, not monitoring
 - Cross-customer benchmarking visible to customers — correlation analysis is SE-internal only
-- Automated alerting or notification systems — these are visualization artifacts, not monitoring tools
 
 ## Context
 
@@ -113,4 +122,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-24 after initialization*
+*Last updated: 2026-04-03 — v2.0 milestone started*
