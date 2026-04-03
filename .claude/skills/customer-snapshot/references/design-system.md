@@ -146,7 +146,7 @@ The analysis section is the dashboard's primary value -- surfacing insights not 
 - Arrow rotation on expand/collapse
 - Full-bleed hover on theme headers
 - Issue rows (not cards) with: key, summary, type badge, priority, status badge, assignee
-- Issue key links to `https://wandb.atlassian.net/browse/KEY`
+- Issue key links to `https://coreweave.atlassian.net/browse/KEY`
 - No zebra stripes -- bottom border dividers only
 - Hover-only row feedback
 - Default: hide resolved issues. Toggle to show/hide resolved.

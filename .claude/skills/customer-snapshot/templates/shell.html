@@ -1002,7 +1002,7 @@ document.addEventListener('contextmenu', function(e) {
     e.preventDefault();
     var key = jiraLink.dataset.jiraKey;
     showContextMenu(e.clientX, e.clientY, [
-      { label: 'Open in Jira', action: function() { window.open('https://wandb.atlassian.net/browse/' + key, '_blank'); } },
+      { label: 'Open in Jira', action: function() { window.open('https://coreweave.atlassian.net/browse/' + key, '_blank'); } },
       { label: 'Copy issue key', action: function() { navigator.clipboard.writeText(key); } },
       { separator: true },
       { label: 'Search in Slack', action: function() { window.open('https://coreweave.slack.com/search/' + encodeURIComponent(key), '_blank'); } }

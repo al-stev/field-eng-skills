@@ -410,7 +410,7 @@
         for (var i = 0; i < sorted.length; i++) {
           var t = sorted[i];
           var age = ChartHelpers.daysBetween(t.created_at);
-          var jiraUrl = t.jira_id ? 'https://wandb.atlassian.net/browse/' + t.jira_id : '';
+          var jiraUrl = t.jira_id ? 'https://coreweave.atlassian.net/browse/' + t.jira_id : '';
           var jiraCell = t.jira_id
             ? '<a class="jira-link" href="' + jiraUrl + '" target="_blank" rel="noopener" data-jira-key="' + t.jira_id + '">' + t.jira_id + '</a>'
             : '—';
@@ -776,7 +776,7 @@
         // Click handler: open Jira ticket
         scatterChart.on('click', function(params) {
           if (params.data && params.data.jiraId) {
-            window.open('https://wandb.atlassian.net/browse/' + params.data.jiraId, '_blank');
+            window.open('https://coreweave.atlassian.net/browse/' + params.data.jiraId, '_blank');
           }
         });
       }

@@ -195,7 +195,7 @@ const INTELLIGENCE_DATA = {
       created: "2026-01-15",
       updated: "2026-03-08",
       resolutiondate: null,  // or ISO date string for resolved issues
-      url: "https://wandb.atlassian.net/browse/WB-1234",
+      url: "https://coreweave.atlassian.net/browse/WB-1234",
       components: ["Weave Python SDK"],
       parent: "WB-900",
       parent_summary: "Weave SDK Improvements",

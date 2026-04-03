@@ -24,7 +24,7 @@ from assemble import (
 
 SAMPLE_JIRA_ISSUE = {
     "key": "WB-1234",
-    "url": "https://wandb.atlassian.net/browse/WB-1234",
+    "url": "https://coreweave.atlassian.net/browse/WB-1234",
     "summary": "SDK crash on large artifact upload",
     "status": "In Progress",
     "type": "Bug",
@@ -52,7 +52,7 @@ SAMPLE_JIRA_ISSUE = {
 
 SAMPLE_JIRA_ISSUE_NO_COMPONENT = {
     "key": "WB-5678",
-    "url": "https://wandb.atlassian.net/browse/WB-5678",
+    "url": "https://coreweave.atlassian.net/browse/WB-5678",
     "summary": "Sweep parameter ranges off",
     "status": "Open",
     "type": "Bug",
@@ -80,7 +80,7 @@ SAMPLE_JIRA_ISSUE_NO_COMPONENT = {
 
 SAMPLE_JIRA_ISSUE_UNCATEGORIZED = {
     "key": "WB-9999",
-    "url": "https://wandb.atlassian.net/browse/WB-9999",
+    "url": "https://coreweave.atlassian.net/browse/WB-9999",
     "summary": "Random misc issue",
     "status": "Open",
     "type": "Feature Request",
@@ -108,7 +108,7 @@ SAMPLE_JIRA_ISSUE_UNCATEGORIZED = {
 
 SAMPLE_RESOLVED_ISSUE = {
     "key": "WB-1111",
-    "url": "https://wandb.atlassian.net/browse/WB-1111",
+    "url": "https://coreweave.atlassian.net/browse/WB-1111",
     "summary": "Launch config validation",
     "status": "Done",
     "type": "Bug",

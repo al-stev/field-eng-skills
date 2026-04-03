@@ -439,7 +439,7 @@
             // Linked Jira badge
             var jiraHtml = '';
             if (t.linked_jira) {
-              jiraHtml = '<a class="actions-jira-badge" href="https://wandb.atlassian.net/browse/' + escapeHtml(t.linked_jira) + '" target="_blank" rel="noopener">' + escapeHtml(t.linked_jira) + '</a>';
+              jiraHtml = '<a class="actions-jira-badge" href="https://coreweave.atlassian.net/browse/' + escapeHtml(t.linked_jira) + '" target="_blank" rel="noopener">' + escapeHtml(t.linked_jira) + '</a>';
             }
 
             // Assignee (team view only)
