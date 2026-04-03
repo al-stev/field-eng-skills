@@ -184,7 +184,7 @@ def cmd_list(args):
             f"labels,parent,duedate,created,updated,resolutiondate,comment,{CUSTOMER_FIELD}"
         )
 
-    issues = handle_api_call(client.search_issues, jql, **search_kwargs)
+    issues = handle_api_call(client.enhanced_search_issues, jql, **search_kwargs)
 
     result_issues = []
     for issue in issues:
@@ -236,7 +236,7 @@ def cmd_search(args):
         else:
             jql = jql + f" AND {customer_clause}"
 
-    issues = handle_api_call(client.search_issues, jql, maxResults=max_results)
+    issues = handle_api_call(client.enhanced_search_issues, jql, maxResults=max_results)
 
     result = {
         "jql": args.jql,
