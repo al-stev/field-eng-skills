@@ -1,7 +1,7 @@
 # Requirements: v2.0 Dashboard Integration + Skill Consolidation
 
 **Defined:** 2026-04-03
-**Core Value:** Give SEs named-user, team-level, and trend-aware intelligence for specific, data-driven customer conversations — and make this toolkit usable by any W&B SE.
+**Core Value:** Give SEs named-user, team-level, and trend-aware intelligence for specific, data-driven customer conversations -- and make this toolkit usable by any W&B SE.
 
 ## Panel Integration
 
@@ -26,8 +26,8 @@
 
 ## Skill Audit
 
-- [ ] **AUDIT-01**: Skill inventory published — complete list of all skills with one-line descriptions, entry-point vs building-block classification, and dependency graph
-- [ ] **AUDIT-02**: No hardcoded user-specific values (GIDs, channel IDs, email addresses) exist in committed skill code — all user-specific config lives in customers.yaml or ~/.tsm-ai/.env
+- [ ] **AUDIT-01**: Skill inventory published -- complete list of all skills with one-line descriptions, entry-point vs building-block classification, and dependency graph
+- [ ] **AUDIT-02**: No hardcoded user-specific values (GIDs, channel IDs, email addresses) exist in committed skill code -- all user-specific config lives in customers.yaml or ~/.tsm-ai/.env
 - [ ] **AUDIT-03**: Every skill's SKILL.md has accurate, up-to-date documentation that matches current behavior
 - [ ] **AUDIT-04**: Skill composition rules (skill-composition.md) are complete and cover all multi-skill workflows
 
@@ -36,7 +36,7 @@
 - [ ] **DOCS-01**: Getting-started guide exists in the repo explaining: what this repo is, how to install, how to set up credentials, and how to run first skill
 - [ ] **DOCS-02**: Skill reference page lists all skills grouped by category (data sources, dashboards, workflows, utilities) with usage examples
 - [ ] **DOCS-03**: Customer onboarding guide explains how to add a new customer (customers.yaml, Asana setup, Slack channels, SFDC mapping)
-- [ ] **DOCS-04**: Architecture overview explains the dashboard pipeline (fetch → assemble → compose → open) and how panels work
+- [ ] **DOCS-04**: Architecture overview explains the dashboard pipeline (fetch -> assemble -> compose -> open) and how panels work
 
 ## Future Requirements (deferred beyond v2.0)
 
@@ -47,12 +47,34 @@
 
 ## Out of Scope
 
-- Merging setup skills into parent skills — keeps context lean, setup is rarely invoked
-- Rewriting existing BQ transforms — they work, just need panel wrappers
+- Merging setup skills into parent skills -- keeps context lean, setup is rarely invoked
+- Rewriting existing BQ transforms -- they work, just need panel wrappers
 - Building new analytics dimensions beyond the existing 9
 
 ## Traceability
 
-| Requirement | Phase | Plan | Status |
-|-------------|-------|------|--------|
-| (populated by roadmapper) | | | |
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| JIRA-01 | Phase 7 | Pending |
+| JIRA-02 | Phase 7 | Pending |
+| JIRA-03 | Phase 7 | Pending |
+| JIRA-04 | Phase 7 | Pending |
+| JIRA-05 | Phase 7 | Pending |
+| PANEL-01 | Phase 8 | Pending |
+| PANEL-02 | Phase 8 | Pending |
+| PANEL-03 | Phase 8 | Pending |
+| PANEL-04 | Phase 8 | Pending |
+| PANEL-05 | Phase 8 | Pending |
+| PANEL-06 | Phase 8 | Pending |
+| PANEL-07 | Phase 8 | Pending |
+| PANEL-08 | Phase 8 | Pending |
+| PANEL-09 | Phase 8 | Pending |
+| PANEL-10 | Phase 8 | Pending |
+| AUDIT-01 | Phase 9 | Pending |
+| AUDIT-02 | Phase 9 | Pending |
+| AUDIT-03 | Phase 9 | Pending |
+| AUDIT-04 | Phase 9 | Pending |
+| DOCS-01 | Phase 10 | Pending |
+| DOCS-02 | Phase 10 | Pending |
+| DOCS-03 | Phase 10 | Pending |
+| DOCS-04 | Phase 10 | Pending |

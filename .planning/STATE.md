@@ -2,11 +2,11 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Dashboard Integration + Skill Consolidation
-status: Defining requirements
-stopped_at: —
+status: Ready to plan
+stopped_at: Roadmap created for v2.0 (phases 7-10)
 last_updated: "2026-04-03"
 progress:
-  total_phases: 0
+  total_phases: 4
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -18,53 +18,38 @@ progress:
 
 See: .planning/PROJECT.md (updated 2026-04-03)
 
-**Core value:** Give SEs named-user, team-level, and trend-aware intelligence for specific, data-driven customer conversations.
-**Current focus:** Defining v2.0 requirements — dashboard integration, skill consolidation, documentation
+**Core value:** Give SEs named-user, team-level, and trend-aware intelligence for specific, data-driven customer conversations -- and make this toolkit usable by any W&B SE.
+**Current focus:** Phase 7 -- Jira Instance Migration
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
+Phase: 7 of 10 (Jira Instance Migration)
+Plan: -- (not yet planned)
+Status: Ready to plan
+Last activity: 2026-04-03 -- v2.0 roadmap created (phases 7-10)
+
+Progress: [====================..........] 60% (6/10 phases, v1.0 complete)
 
 ## Performance Metrics
 
-**Velocity:**
+**Velocity (v1.0):**
+- Total plans completed: 20
+- Average duration: ~13 min
+- Total execution time: ~4.5 hours
 
-- Total plans completed: 0
-- Average duration: --
-- Total execution time: 0 hours
-
-**By Phase:**
+**By Phase (v1.0):**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| - | - | - | - |
+| Phase 01 | 4 | 16min | 4min |
+| Phase 03 | 4 | 30min | 7.5min |
+| Phase 04 | 3 | 15min | 5min |
+| Phase 05 | 6 | 190min | 32min |
+| Phase 06 | 3 | 21min | 7min |
 
 **Recent Trend:**
-
-- Last 5 plans: --
-- Trend: --
-
-*Updated after each plan completion*
-| Phase 01 P01 | 5min | 2 tasks | 4 files |
-| Phase 01 P02 | 5min | 2 tasks | 14 files |
-| Phase 01 P03 | 2min | 1 tasks | 1 files |
-| Phase 01 P04 | 4min | 1 tasks | 1 files |
-| Phase 03 P01 | 14min | 2 tasks | 4 files |
-| Phase 03 P03 | 4min | 2 tasks | 4 files |
-| Phase 03 P02 | 6min | 2 tasks | 4 files |
-| Phase 03 P04 | 6min | 2 tasks | 4 files |
-| Phase 04 P02 | 5min | 2 tasks | 4 files |
-| Phase 04 P03 | 5min | 2 tasks | 4 files |
-| Phase 05 P01 | 10min | 3 tasks | 6 files |
-| Phase 05 P03 | 5min | 2 tasks | 2 files |
-| Phase 05 P04 | 5min | 1 tasks | 1 files |
-| Phase 05 P02 | 5min | 2 tasks | 1 files |
-| Phase 05 P05 | 53min | 1 tasks | 1 files |
-| Phase 05 P06 | 112min | 3 tasks | 8 files |
-| Phase 06 P02 | 8min | 2 tasks | 4 files |
-| Phase 06 P01 | 11min | 2 tasks | 2 files |
-| Phase 06 P03 | 2min | 2 tasks | 5 files |
+- Last 5 plans: 53min, 112min, 8min, 11min, 2min
+- Trend: Variable (large phases spike, small phases fast)
 
 ## Accumulated Context
 
@@ -73,46 +58,15 @@ Plan: —
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
-- [Roadmap]: 4-phase confidence cascade -- foundation, then high/medium/low confidence pages in order
-- [Roadmap]: XCUT requirements delivered as template system in Phase 1, exercised by every page in Phases 2-4
-- [Roadmap]: Phase 2 pages designed for parallel subagent prototyping (4 independent pages)
-- [Phase 01]: maximum_bytes_billed defaults to None for backwards compat; deep-analytics callers pass 1GB explicitly
-- [Phase 01]: identity_resolution_cte() additive only -- existing power_users_query() unchanged to avoid regression
-- [Phase 01]: sys.path cross-skill imports for bigquery reuse, sentinel injection for HTML templates, dry-run schema validation
-- [Phase 01]: CSS tokens copied verbatim from research doc; function declarations used for browser compatibility
-- [Phase 01]: No changes needed to generate.py -- pipeline wiring from Plans 02-03 worked correctly on first integration test run
-- [Phase 03]: Used Strategy B (raw activity cohort) as default cohort query -- always available
-- [Phase 03]: check_data_availability uses 1GB max_bytes_billed guardrail per count query
-- [Phase 03]: team_growth returns empty structure -- team_detection_query aggregates totals, monthly breakdown needs separate query
-- [Phase 03]: Used overall retention curve as approximation for behavioral cohort groups
-- [Phase 03]: Retention percentages clamped at 100% to handle data anomalies (research pitfall 3)
-- [Phase 03]: Asymmetric risk weights (40/25/20/15) with veto rule flooring score at 70 for churn probability > 0.80
-- [Phase 03]: Behavioral-only risk fallback: weights redistribute among 3 remaining factors when churn model unavailable
-- [Phase 04]: Retention proxy: median event mass as proxy for recent activity in correlation transform
-- [Phase 04]: Privacy enforcement in transform layer not query layer — account_id needed for grouping then stripped
-- [Phase 04]: renderCharts updated to allow page renderers to handle their own descoped/unavailable state
-- [Phase 05]: Font weights 400+600 only per UI-SPEC; panel containers created dynamically by JS; compose.py uses Path(__file__).resolve().parent anchoring; echarts.min.js graceful skip with warning
-- [Phase 05]: Scope toggle uses closure-based renderInner() pattern for encapsulated panel state
-- [Phase 05]: Local helper functions duplicated inside Usage panel IIFE for isolation rather than shared globally
-- [Phase 05]: Multi-chart panel pattern: sub-renderers return ECharts instances, render() collects into charts array for resize handling
-- [Phase 05]: escapeHtml() helper in each panel for XSS prevention on user-supplied content
-- [Phase 05]: File named support.js (not support-tickets.js) to match panel ID convention
-- [Phase 05]: Named bucket filters for serializable filter state in Issues panel; health legend items clickable for bucket filtering; data-attribute DOM targeting for panel container scope
-- [Phase 05]: Overview reads INTELLIGENCE_DATA globally and iterates PanelRegistry.getAll() to aggregate stats — no dataKey needed
-- [Phase 05]: resolveKey() duplicated in overview.js and shell.html for IIFE isolation rather than shared module
-- [Phase 05]: Sidebar collapse removed — always expanded for cadence call discoverability; chart clipping fixed with margin and overflow adjustments
-- [Phase 06]: Support panel uses section-level time periods (All time, Currently open) rather than per-chart labels
-- [Phase 06]: Breadcrumb bar prepended to panel sections during buildSidebar() to decouple from panel render logic
-- [Phase 06]: Chart clipping fixes already present from parallel 06-02 work; sweeps split and dual radar were the net changes
-- [Phase 06]: Shared sortedTopAreas helper for consistent radar area ordering; Weave chart moved to full-width after radar split consumed two-column grid
-- [Phase 06]: SQL icon uses database cylinder SVG for recognizable BQ association
-- [Phase 06]: bq_queries gated behind include_queries=True to avoid bloating non-dashboard output
-- [Phase 06]: v1 intelligence-dashboard.html preserved as fallback; SKILL.md updated for v2 compose.py pipeline
+- [v2.0 Roadmap]: Jira migration first (phase 7) -- unblocks downstream skills and dashboard generation
+- [v2.0 Roadmap]: Panel integration as single phase (phase 8) -- 9 panels + contract compliance, biggest chunk
+- [v2.0 Roadmap]: Skill audit after panels (phase 9) -- audit the final state, not an intermediate one
+- [v2.0 Roadmap]: Documentation last (phase 10) -- document what's actually built
 
 ### Roadmap Evolution
 
-- Phase 5 added: Dashboard V2 — Modular Folder-Based Architecture (replace monolithic intelligence-dashboard.html with folder-based dashboard, spec in DASHBOARD-V2-SPEC.md)
-- Phase 6 added: Dashboard V2 UX Polish — data provenance (BQ SQL copy buttons), split radar charts, navigation breadcrumb, time period labels, compose.py→generate.py wiring
+- v1.0 phases 1-6 completed 2026-03-25 through 2026-04-01
+- v2.0 phases 7-10 roadmapped 2026-04-03
 
 ### Pending Todos
 
@@ -120,18 +74,12 @@ None yet.
 
 ### Blockers/Concerns
 
-- Phase 3 depends on schema validation of `agg_weekly_user_retention_features`, team fields, and `renewal_predictions` -- may require descoping if tables are inaccessible
-- Phase 4 Performance Deep Dive has LOW data confidence -- explicit go/no-go gate on `fct_application_performance`
-
-### Quick Tasks Completed
-
-| # | Description | Date | Commit | Directory |
-|---|-------------|------|--------|-----------|
-| 260401-kd6 | Build assemble.py for customer-snapshot skill | 2026-04-01 | ec2abc7 | [260401-kd6-build-assemble-py-for-customer-snapshot-](./quick/260401-kd6-build-assemble-py-for-customer-snapshot-/) |
-| 260401-mu8 | Replace radar charts with paired horizontal bar chart | 2026-04-01 | 10b84c2 | — |
+- JIRA-02: Custom field IDs (e.g., customfield_10083 for Customer) may differ on coreweave.atlassian.net -- needs field discovery before migration
+- PANEL-09: Performance panel data confidence is LOW -- may need graceful empty state rather than real data
+- AUDIT-02: Hardcoded value scan scope unclear -- need to define what counts as "user-specific"
 
 ## Session Continuity
 
-Last session: 2026-04-01T12:41:13.157Z
-Stopped at: Completed 06-03-PLAN.md
+Last session: 2026-04-03
+Stopped at: v2.0 roadmap created (phases 7-10)
 Resume file: None
