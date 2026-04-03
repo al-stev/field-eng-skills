@@ -13,7 +13,7 @@ Claude Code skills for W&B Solutions Engineers. Integrates with W&B Jira, CoreWe
 
 2. **Configure credentials** in `~/.tsm-ai/.env`:
    ```bash
-   # W&B Jira (wandb.atlassian.net)
+   # W&B Jira (coreweave.atlassian.net)
    ATLASSIAN_EMAIL=your.email@wandb.com
    ATLASSIAN_TOKEN=your-api-token
 
@@ -96,7 +96,7 @@ Claude Code skills for W&B Solutions Engineers. Integrates with W&B Jira, CoreWe
 
 | Skill | Invocation | What it does |
 |-------|-----------|--------------|
-| **jira** | `/jira list --customer GResearch` | Query, create, edit, and transition issues in W&B Jira (wandb.atlassian.net). Supports FE-UPDATE comments, customer filtering, and JQL search. |
+| **jira** | `/jira list --customer GResearch` | Query, create, edit, and transition issues in W&B Jira (coreweave.atlassian.net). Supports FE-UPDATE comments, customer filtering, and JQL search. |
 | **slack** | `/slack search "keyword"` | Search messages, read channel history, fetch threads, and look up users in the CoreWeave Slack workspace. |
 | **confluence** | `/confluence search --title "Meeting Notes"` | Read, create, and update pages in CoreWeave Confluence (coreweave.atlassian.net). Supports CQL search, folders, attachments, and labels. |
 | **salesforce** | `/salesforce account-detail --account-id ID` | Read-only Salesforce queries for account data (ARR, contract dates, team members, field discovery). Supports SSO/session auth for W&B's org. |
@@ -177,7 +177,7 @@ Two separate Atlassian instances require separate credentials:
 
 | Instance | Purpose | Credentials |
 |----------|---------|-------------|
-| wandb.atlassian.net | W&B Jira (customer bugs, feature requests) | `ATLASSIAN_EMAIL` / `ATLASSIAN_TOKEN` |
+| coreweave.atlassian.net | W&B Jira (customer bugs, feature requests) | `ATLASSIAN_EMAIL` / `ATLASSIAN_TOKEN` |
 | coreweave.atlassian.net | CoreWeave Confluence (team wiki, cadence docs) | `CONFLUENCE_EMAIL` / `CONFLUENCE_TOKEN` |
 | app.asana.com | Asana (SE action tracking, RAID logs, portfolios) | `ASANA_TOKEN` |
 | wandb.my.salesforce.com | W&B Salesforce (account data, team members) | `SFDC_SESSION_ID` / `SFDC_INSTANCE` |

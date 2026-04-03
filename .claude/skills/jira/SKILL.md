@@ -7,13 +7,13 @@ requires-credentials:
   - ATLASSIAN_EMAIL
   - ATLASSIAN_TOKEN
 setup-skill: atlassian-setup
-service-url: https://wandb.atlassian.net
+service-url: https://coreweave.atlassian.net
 auto-refresh: false
 ---
 
 # Jira Issue Management
 
-Manage issues in the W&B Jira instance (wandb.atlassian.net) using Python tools with the `jira` SDK.
+Manage issues in the W&B Jira instance (coreweave.atlassian.net) using Python tools with the `jira` SDK.
 
 Refer to `.claude/rules/atlassian.md` for shared Atlassian constants and FE-UPDATE convention.
 
@@ -22,7 +22,7 @@ Refer to `.claude/rules/atlassian.md` for shared Atlassian constants and FE-UPDA
 | Property | Value |
 |---|---|
 | Project | `WB` (W&B Eng) |
-| Instance | `wandb.atlassian.net` |
+| Instance | `coreweave.atlassian.net` |
 
 ## Prerequisites
 
@@ -204,7 +204,7 @@ uv run --project .claude/skills/jira python .claude/skills/jira/scripts/issues.p
 ### Open issue in browser
 
 ```
-https://wandb.atlassian.net/browse/WB-123
+https://coreweave.atlassian.net/browse/WB-123
 ```
 
 ## Multi-Project Support

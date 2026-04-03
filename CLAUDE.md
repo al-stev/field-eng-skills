@@ -1,6 +1,6 @@
 # W&B Field Engineering Skills
 
-Claude Code skills for W&B Solutions Engineers. Integrates with W&B Jira (wandb.atlassian.net), CoreWeave Slack, and CoreWeave Confluence (coreweave.atlassian.net).
+Claude Code skills for W&B Solutions Engineers. Integrates with W&B Jira (coreweave.atlassian.net), CoreWeave Slack, and CoreWeave Confluence (coreweave.atlassian.net).
 
 ## Context
 
@@ -32,7 +32,7 @@ Claude Code skills for W&B Solutions Engineers. Integrates with W&B Jira (wandb.
     customer-setup/         -- Interactive customer onboarding (SFDC + SE overlays -> customers.yaml)
     customer-snapshot/      -- Customer intelligence dashboard from Jira + Slack data
     ghosted/                -- Customer silence tracker (Waiting on Customer thread monitoring)
-    jira/                   -- W&B Jira queries, issue creation, FE-UPDATE (wandb.atlassian.net)
+    jira/                   -- W&B Jira queries, issue creation, FE-UPDATE (coreweave.atlassian.net)
     jira-check/             -- Jira issue triage and FE-UPDATE pipeline
     maction/                -- Meeting notes to Asana actions + RAID items
     nag/                    -- Stale/overdue task scanner across customer projects
@@ -68,8 +68,8 @@ All API credentials stored in `~/.tsm-ai/.env`. Run `/credential-status` to chec
 
 | Variable | Service | Instance |
 |----------|---------|----------|
-| `ATLASSIAN_EMAIL` | W&B Jira | wandb.atlassian.net |
-| `ATLASSIAN_TOKEN` | W&B Jira | wandb.atlassian.net |
+| `ATLASSIAN_EMAIL` | W&B Jira | coreweave.atlassian.net |
+| `ATLASSIAN_TOKEN` | W&B Jira | coreweave.atlassian.net |
 | `CONFLUENCE_EMAIL` | CoreWeave Confluence | coreweave.atlassian.net |
 | `CONFLUENCE_TOKEN` | CoreWeave Confluence | coreweave.atlassian.net |
 | `SLACK_TOKEN` | CoreWeave Slack | coreweave.slack.com |
