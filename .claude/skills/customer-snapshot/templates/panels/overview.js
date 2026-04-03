@@ -255,6 +255,24 @@
   max-width: 400px;\
   margin: 0 auto;\
 }\
+.show-more-toggle {\
+  font-family: var(--font-mono);\
+  font-size: 12px;\
+  font-weight: 600;\
+  color: var(--accent);\
+  padding: 10px 16px;\
+  cursor: pointer;\
+  border-radius: 6px;\
+  transition: background 0.15s;\
+}\
+.show-more-toggle:hover {\
+  background: var(--accent-dim);\
+}\
+.hidden-attention {\
+  display: flex;\
+  flex-direction: column;\
+  gap: 8px;\
+}\
 ';
 
   // ── Icon SVG (grid icon — 4 squares) ──
@@ -270,6 +288,23 @@
     'low': 'var(--amber)',
     'info': 'var(--blue)'
   };
+
+  /**
+   * Render a single attention row HTML string.
+   * Extracted to avoid duplication between visible and hidden item loops.
+   */
+  function renderAttentionRow(item) {
+    var sevClass = item.severity || 'info';
+    var sevColor = SEVERITY_COLORS[sevClass] || 'var(--text-tertiary)';
+    var targetPanel = (item.action && item.action.panel) || '';
+
+    return '<div class="attention-row ' + sevClass + '" data-target-panel="' + escapeHtml(targetPanel) + '"' +
+      (item.action && item.action.filter ? ' data-target-filter="' + escapeHtml(item.action.filter) + '"' : '') + '>' +
+      '<span class="attention-severity" style="color:' + sevColor + '">' + escapeHtml(sevClass) + '</span>' +
+      '<span class="attention-text">' + escapeHtml(item.text) + '</span>' +
+      '<span class="attention-action">View &rarr;</span>' +
+    '</div>';
+  }
 
   // ── Registration ──
 
@@ -294,6 +329,9 @@
       var allAttention = [];
       var panels = PanelRegistry.getAll();
 
+      // Groups that belong to operational / key metrics section
+      var operationalGroups = { 'intelligence': 1, 'usage': 1, 'activity': 1 };
+
       for (var p = 0; p < panels.length; p++) {
         var panel = panels[p];
         if (panel.id === 'overview') continue;
@@ -302,7 +340,7 @@
           var panelData = panel.dataKey ? resolveKey(INTELLIGENCE_DATA, panel.dataKey) : null;
           if (!panelData) continue;
 
-          // Collect headline stats
+          // Collect headline stats, tagging with source group and panel id
           var stats = panel.getHeadlineStats(panelData);
           if (stats && stats.length > 0) {
             for (var s = 0; s < stats.length; s++) {
@@ -310,7 +348,9 @@
                 label: stats[s].label,
                 value: stats[s].value,
                 color: stats[s].color || 'var(--text-primary)',
-                source: panel.label
+                source: panel.label,
+                _group: panel.group,
+                _panelId: panel.id
               });
             }
           }
@@ -352,20 +392,17 @@
         '<div class="overview-subtitle">Executive Overview</div>' +
       '</div>';
 
-      // ── 3. Aggregated stats strip ──
-      // Map panel labels to panel IDs for click navigation
-      var sourceToPanelId = {};
-      for (var mp = 0; mp < panels.length; mp++) {
-        sourceToPanelId[panels[mp].label] = panels[mp].id;
-      }
+      // ── 3. Grouped stats strips (operational vs analytics) ──
+      // Split stats into two groups based on panel group
+      var operationalStats = allStats.filter(function(s) { return operationalGroups[s._group]; });
+      var analyticsStats = allStats.filter(function(s) { return !operationalGroups[s._group]; });
 
-      if (allStats.length > 0) {
+      if (operationalStats.length > 0) {
         html += '<div class="section-label">Key Metrics</div>';
         html += '<div class="stats-strip">';
-        for (var si = 0; si < allStats.length; si++) {
-          var stat = allStats[si];
-          var targetPanelId = sourceToPanelId[stat.source] || '';
-          html += '<div class="stat-card" data-source-panel="' + escapeHtml(targetPanelId) + '">' +
+        for (var si = 0; si < operationalStats.length; si++) {
+          var stat = operationalStats[si];
+          html += '<div class="stat-card" data-source-panel="' + escapeHtml(stat._panelId) + '">' +
             '<div class="stat-value" style="color:' + stat.color + '">' + escapeHtml(stat.value) + '</div>' +
             '<div class="stat-label">' + escapeHtml(stat.label) + '</div>' +
             '<div class="stat-source">' + escapeHtml(stat.source) + '</div>' +
@@ -374,24 +411,49 @@
         html += '</div>';
       }
 
-      // ── 4. Attention items ──
+      if (analyticsStats.length > 0) {
+        html += '<div class="section-label">Analytics Insights</div>';
+        html += '<div class="stats-strip">';
+        for (var ai2 = 0; ai2 < analyticsStats.length; ai2++) {
+          var aStat = analyticsStats[ai2];
+          html += '<div class="stat-card" data-source-panel="' + escapeHtml(aStat._panelId) + '">' +
+            '<div class="stat-value" style="color:' + aStat.color + '">' + escapeHtml(aStat.value) + '</div>' +
+            '<div class="stat-label">' + escapeHtml(aStat.label) + '</div>' +
+            '<div class="stat-source">' + escapeHtml(aStat.source) + '</div>' +
+          '</div>';
+        }
+        html += '</div>';
+      }
+
+      // ── 4. Attention items with severity-based overflow management ──
       if (allAttention.length > 0) {
+        // Split into visible (high + medium) and hidden (low + info)
+        var visibleItems = allAttention.filter(function(item) {
+          return item.severity === 'high' || item.severity === 'medium';
+        });
+        var hiddenItems = allAttention.filter(function(item) {
+          return item.severity !== 'high' && item.severity !== 'medium';
+        });
+
         html += '<div class="attention-section">';
         html += '<div class="section-label">Attention Required (' + allAttention.length + ')</div>';
         html += '<div class="attention-list">';
 
-        for (var ai = 0; ai < allAttention.length; ai++) {
-          var item = allAttention[ai];
-          var sevClass = item.severity || 'info';
-          var sevColor = SEVERITY_COLORS[sevClass] || 'var(--text-tertiary)';
-          var targetPanel = (item.action && item.action.panel) || '';
+        // Render high + medium severity items always visible
+        for (var ai = 0; ai < visibleItems.length; ai++) {
+          html += renderAttentionRow(visibleItems[ai]);
+        }
 
-          html += '<div class="attention-row ' + sevClass + '" data-target-panel="' + escapeHtml(targetPanel) + '"' +
-            (item.action && item.action.filter ? ' data-target-filter="' + escapeHtml(item.action.filter) + '"' : '') + '>' +
-            '<span class="attention-severity" style="color:' + sevColor + '">' + escapeHtml(sevClass) + '</span>' +
-            '<span class="attention-text">' + escapeHtml(item.text) + '</span>' +
-            '<span class="attention-action">View &rarr;</span>' +
+        // If there are low/info items, add a show-more toggle
+        if (hiddenItems.length > 0) {
+          html += '<div class="show-more-toggle" data-action="expand-attention">' +
+            '+ ' + hiddenItems.length + ' informational item' + (hiddenItems.length > 1 ? 's' : '') +
           '</div>';
+          html += '<div class="hidden-attention" style="display:none;">';
+          for (var hi = 0; hi < hiddenItems.length; hi++) {
+            html += renderAttentionRow(hiddenItems[hi]);
+          }
+          html += '</div>';
         }
 
         html += '</div>';
@@ -495,6 +557,18 @@
               }));
             }
           }
+        });
+      }
+
+      // ── Wire show-more toggle for low-severity items ──
+      var toggles = container.querySelectorAll('.show-more-toggle[data-action="expand-attention"]');
+      for (var ti = 0; ti < toggles.length; ti++) {
+        toggles[ti].addEventListener('click', function() {
+          var hiddenSection = this.nextElementSibling;
+          if (hiddenSection) {
+            hiddenSection.style.display = 'flex';
+          }
+          this.style.display = 'none';
         });
       }
 
