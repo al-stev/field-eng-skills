@@ -3,6 +3,10 @@ groups:
     label: Intelligence
   - id: usage
     label: Usage & Analytics
+  - id: user-intel
+    label: User Intelligence
+  - id: product-intel
+    label: Product Intelligence
   - id: activity
     label: Activity & Comms
 
@@ -33,6 +37,62 @@ panels:
     icon: trending-up
     data_key: usage
     order: 4
+  - id: journey
+    group: user-intel
+    label: User Journey
+    icon: git-branch
+    data_key: analytics.journey
+    order: 7
+  - id: cohort
+    group: user-intel
+    label: Cohort Analysis
+    icon: calendar
+    data_key: analytics.cohort
+    order: 8
+  - id: decay
+    group: user-intel
+    label: Engagement Decay
+    icon: trending-down
+    data_key: analytics.decay
+    badge_key: analytics.decay.cold_users_count
+    order: 9
+  - id: team
+    group: user-intel
+    label: Team Detection
+    icon: users
+    data_key: analytics.team
+    order: 10
+  - id: velocity
+    group: product-intel
+    label: Feature Velocity
+    icon: zap
+    data_key: analytics.velocity
+    order: 11
+  - id: sdk-versions
+    group: product-intel
+    label: SDK Versions
+    icon: package
+    data_key: analytics.sdk_versions
+    badge_key: analytics.sdk_versions.stale_count
+    order: 12
+  - id: correlation
+    group: product-intel
+    label: Usage Correlation
+    icon: link-2
+    data_key: analytics.correlation
+    order: 13
+  - id: risk
+    group: product-intel
+    label: Risk Scoring
+    icon: shield
+    data_key: analytics.risk
+    order: 14
+  - id: performance
+    group: product-intel
+    label: Performance
+    icon: activity
+    data_key: analytics.performance
+    order: 15
   - id: actions
     group: activity
     label: SE Actions
