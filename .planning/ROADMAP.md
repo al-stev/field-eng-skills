@@ -140,7 +140,11 @@ Plans:
   3. Issue URLs in dashboard HTML output and FE-UPDATE comments link to coreweave.atlassian.net/browse/WB-XXXX (not wandb.atlassian.net)
   4. All downstream skills that consume Jira data (customer-snapshot, jira-check, cadence-prep, pre-read, 3p-update) produce correct output when run end-to-end against the new instance
   5. CLAUDE.md, atlassian.md rules, credential table, and skill-composition.md all reference coreweave.atlassian.net -- no stale wandb.atlassian.net references in committed code
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+- [ ] 07-01-PLAN.md -- Core migration: Jira API client, health checker, rules, project docs
+- [ ] 07-02-PLAN.md -- Dashboard templates, downstream skill docs, test fixtures
+- [ ] 07-03-PLAN.md -- Live validation, custom field discovery, worktree cleanup
 
 ### Phase 8: Panel Integration
 **Goal**: SE can generate a v2 dashboard with all 15 panels (6 existing + 9 new analytics) and each new panel surfaces its analytical dimension inline alongside operational data, giving a single-pane view of customer health
@@ -190,7 +194,7 @@ Phases execute in numeric order: 7 -> 8 -> 9 -> 10
 | 4. Privacy-Sensitive and Exploratory Pages | v1.0 | 3/3 | Complete | 2026-03-27 |
 | 5. Dashboard V2 -- Modular Folder-Based Architecture | v1.0 | 6/6 | Complete | 2026-04-01 |
 | 6. Dashboard V2 UX Polish | v1.0 | 3/3 | Complete | 2026-04-01 |
-| 7. Jira Instance Migration | v2.0 | 0/? | Not started | - |
+| 7. Jira Instance Migration | v2.0 | 0/3 | Planned | - |
 | 8. Panel Integration | v2.0 | 0/? | Not started | - |
 | 9. Skill Audit and Consolidation | v2.0 | 0/? | Not started | - |
 | 10. Documentation | v2.0 | 0/? | Not started | - |
