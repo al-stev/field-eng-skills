@@ -11,8 +11,8 @@
 - Use the Jira skill scripts (uv run) for Jira operations
 - MCP Atlassian tools (mcp__atlassian-wandb) may be used as complement for operations the skill doesn't cover
 - Primary project: WB (W&B Eng) -- customer bugs and feature requests
-- Customer field (customfield_10083): used for per-customer queries ("Customer" = "CustomerName")
-- Eng Team field (customfield_10084): engineering team assignment
+- Customer field (customfield_16678, "Customer (WB)"): used for per-customer queries ("Customer" = "CustomerName")
+- Eng Team field (customfield_16680, "Eng Team"): engineering team assignment
 - Write operations (create issue, add comment, transition) require user approval
 - Destructive operations (delete issues) are blocked entirely
 

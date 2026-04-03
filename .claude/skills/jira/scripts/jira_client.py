@@ -19,8 +19,8 @@ from jira.resources import Resource
 # Constants
 JIRA_SERVER = "https://coreweave.atlassian.net"
 DEFAULT_PROJECT = "WB"
-CUSTOMER_FIELD = "customfield_10083"
-ENG_TEAM_FIELD = "customfield_10084"
+CUSTOMER_FIELD = "customfield_16678"
+ENG_TEAM_FIELD = "customfield_16680"
 
 TSM_ENV = Path.home() / '.tsm-ai' / '.env'
 

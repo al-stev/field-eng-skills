@@ -85,9 +85,9 @@ def _customer_jql_clause(name: str) -> str:
             variants.add(split.replace("-", " "))  # G Research
             variants.add(split.replace("-", ""))   # GResearch (already in set)
     if len(variants) == 1:
-        return f'"Customer" = "{escape_jql_string(name)}"'
+        return f'"Customer (WB)" = "{escape_jql_string(name)}"'
     quoted = ", ".join(f'"{escape_jql_string(v)}"' for v in sorted(variants))
-    return f'"Customer" IN ({quoted})'
+    return f'"Customer (WB)" IN ({quoted})'
 
 
 def cmd_view(args):
@@ -669,8 +669,8 @@ def main():
     create_parser.add_argument("--priority", help="Priority (P0, P1, P2, P3, P4)")
     create_parser.add_argument("--labels", nargs="+", help="Labels to add")
     create_parser.add_argument("--parent", help="Parent issue key (for Sub-task or child issues)")
-    create_parser.add_argument("--customer", help="Customer name (sets customfield_10083)")
-    create_parser.add_argument("--eng-team", dest="eng_team", help="Eng Team (sets customfield_10084)")
+    create_parser.add_argument("--customer", help="Customer name (sets customfield_16678)")
+    create_parser.add_argument("--eng-team", dest="eng_team", help="Eng Team (sets customfield_16680)")
     create_parser.add_argument("--project", help=f"Project key (default: {DEFAULT_PROJECT})")
 
     # create-epic
