@@ -38,9 +38,9 @@ Declared values (must be multiples of 4):
 | xs | 4px | Nav separator margins, sidebar-nav gap (2px rounds to 4) |
 | sm | 8px | Compact element spacing, breadcrumb padding, sidebar nav padding |
 | md | 16px | Default element spacing, stat-card gap, sidebar footer padding, section-label margin-bottom |
-| lg | 24px | Panel-card internal padding, two-col grid gap, page-nav margin-bottom |
+| lg | 24px | Panel-card internal padding, stat-card padding, two-col grid gap, page-nav margin-bottom |
 | xl | 32px | Stats-strip margin-bottom, full-width section margin-bottom, header horizontal padding |
-| 2xl | 48px | Panel content padding upper bound (`clamp(24px, 3vw, 40px)` vertical, `clamp(24px, 4vw, 48px)` horizontal) |
+| 2xl | 48px | Panel content padding upper bound (`clamp(24px, 3vw, 48px)` vertical, `clamp(24px, 4vw, 48px)` horizontal) |
 | 3xl | 64px | Header min-height (64px) |
 
 Exceptions: none. All new panel CSS must use these values exclusively.
@@ -54,7 +54,7 @@ Exceptions: none. All new panel CSS must use these values exclusively.
 | Role | Font Family | Size | Weight | Line Height | Letter Spacing | Usage |
 |------|-------------|------|--------|-------------|----------------|-------|
 | Display | Instrument Serif | 24px | 400 | 1.2 | -0.3px | Panel titles (`.placeholder-title`), dashboard header h1 |
-| Body | Outfit | 14px | 400 | 1.55 | normal | Body text, table cells, nav labels, descriptions |
+| Body | Outfit | 14px | 400 | 1.55 | normal | Body text, table cells, nav labels, descriptions, ECharts tooltip body |
 | Body strong | Outfit | 14px | 600 | 1.55 | normal | Nav labels (`.nav-label`), bold inline text |
 | KPI value | Outfit | 28px | 600 | 1.1 | normal | Stat card hero numbers (`.stat-value`) |
 | Micro label | JetBrains Mono | 11px | 600 | 1.3 | 1.5px | Section labels, table headers, badges, axis labels, metadata -- always UPPERCASE |
@@ -63,7 +63,7 @@ Exceptions: none. All new panel CSS must use these values exclusively.
 Additional type rules:
 - All JetBrains Mono labels at 11px use `text-transform: uppercase` and `letter-spacing: 1.5px`
 - ECharts axis labels: JetBrains Mono 11px weight 600 (set in wandb theme via chart-helpers.js)
-- ECharts tooltip body: Outfit 13px (set in wandb theme)
+- ECharts tooltip body: Outfit 14px (set in wandb theme via chart-helpers.js -- matches body text size)
 - No other font sizes permitted in new panels
 
 > Source: Extracted from shell.html, support.js PANEL_CSS, chart-helpers.js wandb theme registration. The system uses exactly 3 fonts, 4 size stops (11, 14, 24, 28), and 2 weights (400, 600).
@@ -173,7 +173,7 @@ Each new analytics panel follows this exact structure. Deviations are not permit
 | Class | Usage | CSS Pattern |
 |-------|-------|-------------|
 | `.stats-strip` | KPI headline row | `display: grid; grid-template-columns: repeat(N, 1fr); gap: 16px; margin-bottom: 32px;` |
-| `.stat-card` | Individual KPI card | `background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 20px;` |
+| `.stat-card` | Individual KPI card | `background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 24px;` |
 | `.stat-value` | KPI hero number | Outfit 28px weight 600, line-height 1.1 |
 | `.stat-label` | KPI label below value | JetBrains Mono 11px weight 600, uppercase, letter-spacing 1.5px, color `--text-tertiary` |
 | `.stat-sub` | KPI subtitle | JetBrains Mono 11px weight 400, color `--text-tertiary` |
@@ -182,7 +182,7 @@ Each new analytics panel follows this exact structure. Deviations are not permit
 | `.two-col` | Two-column chart layout | `display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px;` |
 | `.panel-card` | Chart container card | `background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 24px;` |
 | `.full-width` | Full-width section | `margin-bottom: 32px;` |
-| `.sql-copy-btn` | Data provenance button | 20x20px, opacity 0.4 default, 1.0 on hover, inline SVG database icon |
+| `.sql-copy-btn` | Data provenance button | 20x20px, opacity 0.4 default, 1.0 on hover, inline SVG database icon, `aria-label="Copy SQL query"`, `title="Copy SQL query"` hover tooltip |
 
 ### Chart container pattern
 
@@ -455,7 +455,7 @@ Applies to: Cohort trend, Engagement trend, Feature velocity trend, SDK version 
 
 ### SQL copy buttons (data provenance)
 
-Each chart section includes a SQL copy button (existing pattern from Phase 6 UX Polish). The button copies the BQ query that produced that data section to the clipboard, with a toast notification.
+Each chart section includes a SQL copy button (existing pattern from Phase 6 UX Polish). The button copies the BQ query that produced that data section to the clipboard, with a toast notification. The button element must include `aria-label="Copy SQL query"` for accessibility and `title="Copy SQL query"` for a native hover tooltip.
 
 ### Responsive breakpoints
 
