@@ -34,13 +34,13 @@ if [ -n "${ATLASSIAN_TOKEN:-}" ] && [ -n "${ATLASSIAN_EMAIL:-}" ]; then
   # Test against W&B Jira instance
   HTTP_CODE_JIRA=$(curl -s -o /dev/null -w "%{http_code}" \
     -u "${ATLASSIAN_EMAIL}:${ATLASSIAN_TOKEN}" \
-    "https://wandb.atlassian.net/rest/api/3/myself" 2>/dev/null || echo "000")
+    "https://coreweave.atlassian.net/rest/api/3/myself" 2>/dev/null || echo "000")
   # Test against CoreWeave Confluence instance
   HTTP_CODE_CONF=$(curl -s -o /dev/null -w "%{http_code}" \
     -u "${ATLASSIAN_EMAIL}:${ATLASSIAN_TOKEN}" \
     "https://coreweave.atlassian.net/rest/api/3/myself" 2>/dev/null || echo "000")
   if [ "$HTTP_CODE_JIRA" = "200" ]; then
-    ok "Jira (wandb.atlassian.net)"
+    ok "Jira (coreweave.atlassian.net)"
   else
     expired "Jira" "HTTP $HTTP_CODE_JIRA — run /atlassian-setup"
   fi

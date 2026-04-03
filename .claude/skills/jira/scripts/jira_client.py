@@ -17,7 +17,7 @@ from jira.resources import Resource
 
 
 # Constants
-JIRA_SERVER = "https://wandb.atlassian.net"
+JIRA_SERVER = "https://coreweave.atlassian.net"
 DEFAULT_PROJECT = "WB"
 CUSTOMER_FIELD = "customfield_10083"
 ENG_TEAM_FIELD = "customfield_10084"

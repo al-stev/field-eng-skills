@@ -2,7 +2,7 @@
 
 ## Instances
 
-- Jira: wandb.atlassian.net (W&B instance -- customer bugs, feature requests, escalations)
+- Jira: coreweave.atlassian.net (W&B project WB -- customer bugs, feature requests, escalations)
 - Confluence: coreweave.atlassian.net (CoreWeave instance -- available via MCP tools, skill deferred)
 - User is a Solutions Engineer at W&B (Weights & Biases), which is by CoreWeave
 
