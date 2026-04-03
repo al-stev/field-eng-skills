@@ -162,7 +162,7 @@ Plans:
 - [ ] 08-02-PLAN.md -- User Intelligence panels: User Journey + Cohort Analysis
 - [ ] 08-03-PLAN.md -- User Intelligence panels: Engagement Decay + Team Detection
 - [ ] 08-04-PLAN.md -- Product Intelligence panels: Feature Velocity + SDK Versions
-- [ ] 08-05-PLAN.md -- Product Intelligence panels: Usage Correlation + Risk Scoring + Performance
+- [x] 08-05-PLAN.md -- Product Intelligence panels: Usage Correlation + Risk Scoring + Performance
 - [ ] 08-06-PLAN.md -- Overview aggregation update + end-to-end structural verification
 **UI hint**: yes
 
