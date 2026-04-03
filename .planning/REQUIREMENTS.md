@@ -18,10 +18,10 @@
 
 ## Jira Migration
 
-- [ ] **JIRA-01**: All Jira skill scripts connect to coreweave.atlassian.net instead of wandb.atlassian.net
+- [x] **JIRA-01**: All Jira skill scripts connect to coreweave.atlassian.net instead of wandb.atlassian.net
 - [ ] **JIRA-02**: Existing JQL filters and customer queries return correct results on the new instance
 - [x] **JIRA-03**: Issue URLs in dashboards and FE-UPDATE comments point to coreweave.atlassian.net/browse/WB-XXXX
-- [ ] **JIRA-04**: CLAUDE.md, atlassian.md rules, and credential table updated to reference new instance
+- [x] **JIRA-04**: CLAUDE.md, atlassian.md rules, and credential table updated to reference new instance
 - [x] **JIRA-05**: All downstream skills that consume Jira data (customer-snapshot, jira-check, cadence-prep, pre-read, 3p-update) produce correct output after migration
 
 ## Skill Audit
@@ -55,10 +55,10 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| JIRA-01 | Phase 7 | Pending |
+| JIRA-01 | Phase 7 | Complete |
 | JIRA-02 | Phase 7 | Pending |
 | JIRA-03 | Phase 7 | Complete |
-| JIRA-04 | Phase 7 | Pending |
+| JIRA-04 | Phase 7 | Complete |
 | JIRA-05 | Phase 7 | Complete |
 | PANEL-01 | Phase 8 | Pending |
 | PANEL-02 | Phase 8 | Pending |
