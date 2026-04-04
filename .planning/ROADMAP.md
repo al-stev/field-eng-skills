@@ -126,7 +126,7 @@ Plans:
 - [ ] **Phase 7: Jira Instance Migration** - Migrate all Jira skills and downstream consumers from wandb.atlassian.net to coreweave.atlassian.net
 - [ ] **Phase 8: Panel Integration** - Integrate 9 deep-analytics page types as dashboard panels following the v2 panel contract
 - [ ] **Phase 9: Skill Audit and Consolidation** - Inventory all 35 skills, remove hardcoded user-specific values, update SKILL.md docs, complete composition rules
-- [ ] **Phase 10: Documentation** - Getting-started guide, skill reference, customer onboarding guide, architecture overview
+- [x] **Phase 10: Documentation** - Getting-started guide, skill reference, customer onboarding guide, architecture overview (completed 2026-04-04)
 
 ## Phase Details
 
@@ -192,7 +192,7 @@ Plans:
   4. An architecture overview explains the dashboard pipeline (assemble -> compose -> open), panel contract, data flow from BQ/Jira/Slack through to HTML output, and how to add a new panel
 **Plans**: 2 plans
 Plans:
-- [ ] 10-01-PLAN.md -- Credential path rename (~/.tsm-ai/ to ~/.fe-skills/) across all code and docs
+- [x] 10-01-PLAN.md -- Credential path rename (~/.tsm-ai/ to ~/.fe-skills/) across all code and docs
 - [x] 10-02-PLAN.md -- README.md rewrite: getting-started, skill reference, customer onboarding, architecture overview
 
 ## Progress
@@ -211,4 +211,4 @@ Phases execute in numeric order: 7 -> 8 -> 9 -> 10
 | 7. Jira Instance Migration | v2.0 | 2/3 | In Progress | - |
 | 8. Panel Integration | v2.0 | 0/6 | Planned | - |
 | 9. Skill Audit and Consolidation | v2.0 | 0/3 | Planned | - |
-| 10. Documentation | v2.0 | 1/2 | In Progress|  |
+| 10. Documentation | v2.0 | 2/2 | Complete   | 2026-04-04 |
