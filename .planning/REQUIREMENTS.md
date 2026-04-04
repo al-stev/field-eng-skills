@@ -27,16 +27,16 @@
 ## Skill Audit
 
 - [x] **AUDIT-01**: Skill inventory published -- complete list of all skills with one-line descriptions, entry-point vs building-block classification, and dependency graph
-- [x] **AUDIT-02**: No hardcoded user-specific values (GIDs, channel IDs, email addresses) exist in committed skill code -- all user-specific config lives in customers.yaml or ~/.tsm-ai/.env
+- [x] **AUDIT-02**: No hardcoded user-specific values (GIDs, channel IDs, email addresses) exist in committed skill code -- all user-specific config lives in customers.yaml or ~/.fe-skills/.env
 - [x] **AUDIT-03**: Every skill's SKILL.md has accurate, up-to-date documentation that matches current behavior
 - [x] **AUDIT-04**: Skill composition rules (skill-composition.md) are complete and cover all multi-skill workflows
 
 ## Documentation
 
-- [ ] **DOCS-01**: Getting-started guide exists in the repo explaining: what this repo is, how to install, how to set up credentials, and how to run first skill
-- [ ] **DOCS-02**: Skill reference page lists all skills grouped by category (data sources, dashboards, workflows, utilities) with usage examples
-- [ ] **DOCS-03**: Customer onboarding guide explains how to add a new customer (customers.yaml, Asana setup, Slack channels, SFDC mapping)
-- [ ] **DOCS-04**: Architecture overview explains the dashboard pipeline (fetch -> assemble -> compose -> open) and how panels work
+- [x] **DOCS-01**: Getting-started guide exists in the repo explaining: what this repo is, how to install, how to set up credentials, and how to run first skill
+- [x] **DOCS-02**: Skill reference page lists all skills grouped by category (data sources, dashboards, workflows, utilities) with usage examples
+- [x] **DOCS-03**: Customer onboarding guide explains how to add a new customer (customers.yaml, Asana setup, Slack channels, SFDC mapping)
+- [x] **DOCS-04**: Architecture overview explains the dashboard pipeline (fetch -> assemble -> compose -> open) and how panels work
 
 ## Future Requirements (deferred beyond v2.0)
 
@@ -74,7 +74,7 @@
 | AUDIT-02 | Phase 9 | Complete |
 | AUDIT-03 | Phase 9 | Complete |
 | AUDIT-04 | Phase 9 | Complete |
-| DOCS-01 | Phase 10 | Pending |
-| DOCS-02 | Phase 10 | Pending |
-| DOCS-03 | Phase 10 | Pending |
-| DOCS-04 | Phase 10 | Pending |
+| DOCS-01 | Phase 10 | Complete |
+| DOCS-02 | Phase 10 | Complete |
+| DOCS-03 | Phase 10 | Complete |
+| DOCS-04 | Phase 10 | Complete |

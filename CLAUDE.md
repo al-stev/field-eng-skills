@@ -54,14 +54,6 @@ Claude Code skills for W&B Solutions Engineers. Integrates with W&B Jira (corewe
     slack/                  -- CoreWeave Slack channel history, search, threads
     slack-setup/            -- One-time Slack credential setup
     usage-report/           -- Standalone usage visualization (external QBR-ready + internal SE prep reports with ECharts)
-    gcalendar/              -- Google Calendar via Apps Script + Chrome CDP (Okta SSO)
-    gcalendar-setup/        -- One-time Google Calendar Apps Script setup
-    gdocs/                  -- Google Docs via Apps Script + Chrome CDP (Okta SSO)
-    gdocs-setup/            -- One-time Google Docs Apps Script setup
-    gmail/                  -- Gmail via Apps Script + Chrome CDP (Okta SSO, read-only)
-    gmail-setup/            -- One-time Gmail Apps Script setup
-    gong/                   -- Gong call recordings, transcripts, AI summaries (cookie-based + CDP)
-    gong-setup/             -- One-time Gong credential setup
   rules/                    -- Auto-loaded project rules
     asana.md                -- Asana workspace conventions (sections, custom fields, RAID, portfolio, staleness rules)
     atlassian.md            -- Atlassian workspace conventions
@@ -94,6 +86,8 @@ All API credentials stored in `~/.fe-skills/.env`. Run `/credential-status` to c
 | `GMAIL_APPSCRIPT_URL` | Gmail | script.google.com |
 | `GMAIL_APPSCRIPT_KEY` | Gmail | script.google.com |
 | `GONG_COOKIE` | Gong | us-54638.app.gong.io |
+| `GONG_BASE_URL` | Gong | us-54638.app.gong.io |
+| `GONG_WORKSPACE_ID` | Gong | us-54638.app.gong.io |
 
 BigQuery uses Application Default Credentials (ADC) -- no token in ~/.fe-skills/.env. Run `gcloud auth application-default login` to configure. Verify with `/bigquery-setup`.
 

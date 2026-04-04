@@ -42,7 +42,7 @@ customers/<name>/dashboard/
 
 ```bash
 # Step 1: Assemble data from sources
-uv run --project .claude/skills/customer-snapshot python \
+uv run --project .claude/skills/deep-analytics python \
     .claude/skills/customer-snapshot/templates/assemble.py \
     --customer "GResearch" \
     --jira /path/to/jira.json \

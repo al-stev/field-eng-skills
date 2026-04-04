@@ -457,7 +457,7 @@ Two separate Atlassian instances require separate credentials:
 | script.google.com | Google Calendar Apps Script | `GCALENDAR_APPSCRIPT_URL` / `GCALENDAR_APPSCRIPT_KEY` |
 | script.google.com | Google Docs Apps Script | `GDOCS_APPSCRIPT_URL` / `GDOCS_APPSCRIPT_KEY` |
 | script.google.com | Gmail Apps Script | `GMAIL_APPSCRIPT_URL` / `GMAIL_APPSCRIPT_KEY` |
-| us-54638.app.gong.io | Gong (call recordings, transcripts) | `GONG_COOKIE` |
+| us-54638.app.gong.io | Gong (call recordings, transcripts) | `GONG_COOKIE` / `GONG_BASE_URL` / `GONG_WORKSPACE_ID` |
 
 Slack uses the CoreWeave workspace: `SLACK_TOKEN` / `SLACK_COOKIE`.
 
@@ -495,4 +495,4 @@ Skills with Python scripts use [uv](https://docs.astral.sh/uv/) for per-skill de
 uv run --project .claude/skills/<skill> python .claude/skills/<skill>/scripts/<script>.py <command> [options]
 ```
 
-Each skill with Python has its own `pyproject.toml` and `uv.lock`. Run `uv sync` in the skill directory on first use.
+Each skill with Python has its own `pyproject.toml` and `uv.lock`. Dependencies install automatically on first `uv run`.
