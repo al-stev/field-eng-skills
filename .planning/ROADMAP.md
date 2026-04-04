@@ -190,7 +190,10 @@ Plans:
   2. A skill reference page lists all skills grouped by category (data sources, dashboards, workflows, utilities) with one-liner descriptions, required credentials, and usage examples
   3. A customer onboarding guide explains the full flow: customers.yaml entry, Asana setup (portfolio + Actions + RAID), Slack channel lookup, SFDC mapping, and first dashboard generation
   4. An architecture overview explains the dashboard pipeline (assemble -> compose -> open), panel contract, data flow from BQ/Jira/Slack through to HTML output, and how to add a new panel
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+- [ ] 10-01-PLAN.md -- Credential path rename (~/.tsm-ai/ to ~/.fe-skills/) across all code and docs
+- [ ] 10-02-PLAN.md -- README.md rewrite: getting-started, skill reference, customer onboarding, architecture overview
 
 ## Progress
 
@@ -208,4 +211,4 @@ Phases execute in numeric order: 7 -> 8 -> 9 -> 10
 | 7. Jira Instance Migration | v2.0 | 2/3 | In Progress | - |
 | 8. Panel Integration | v2.0 | 0/6 | Planned | - |
 | 9. Skill Audit and Consolidation | v2.0 | 0/3 | Planned | - |
-| 10. Documentation | v2.0 | 0/? | Not started | - |
+| 10. Documentation | v2.0 | 0/2 | Not started | - |
