@@ -304,7 +304,7 @@
             ? 'Asana data unavailable &mdash; API error during fetch'
             : 'Asana not configured for this customer';
           var hint = data && data.reason === 'api_error'
-            ? 'Check ASANA_TOKEN in ~/.tsm-ai/.env'
+            ? 'Check ASANA_TOKEN in ~/.fe-skills/.env'
             : 'Add action_tracker_id to templates/customers.yaml, or run /asana-setup';
           container.innerHTML =
             '<div class="section-label">SE Actions</div>' +
