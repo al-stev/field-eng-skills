@@ -14,8 +14,8 @@ Customer accounts accumulate history across many Slack threads (external channel
 
 ## Prerequisites
 
-- Slack skill configured (`/slack-setup` done, credentials in `~/.tsm-ai/.env`)
-- Jira skill configured (`/atlassian-setup` done, credentials in `~/.tsm-ai/.env`)
+- Slack skill configured (`/slack-setup` done, credentials in `~/.fe-skills/.env`)
+- Jira skill configured (`/atlassian-setup` done, credentials in `~/.fe-skills/.env`)
 - Both skills' dependencies installed (`uv sync` in each skill directory)
 
 ## Input Gathering

@@ -48,10 +48,10 @@ Copy the `accessToken` and `instanceUrl` values from the output.
 Ensure the credential directory exists:
 
 ```bash
-mkdir -p ~/.tsm-ai && chmod 700 ~/.tsm-ai
+mkdir -p ~/.fe-skills && chmod 700 ~/.fe-skills
 ```
 
-Use the **Edit tool** to add to `~/.tsm-ai/.env`:
+Use the **Edit tool** to add to `~/.fe-skills/.env`:
 
 - `SFDC_SESSION_ID=<accessToken from sf org display>`
 - `SFDC_INSTANCE=wandb.my.salesforce.com`
@@ -61,7 +61,7 @@ Do **NOT** use `echo`, `printf`, or any bash command to write credentials -- the
 Then lock file permissions:
 
 ```bash
-chmod 600 ~/.tsm-ai/.env
+chmod 600 ~/.fe-skills/.env
 ```
 
 ### Step 5: Install Python Dependencies
@@ -128,7 +128,7 @@ sf org login web --instance-url https://wandb.my.salesforce.com --alias wandb
 sf org display --target-org wandb --json
 ```
 
-Then update `SFDC_SESSION_ID` in `~/.tsm-ai/.env` with the new `accessToken`.
+Then update `SFDC_SESSION_ID` in `~/.fe-skills/.env` with the new `accessToken`.
 
 ## Troubleshooting
 

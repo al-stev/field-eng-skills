@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 # Credential Reference
 
-All API credentials are stored in `~/.tsm-ai/.env` (directory permissions `700`, file permissions `600`). Format is flat `KEY=value`, one per line.
+All API credentials are stored in `~/.fe-skills/.env` (directory permissions `700`, file permissions `600`). Format is flat `KEY=value`, one per line.
 
 | Key | Service | Set by |
 |---|---|---|

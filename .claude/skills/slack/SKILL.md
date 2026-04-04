@@ -13,7 +13,7 @@ Refer to `.claude/rules/coreweave-slack.md` for shared constants (API base URL, 
 
 ## Prerequisites
 
-- `SLACK_TOKEN` and `SLACK_COOKIE` configured in `~/.tsm-ai/.env` (run `/slack-setup` if not done)
+- `SLACK_TOKEN` and `SLACK_COOKIE` configured in `~/.fe-skills/.env` (run `/slack-setup` if not done)
 - Chrome debug instance running (`./scripts/chrome-debug.sh start`) for credential auto-refresh
 - Python dependencies installed: `cd .claude/skills/slack && uv sync`
 
@@ -29,7 +29,7 @@ If the tool exits with an error about credentials, ensure the Chrome debug insta
 
 ## Authentication
 
-All Python tools automatically read credentials from `~/.tsm-ai/.env` (`SLACK_TOKEN` and `SLACK_COOKIE`). The custom WebClient implementation injects the cookie into every HTTP request, allowing the official Slack SDK to work with browser-based authentication.
+All Python tools automatically read credentials from `~/.fe-skills/.env` (`SLACK_TOKEN` and `SLACK_COOKIE`). The custom WebClient implementation injects the cookie into every HTTP request, allowing the official Slack SDK to work with browser-based authentication.
 
 ## Tool Invocation
 
@@ -184,7 +184,7 @@ This searches `real_name`, `display_name`, and `username` fields and returns all
 **Note:** DM channel creation is not yet implemented in the Python tools. Use the curl fallback for now:
 
 ```bash
-curl -s "https://slack.com/api/conversations.open" -H "Authorization: Bearer $(grep '^SLACK_TOKEN=' ~/.tsm-ai/.env | cut -d= -f2-)" -b "d=$(grep '^SLACK_COOKIE=' ~/.tsm-ai/.env | cut -d= -f2-)" -H "Content-Type: application/json" -d '{"users": "USER_ID"}'
+curl -s "https://slack.com/api/conversations.open" -H "Authorization: Bearer $(grep '^SLACK_TOKEN=' ~/.fe-skills/.env | cut -d= -f2-)" -b "d=$(grep '^SLACK_COOKIE=' ~/.fe-skills/.env | cut -d= -f2-)" -H "Content-Type: application/json" -d '{"users": "USER_ID"}'
 ```
 
 The response contains `channel.id` — this is the DM channel ID needed for history and messaging operations.

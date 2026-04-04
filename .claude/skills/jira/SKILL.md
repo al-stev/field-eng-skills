@@ -26,7 +26,7 @@ Refer to `.claude/rules/atlassian.md` for shared Atlassian constants and FE-UPDA
 
 ## Prerequisites
 
-- `ATLASSIAN_EMAIL` and `ATLASSIAN_TOKEN` configured in `~/.tsm-ai/.env`
+- `ATLASSIAN_EMAIL` and `ATLASSIAN_TOKEN` configured in `~/.fe-skills/.env`
 - Python dependencies installed: `cd .claude/skills/jira && uv sync`
 - Verify with: `uv run --project .claude/skills/jira python .claude/skills/jira/scripts/issues.py list --max-results 1 --pretty`
 
@@ -221,8 +221,8 @@ Issue keys like `FIELD-123` auto-resolve to their project -- no `--project` need
 
 | Problem | Fix |
 |---|---|
-| `credentials_not_found` error | Ensure `ATLASSIAN_EMAIL`/`ATLASSIAN_TOKEN` are set in `~/.tsm-ai/.env` |
-| `jira_error_401` | Check `ATLASSIAN_EMAIL` and `ATLASSIAN_TOKEN` in `~/.tsm-ai/.env` |
+| `credentials_not_found` error | Ensure `ATLASSIAN_EMAIL`/`ATLASSIAN_TOKEN` are set in `~/.fe-skills/.env` |
+| `jira_error_401` | Check `ATLASSIAN_EMAIL` and `ATLASSIAN_TOKEN` in `~/.fe-skills/.env` |
 | `jira_error_403` | Check your Jira project permissions |
 | `jira_error_404` | Verify the issue key or project exists |
 | `invalid_transition` | Run `transitions --key` to see available status changes |

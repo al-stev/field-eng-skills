@@ -34,14 +34,14 @@ This launches an isolated Chrome window with Grafana and Slack pre-loaded. If it
 ./scripts/slack-credential-refresh.sh
 ```
 
-This extracts the `xoxc-` token and `d` cookie via CDP, saves them as `SLACK_TOKEN` and `SLACK_COOKIE` in `~/.tsm-ai/.env`, and verifies API access automatically.
+This extracts the `xoxc-` token and `d` cookie via CDP, saves them as `SLACK_TOKEN` and `SLACK_COOKIE` in `~/.fe-skills/.env`, and verifies API access automatically.
 
 ### Step 3: Verify (optional)
 
 The script runs verification automatically. To manually confirm:
 
 ```bash
-curl -s "https://slack.com/api/auth.test" -H "Authorization: Bearer $(grep '^SLACK_TOKEN=' ~/.tsm-ai/.env | cut -d= -f2-)" -b "d=$(grep '^SLACK_COOKIE=' ~/.tsm-ai/.env | cut -d= -f2-)" | python3 -m json.tool
+curl -s "https://slack.com/api/auth.test" -H "Authorization: Bearer $(grep '^SLACK_TOKEN=' ~/.fe-skills/.env | cut -d= -f2-)" -b "d=$(grep '^SLACK_COOKIE=' ~/.fe-skills/.env | cut -d= -f2-)" | python3 -m json.tool
 ```
 
 ## Method 2: Manual Extraction (Fallback)
@@ -73,15 +73,15 @@ For the cookie: go to **Application** tab → **Cookies** → `https://app.slack
 
 ### Step 2: Save the Credentials
 
-Add the token and cookie to `~/.tsm-ai/.env`:
+Add the token and cookie to `~/.fe-skills/.env`:
 
 ```bash
-mkdir -p ~/.tsm-ai && chmod 700 ~/.tsm-ai
-cat >> ~/.tsm-ai/.env << 'EOF'
+mkdir -p ~/.fe-skills && chmod 700 ~/.fe-skills
+cat >> ~/.fe-skills/.env << 'EOF'
 SLACK_TOKEN=xoxc-YOUR-TOKEN-HERE
 SLACK_COOKIE=xoxd-YOUR-COOKIE-HERE
 EOF
-chmod 600 ~/.tsm-ai/.env
+chmod 600 ~/.fe-skills/.env
 ```
 
 Replace the placeholder values with the actual token and cookie from Step 1.
@@ -89,7 +89,7 @@ Replace the placeholder values with the actual token and cookie from Step 1.
 ### Step 3: Verify
 
 ```bash
-curl -s "https://slack.com/api/auth.test" -H "Authorization: Bearer $(grep '^SLACK_TOKEN=' ~/.tsm-ai/.env | cut -d= -f2-)" -b "d=$(grep '^SLACK_COOKIE=' ~/.tsm-ai/.env | cut -d= -f2-)" | python3 -m json.tool
+curl -s "https://slack.com/api/auth.test" -H "Authorization: Bearer $(grep '^SLACK_TOKEN=' ~/.fe-skills/.env | cut -d= -f2-)" -b "d=$(grep '^SLACK_COOKIE=' ~/.fe-skills/.env | cut -d= -f2-)" | python3 -m json.tool
 ```
 
 Should return JSON with `"ok": true` and your user info.
@@ -97,7 +97,7 @@ Should return JSON with `"ok": true` and your user info.
 Then test search:
 
 ```bash
-curl -s "https://slack.com/api/search.messages?query=hello&count=1" -H "Authorization: Bearer $(grep '^SLACK_TOKEN=' ~/.tsm-ai/.env | cut -d= -f2-)" -b "d=$(grep '^SLACK_COOKIE=' ~/.tsm-ai/.env | cut -d= -f2-)" | python3 -m json.tool
+curl -s "https://slack.com/api/search.messages?query=hello&count=1" -H "Authorization: Bearer $(grep '^SLACK_TOKEN=' ~/.fe-skills/.env | cut -d= -f2-)" -b "d=$(grep '^SLACK_COOKIE=' ~/.fe-skills/.env | cut -d= -f2-)" | python3 -m json.tool
 ```
 
 Should return `"ok": true` with search results.
@@ -114,13 +114,13 @@ Session tokens expire when you sign out of Slack in your browser or after extend
 ### `"ok": false, "error": "invalid_auth"`
 
 - The token or cookie may have expired — refresh them using the method above
-- Verify `SLACK_TOKEN` in `~/.tsm-ai/.env` starts with `xoxc-` and `SLACK_COOKIE` starts with `xoxd-`
+- Verify `SLACK_TOKEN` in `~/.fe-skills/.env` starts with `xoxc-` and `SLACK_COOKIE` starts with `xoxd-`
 - Make sure there's no trailing whitespace in the values
 
 ### `"ok": false, "error": "not_authed"`
 
 - The `Authorization` header or `d` cookie is missing
-- `xoxc-` tokens **require** both the token and the cookie — check that both `SLACK_TOKEN` and `SLACK_COOKIE` are set in `~/.tsm-ai/.env`
+- `xoxc-` tokens **require** both the token and the cookie — check that both `SLACK_TOKEN` and `SLACK_COOKIE` are set in `~/.fe-skills/.env`
 
 ### `"ok": false, "error": "missing_scope"`
 

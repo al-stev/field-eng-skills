@@ -43,6 +43,6 @@ Sections: Executive Summary, Impact Summary, Timeline, W&B Configuration & Setti
 
 ## Prerequisites
 
-- Slack credentials configured (`~/.tsm-ai/.env` — SLACK_TOKEN, SLACK_COOKIE)
-- Jira credentials configured (`~/.tsm-ai/.env` — ATLASSIAN_EMAIL, ATLASSIAN_TOKEN)
+- Slack credentials configured (`~/.fe-skills/.env` — SLACK_TOKEN, SLACK_COOKIE)
+- Jira credentials configured (`~/.fe-skills/.env` — ATLASSIAN_EMAIL, ATLASSIAN_TOKEN)
 - Read the full skill at `.claude/skills/pre-read/SKILL.md` before executing

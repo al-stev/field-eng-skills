@@ -39,8 +39,8 @@ Gather context from Jira and Slack, populate a structured agenda using the caden
 
 The following credentials must be configured before use:
 
-- **Jira** -- `ATLASSIAN_EMAIL` and `ATLASSIAN_TOKEN` in `~/.tsm-ai/.env`
-- **Slack** -- `SLACK_TOKEN` and `SLACK_COOKIE` in `~/.tsm-ai/.env`
+- **Jira** -- `ATLASSIAN_EMAIL` and `ATLASSIAN_TOKEN` in `~/.fe-skills/.env`
+- **Slack** -- `SLACK_TOKEN` and `SLACK_COOKIE` in `~/.fe-skills/.env`
 
 Verify Jira connectivity:
 ```bash
@@ -283,7 +283,7 @@ uv run --project .claude/skills/confluence python .claude/skills/confluence/scri
 
 The Confluence page is the shareable, persistent record. Team members and the customer can view it directly.
 
-**Confluence credentials**: The Confluence skill uses `CONFLUENCE_EMAIL`/`CONFLUENCE_TOKEN` from `~/.tsm-ai/.env` (CoreWeave Confluence instance). These are separate from the Jira credentials (`ATLASSIAN_EMAIL`/`ATLASSIAN_TOKEN`).
+**Confluence credentials**: The Confluence skill uses `CONFLUENCE_EMAIL`/`CONFLUENCE_TOKEN` from `~/.fe-skills/.env` (CoreWeave Confluence instance). These are separate from the Jira credentials (`ATLASSIAN_EMAIL`/`ATLASSIAN_TOKEN`).
 
 If Confluence publishing fails (credentials missing, permission error), fall back to local markdown and note the failure. Do not block the entire workflow on Confluence.
 
@@ -388,6 +388,6 @@ The skill publishes cadence documents to CoreWeave Confluence (coreweave.atlassi
 - **Jira** (coreweave.atlassian.net): `ATLASSIAN_EMAIL` / `ATLASSIAN_TOKEN`
 - **Confluence** (coreweave.atlassian.net): `CONFLUENCE_EMAIL` / `CONFLUENCE_TOKEN`
 
-Both are stored in `~/.tsm-ai/.env`. The Confluence skill falls back to `ATLASSIAN_*` if `CONFLUENCE_*` vars are not set.
+Both are stored in `~/.fe-skills/.env`. The Confluence skill falls back to `ATLASSIAN_*` if `CONFLUENCE_*` vars are not set.
 
 Each customer should have a cadence folder in Confluence where dated pages are created as children. Store the Confluence parent folder ID in `templates/customers.yaml` under `confluence.cadence_folder_id` for each customer.

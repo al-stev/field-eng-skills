@@ -26,7 +26,7 @@ Default to TSM unless the user explicitly asks for personal content. Pass `--spa
 
 ## Prerequisites
 
-- `ATLASSIAN_EMAIL` and `ATLASSIAN_TOKEN` configured in `~/.tsm-ai/.env` (run `/atlassian-setup` if not done)
+- `ATLASSIAN_EMAIL` and `ATLASSIAN_TOKEN` configured in `~/.fe-skills/.env` (run `/atlassian-setup` if not done)
 - Dependencies installed: `cd .claude/skills/confluence && uv sync`
 
 ## Tool Invocation
@@ -224,8 +224,8 @@ When creating or updating content, use Confluence storage format (XHTML):
 All tools output structured JSON. On success, results go to stdout. On error, a JSON object with `ok`, `error`, and `message` fields goes to stderr, and the process exits with code 1.
 
 Common errors:
-- `credentials_not_found` — `ATLASSIAN_EMAIL`/`ATLASSIAN_TOKEN` missing from `~/.tsm-ai/.env`; run `/atlassian-setup`
-- `credentials_missing` — `ATLASSIAN_EMAIL` or `ATLASSIAN_TOKEN` not set in `~/.tsm-ai/.env`
+- `credentials_not_found` — `ATLASSIAN_EMAIL`/`ATLASSIAN_TOKEN` missing from `~/.fe-skills/.env`; run `/atlassian-setup`
+- `credentials_missing` — `ATLASSIAN_EMAIL` or `ATLASSIAN_TOKEN` not set in `~/.fe-skills/.env`
 - `api_error` with "Authentication failed" — bad credentials
 - `api_error` with "Permission denied" — no access to space/page
 - `api_error` with "Not found" — invalid page ID

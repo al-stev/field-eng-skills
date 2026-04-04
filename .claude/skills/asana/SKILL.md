@@ -26,7 +26,7 @@ Refer to `.claude/rules/asana.md` for shared constants (workspace GID, project G
 
 ## Prerequisites
 
-- `ASANA_TOKEN` configured in `~/.tsm-ai/.env` (run `/asana-setup` if not done)
+- `ASANA_TOKEN` configured in `~/.fe-skills/.env` (run `/asana-setup` if not done)
 - Python dependencies installed: `cd .claude/skills/asana && uv sync`
 - Verify with: `uv run --project .claude/skills/asana python .claude/skills/asana/scripts/query.py projects --limit 3 --pretty`
 
@@ -280,7 +280,7 @@ This is parsed with regex `\(WB-\d+\)` for bidirectional cross-linking in the cu
 
 | Problem | Fix |
 |---|---|
-| `credentials_not_found` error | Run `/asana-setup` to configure PAT in `~/.tsm-ai/.env` |
+| `credentials_not_found` error | Run `/asana-setup` to configure PAT in `~/.fe-skills/.env` |
 | `asana_api_error` with 401 | PAT may be revoked. Generate a new one via `/asana-setup` |
 | `asana_api_error` with 403 | You don't have access to this resource. Check project permissions in Asana |
 | `asana_api_error` with 404 | GID not found. Verify the GID or URL is correct |

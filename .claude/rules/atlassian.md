@@ -42,5 +42,5 @@ Tags:
 
 ## Credential Location
 
-- Credentials stored in ~/.tsm-ai/.env (ATLASSIAN_EMAIL, ATLASSIAN_TOKEN)
+- Credentials stored in ~/.fe-skills/.env (ATLASSIAN_EMAIL, ATLASSIAN_TOKEN)
 - API tokens do not expire -- no auto-refresh needed (unlike Slack)

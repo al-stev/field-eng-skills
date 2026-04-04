@@ -16,6 +16,6 @@
 
 ## Credential Location
 
-- Credentials stored in ~/.tsm-ai/.env (SLACK_TOKEN, SLACK_COOKIE)
+- Credentials stored in ~/.fe-skills/.env (SLACK_TOKEN, SLACK_COOKIE)
 - Chrome debug instance on port 9222 required for credential refresh
 - Run /slack-setup if credentials are not configured

@@ -31,17 +31,17 @@ For full functionality (Priority custom field on tasks), **Asana Starter plan** 
 Ensure the credential directory exists:
 
 ```bash
-mkdir -p ~/.tsm-ai && chmod 700 ~/.tsm-ai
+mkdir -p ~/.fe-skills && chmod 700 ~/.fe-skills
 ```
 
-Use the **Edit tool** to append the token to `~/.tsm-ai/.env`:
+Use the **Edit tool** to append the token to `~/.fe-skills/.env`:
 - Add a line: `ASANA_TOKEN=<paste-token-here>`
 - Do **NOT** use `echo`, `printf`, or any bash command to write credentials -- these leak into shell history
 
 Then lock file permissions:
 
 ```bash
-chmod 600 ~/.tsm-ai/.env
+chmod 600 ~/.fe-skills/.env
 ```
 
 ## Step 2.5: Auto-discover Workspace GID
@@ -83,7 +83,7 @@ Test connectivity by listing projects:
 uv run --project .claude/skills/asana python .claude/skills/asana/scripts/query.py projects --limit 3 --pretty
 ```
 
-Should return JSON with project entries from your workspace (or an empty list for a new workspace). If you see an auth error, double-check the token in `~/.tsm-ai/.env`.
+Should return JSON with project entries from your workspace (or an empty list for a new workspace). If you see an auth error, double-check the token in `~/.fe-skills/.env`.
 
 ## Step 5: Create SE Team Project (Optional but Recommended)
 
@@ -101,13 +101,13 @@ Asana PATs do not expire automatically. They remain valid until you revoke them.
 
 1. Go to https://app.asana.com/0/my-apps
 2. Revoke the old token
-3. Create a new one and update `ASANA_TOKEN` in `~/.tsm-ai/.env`
+3. Create a new one and update `ASANA_TOKEN` in `~/.fe-skills/.env`
 
 ## Troubleshooting
 
 ### Authentication failed / 401 errors
 
-- Verify `ASANA_TOKEN` in `~/.tsm-ai/.env` has no trailing whitespace
+- Verify `ASANA_TOKEN` in `~/.fe-skills/.env` has no trailing whitespace
 - Make sure you copied the full token
 - The PAT may have been revoked -- generate a new one
 

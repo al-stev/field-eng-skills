@@ -16,7 +16,7 @@ Query customer usage data from W&B's BigQuery (`wandb-production`) for dashboard
 ## Prerequisites
 
 - **ADC configured:** Run `gcloud auth application-default login` (one-time setup)
-- **No stored secrets:** BigQuery uses Application Default Credentials -- nothing in `~/.tsm-ai/.env`
+- **No stored secrets:** BigQuery uses Application Default Credentials -- nothing in `~/.fe-skills/.env`
 - **Customer registered:** Customer must have `sfdc_account_id` set in `templates/customers.yaml`
 - **Verify setup:** Run `/bigquery-setup` to check connectivity
 

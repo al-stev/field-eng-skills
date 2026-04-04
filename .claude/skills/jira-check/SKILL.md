@@ -21,8 +21,8 @@ The SE drives every decision. You draft, they review, enrich, and approve. This 
 
 ## Prerequisites
 
-- **Jira** -- `ATLASSIAN_EMAIL` and `ATLASSIAN_TOKEN` in `~/.tsm-ai/.env`
-- **Slack** -- `SLACK_TOKEN` and `SLACK_COOKIE` in `~/.tsm-ai/.env`
+- **Jira** -- `ATLASSIAN_EMAIL` and `ATLASSIAN_TOKEN` in `~/.fe-skills/.env`
+- **Slack** -- `SLACK_TOKEN` and `SLACK_COOKIE` in `~/.fe-skills/.env`
 
 Verify Jira connectivity:
 ```bash
