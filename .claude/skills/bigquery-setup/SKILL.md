@@ -35,5 +35,5 @@ If verification fails:
 ## Notes
 
 - ADC tokens refresh automatically -- no manual token management needed
-- No secrets stored in `~/.tsm-ai/.env` for BigQuery (unlike Slack/Jira)
+- No secrets stored in `~/.fe-skills/.env` for BigQuery (unlike Slack/Jira)
 - The `landing_development` dataset check is non-fatal: if it fails, churn probability data will be unavailable but all other metrics still work

@@ -20,7 +20,7 @@
 
 | Property | Value |
 |---|---|
-| Credential store | `~/.tsm-ai/.env` |
+| Credential store | `~/.fe-skills/.env` |
 | Token key | `ASANA_TOKEN` |
 | Auth method | Personal Access Token (PAT) |
 

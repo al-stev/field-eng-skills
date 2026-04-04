@@ -11,7 +11,7 @@ Claude Code skills for W&B Solutions Engineers. Integrates with W&B Jira, CoreWe
    git clone https://github.com/wandb/field-eng-skills.git
    ```
 
-2. **Configure credentials** in `~/.tsm-ai/.env`:
+2. **Configure credentials** in `~/.fe-skills/.env`:
    ```bash
    # W&B Jira (wandb.atlassian.net)
    ATLASSIAN_EMAIL=your.email@wandb.com
@@ -160,7 +160,7 @@ Asana uses a Personal Access Token (PAT) generated at [app.asana.com/0/my-apps](
 
 Salesforce uses session-based auth via `sf` CLI OAuth (W&B uses SSO, so password auth doesn't work). Run `/salesforce-setup` for guided configuration. Tokens expire periodically and need re-auth via `sf org login web`.
 
-All stored in `~/.tsm-ai/.env`. API tokens are generated at [id.atlassian.com](https://id.atlassian.com/manage-profile/security/api-tokens) — make sure you're logged in as the correct account for each instance.
+All stored in `~/.fe-skills/.env`. API tokens are generated at [id.atlassian.com](https://id.atlassian.com/manage-profile/security/api-tokens) — make sure you're logged in as the correct account for each instance.
 
 ## Customer Registry
 

@@ -30,15 +30,15 @@ Both instances use the same API token (tied to your Atlassian ID).
 3. Label it something like `claude-code` or `wandb-se`
 4. Copy the token — you will need it in the next step
 
-## Step 2: Save Credentials to `~/.tsm-ai/.env`
+## Step 2: Save Credentials to `~/.fe-skills/.env`
 
 Ensure the credential directory exists:
 
 ```bash
-mkdir -p ~/.tsm-ai && chmod 700 ~/.tsm-ai
+mkdir -p ~/.fe-skills && chmod 700 ~/.fe-skills
 ```
 
-Use the **Edit tool** to append credentials to `~/.tsm-ai/.env`:
+Use the **Edit tool** to append credentials to `~/.fe-skills/.env`:
 - Add two lines:
   ```
   ATLASSIAN_EMAIL=your-email@coreweave.com
@@ -50,7 +50,7 @@ Use the **Edit tool** to append credentials to `~/.tsm-ai/.env`:
 Then lock file permissions:
 
 ```bash
-chmod 600 ~/.tsm-ai/.env
+chmod 600 ~/.fe-skills/.env
 ```
 
 ## Step 3: Install Jira CLI (Optional)
@@ -95,7 +95,7 @@ Should print your Atlassian user profile.
 uv run --project .claude/skills/confluence python .claude/skills/confluence/scripts/pages.py spaces --pretty
 ```
 
-Should return JSON with accessible Confluence spaces. No credentials appear in the command — Python reads them from `~/.tsm-ai/.env` internally.
+Should return JSON with accessible Confluence spaces. No credentials appear in the command — Python reads them from `~/.fe-skills/.env` internally.
 
 ## Troubleshooting
 
@@ -114,6 +114,6 @@ jira init
 
 ### Common issues
 
-- **401 Unauthorized**: Check that `ATLASSIAN_EMAIL` and `ATLASSIAN_TOKEN` in `~/.tsm-ai/.env` have the correct values, and that file permissions are `600`.
+- **401 Unauthorized**: Check that `ATLASSIAN_EMAIL` and `ATLASSIAN_TOKEN` in `~/.fe-skills/.env` have the correct values, and that file permissions are `600`.
 - **Confluence API returns HTML instead of JSON**: Make sure the URL includes `/wiki/api/v2/` — missing `/wiki` is the most common mistake.
 - **Wrong Jira instance**: The W&B Jira is at `wandb.atlassian.net`, not `coreweave.atlassian.net`. Confluence is at `coreweave.atlassian.net`.

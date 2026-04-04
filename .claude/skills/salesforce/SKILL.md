@@ -10,7 +10,7 @@ Read-only Salesforce API access for querying account data, team members, and fie
 
 ## Prerequisites
 
-- SFDC credentials configured in `~/.tsm-ai/.env` (run `/salesforce-setup` if not configured)
+- SFDC credentials configured in `~/.fe-skills/.env` (run `/salesforce-setup` if not configured)
 - Auth mode 1 (SSO/2FA -- recommended): `SFDC_SESSION_ID` + `SFDC_INSTANCE` (from `sf org login web` OAuth flow)
 - Auth mode 2 (password): `SFDC_USERNAME` + `SFDC_PASSWORD` + `SFDC_SECURITY_TOKEN`
 - W&B instance: `wandb.my.salesforce.com`

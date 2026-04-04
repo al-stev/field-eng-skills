@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Confluence client with ~/.tsm-ai/.env authentication support.
+Confluence client with ~/.fe-skills/.env authentication support.
 
 Provides get_client() for authenticated Confluence Cloud API access and
 handle_api_call() for structured error handling. Auth uses basic_auth from
-ATLASSIAN_EMAIL and ATLASSIAN_TOKEN in ~/.tsm-ai/.env, configured by /atlassian-setup.
+ATLASSIAN_EMAIL and ATLASSIAN_TOKEN in ~/.fe-skills/.env, configured by /atlassian-setup.
 """
 
 import json
@@ -27,32 +27,32 @@ TSM_SPACE_ID = "282199076"
 PERSONAL_SPACE_KEY = "~712020cfd6bd1badc345a895e7bcf488706f05"
 PERSONAL_SPACE_ID = "658472966"
 
-TSM_ENV = Path.home() / '.tsm-ai' / '.env'
+ENV_FILE = Path.home() / '.fe-skills' / '.env'
 
 _env_perms_warned = False
 
 
 def _check_env_permissions() -> None:
-    """Warn once if ~/.tsm-ai/.env has permissions more open than 600."""
+    """Warn once if ~/.fe-skills/.env has permissions more open than 600."""
     global _env_perms_warned
-    if _env_perms_warned or not TSM_ENV.exists():
+    if _env_perms_warned or not ENV_FILE.exists():
         return
-    mode = TSM_ENV.stat().st_mode & 0o777
+    mode = ENV_FILE.stat().st_mode & 0o777
     if mode & 0o077:  # group or other has any access
         print(
-            f"WARNING: {TSM_ENV} has permissions {oct(mode)} (expected 0o600). "
-            f"Run: chmod 600 {TSM_ENV}",
+            f"WARNING: {ENV_FILE} has permissions {oct(mode)} (expected 0o600). "
+            f"Run: chmod 600 {ENV_FILE}",
             file=sys.stderr,
         )
         _env_perms_warned = True
 
 
 def _load_credential(key: str) -> str | None:
-    """Read a single value from ~/.tsm-ai/.env."""
-    if not TSM_ENV.exists():
+    """Read a single value from ~/.fe-skills/.env."""
+    if not ENV_FILE.exists():
         return None
     _check_env_permissions()
-    for line in TSM_ENV.read_text().splitlines():
+    for line in ENV_FILE.read_text().splitlines():
         if line.startswith(f'{key}='):
             return line.split('=', 1)[1]
     return None
@@ -60,9 +60,9 @@ def _load_credential(key: str) -> str | None:
 
 def get_client() -> Confluence:
     """
-    Create a Confluence client using ~/.tsm-ai/.env credentials.
+    Create a Confluence client using ~/.fe-skills/.env credentials.
 
-    Reads ATLASSIAN_EMAIL and ATLASSIAN_TOKEN from ~/.tsm-ai/.env.
+    Reads ATLASSIAN_EMAIL and ATLASSIAN_TOKEN from ~/.fe-skills/.env.
     These are configured by /atlassian-setup.
 
     Returns:
@@ -79,7 +79,7 @@ def get_client() -> Confluence:
 
     if not login or not password:
         raise FileNotFoundError(
-            "Confluence credentials not found in ~/.tsm-ai/.env. "
+            "Confluence credentials not found in ~/.fe-skills/.env. "
             "Set CONFLUENCE_EMAIL/CONFLUENCE_TOKEN (preferred) or ATLASSIAN_EMAIL/ATLASSIAN_TOKEN. "
             "Run /atlassian-setup first."
         )
@@ -119,7 +119,7 @@ def handle_api_call(api_func: Callable, *args, **kwargs) -> Any:
             status = e.response.status_code
         if status == 401 or "401" in error_str or "Unauthorized" in error_str:
             raise RuntimeError(
-                "Authentication failed. Check ATLASSIAN_EMAIL/ATLASSIAN_TOKEN in ~/.tsm-ai/.env. "
+                "Authentication failed. Check ATLASSIAN_EMAIL/ATLASSIAN_TOKEN in ~/.fe-skills/.env. "
                 "Run /atlassian-setup to reconfigure."
             ) from e
         elif status == 403 or "403" in error_str or "Forbidden" in error_str:

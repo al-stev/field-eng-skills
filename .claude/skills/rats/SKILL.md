@@ -15,7 +15,7 @@ This is a **composition skill** -- it uses the existing `/slack` skill for searc
 
 ## Prerequisites
 
-- Slack credentials configured (`SLACK_TOKEN`, `SLACK_COOKIE` in `~/.tsm-ai/.env`). Run `/slack-setup` if not done.
+- Slack credentials configured (`SLACK_TOKEN`, `SLACK_COOKIE` in `~/.fe-skills/.env`). Run `/slack-setup` if not done.
 - Dependencies installed: `cd .claude/skills/slack && uv sync`
 
 ## Pipeline

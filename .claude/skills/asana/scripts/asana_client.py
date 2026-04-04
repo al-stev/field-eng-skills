@@ -4,7 +4,7 @@ Asana client with Personal Access Token authentication.
 
 Provides get_client() for authenticated Asana API access and helpers
 for URL parsing, serialization, and structured output. Auth uses a PAT
-from ~/.tsm-ai/.env configured by /asana-setup.
+from ~/.fe-skills/.env configured by /asana-setup.
 """
 
 import json
@@ -22,7 +22,7 @@ import asana
 _ASANA_WORKSPACE_GID_DEFAULT = "1208076155392173"
 DEFAULT_LIMIT = 100
 
-TSM_ENV = Path.home() / '.tsm-ai' / '.env'
+ENV_FILE = Path.home() / '.fe-skills' / '.env'
 
 
 def get_workspace_gid() -> str:
@@ -52,10 +52,10 @@ def get_workspace_gid() -> str:
 
 
 def _load_credential(key: str) -> str | None:
-    """Read a single value from ~/.tsm-ai/.env."""
-    if not TSM_ENV.exists():
+    """Read a single value from ~/.fe-skills/.env."""
+    if not ENV_FILE.exists():
         return None
-    for line in TSM_ENV.read_text().splitlines():
+    for line in ENV_FILE.read_text().splitlines():
         if line.startswith(f'{key}='):
             return line.split('=', 1)[1]
     return None
@@ -63,9 +63,9 @@ def _load_credential(key: str) -> str | None:
 
 def get_client() -> asana.ApiClient:
     """
-    Create an authenticated Asana API client using ~/.tsm-ai/.env credentials.
+    Create an authenticated Asana API client using ~/.fe-skills/.env credentials.
 
-    Reads ASANA_TOKEN from ~/.tsm-ai/.env.
+    Reads ASANA_TOKEN from ~/.fe-skills/.env.
     Configured by /asana-setup.
 
     Returns:
@@ -78,7 +78,7 @@ def get_client() -> asana.ApiClient:
 
     if not token:
         raise FileNotFoundError(
-            "ASANA_TOKEN not found in ~/.tsm-ai/.env. "
+            "ASANA_TOKEN not found in ~/.fe-skills/.env. "
             "Run /asana-setup first."
         )
 
@@ -99,7 +99,7 @@ def handle_api_call(api_func, *args, **kwargs) -> Any:
     except asana.rest.ApiException as e:
         if e.status == 401:
             raise Exception(
-                "Authentication failed. Check ASANA_TOKEN in ~/.tsm-ai/.env. "
+                "Authentication failed. Check ASANA_TOKEN in ~/.fe-skills/.env. "
                 "Run /asana-setup to reconfigure."
             )
         if e.status == 403:

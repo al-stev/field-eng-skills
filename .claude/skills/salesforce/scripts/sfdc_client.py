@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Salesforce client with ~/.tsm-ai/.env authentication support.
+Salesforce client with ~/.fe-skills/.env authentication support.
 
 Provides get_client() for authenticated Salesforce API access and handle_api_call()
 for structured error handling. Auth uses username/password/security_token from
-SFDC_USERNAME, SFDC_PASSWORD, SFDC_SECURITY_TOKEN in ~/.tsm-ai/.env, configured
+SFDC_USERNAME, SFDC_PASSWORD, SFDC_SECURITY_TOKEN in ~/.fe-skills/.env, configured
 by /salesforce-setup.
 """
 
@@ -21,32 +21,32 @@ from simple_salesforce.exceptions import (
 
 
 # Constants
-TSM_ENV = Path.home() / '.tsm-ai' / '.env'
+ENV_FILE = Path.home() / '.fe-skills' / '.env'
 
 _env_perms_warned = False
 
 
 def _check_env_permissions() -> None:
-    """Warn once if ~/.tsm-ai/.env has permissions more open than 600."""
+    """Warn once if ~/.fe-skills/.env has permissions more open than 600."""
     global _env_perms_warned
-    if _env_perms_warned or not TSM_ENV.exists():
+    if _env_perms_warned or not ENV_FILE.exists():
         return
-    mode = TSM_ENV.stat().st_mode & 0o777
+    mode = ENV_FILE.stat().st_mode & 0o777
     if mode & 0o077:  # group or other has any access
         print(
-            f"WARNING: {TSM_ENV} has permissions {oct(mode)} (expected 0o600). "
-            f"Run: chmod 600 {TSM_ENV}",
+            f"WARNING: {ENV_FILE} has permissions {oct(mode)} (expected 0o600). "
+            f"Run: chmod 600 {ENV_FILE}",
             file=sys.stderr,
         )
         _env_perms_warned = True
 
 
 def _load_credential(key: str) -> str | None:
-    """Read a single value from ~/.tsm-ai/.env."""
-    if not TSM_ENV.exists():
+    """Read a single value from ~/.fe-skills/.env."""
+    if not ENV_FILE.exists():
         return None
     _check_env_permissions()
-    for line in TSM_ENV.read_text().splitlines():
+    for line in ENV_FILE.read_text().splitlines():
         if line.startswith(f'{key}='):
             return line.split('=', 1)[1]
     return None
@@ -54,7 +54,7 @@ def _load_credential(key: str) -> str | None:
 
 def get_client() -> Salesforce:
     """
-    Create a Salesforce client using ~/.tsm-ai/.env credentials.
+    Create a Salesforce client using ~/.fe-skills/.env credentials.
 
     Supports two auth modes (checked in order):
     1. Session-based (SSO/2FA): SFDC_SESSION_ID + SFDC_INSTANCE
@@ -88,7 +88,7 @@ def get_client() -> Salesforce:
         )
 
     raise FileNotFoundError(
-        "SFDC credentials not found in ~/.tsm-ai/.env. "
+        "SFDC credentials not found in ~/.fe-skills/.env. "
         "Need either SFDC_SESSION_ID + SFDC_INSTANCE (session auth) "
         "or SFDC_USERNAME + SFDC_PASSWORD + SFDC_SECURITY_TOKEN (password auth). "
         "Run /salesforce-setup first."
@@ -116,7 +116,7 @@ def handle_api_call(api_func: Callable, *args, **kwargs) -> Any:
     except SalesforceAuthenticationFailed:
         raise SalesforceAuthenticationFailed(
             401,
-            "Authentication failed. Check credentials in ~/.tsm-ai/.env. "
+            "Authentication failed. Check credentials in ~/.fe-skills/.env. "
             "Run /salesforce-setup to reconfigure.",
         )
     except SalesforceMalformedRequest as e:

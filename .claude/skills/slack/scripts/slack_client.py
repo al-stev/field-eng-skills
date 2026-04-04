@@ -18,14 +18,14 @@ from slack_sdk.http_retry.response import HttpResponse
 from slack_sdk.http_retry.state import RetryState
 
 
-TSM_ENV = Path.home() / '.tsm-ai' / '.env'
+ENV_FILE = Path.home() / '.fe-skills' / '.env'
 
 
 def _load_credential(key: str) -> str | None:
-    """Read a single value from ~/.tsm-ai/.env."""
-    if not TSM_ENV.exists():
+    """Read a single value from ~/.fe-skills/.env."""
+    if not ENV_FILE.exists():
         return None
-    for line in TSM_ENV.read_text().splitlines():
+    for line in ENV_FILE.read_text().splitlines():
         if line.startswith(f'{key}='):
             return line.split('=', 1)[1]
     return None
@@ -35,7 +35,7 @@ def get_client() -> WebClient:
     """
     Create a Slack WebClient with xoxc token and d cookie support.
 
-    Reads credentials from ~/.tsm-ai/.env (SLACK_TOKEN, SLACK_COOKIE).
+    Reads credentials from ~/.fe-skills/.env (SLACK_TOKEN, SLACK_COOKIE).
 
     Returns:
         WebClient configured with cookie header injection
@@ -49,11 +49,11 @@ def get_client() -> WebClient:
 
     if not token:
         raise FileNotFoundError(
-            "SLACK_TOKEN not found in ~/.tsm-ai/.env. Run /slack-setup first."
+            "SLACK_TOKEN not found in ~/.fe-skills/.env. Run /slack-setup first."
         )
     if not cookie:
         raise FileNotFoundError(
-            "SLACK_COOKIE not found in ~/.tsm-ai/.env. Run /slack-setup first."
+            "SLACK_COOKIE not found in ~/.fe-skills/.env. Run /slack-setup first."
         )
 
     if not token.startswith('xoxc-'):

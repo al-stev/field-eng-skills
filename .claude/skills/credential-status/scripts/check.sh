@@ -2,7 +2,7 @@
 # Check the health of all configured API credentials
 set -euo pipefail
 
-ENV_FILE="$HOME/.tsm-ai/.env"
+ENV_FILE="$HOME/.fe-skills/.env"
 
 if [ ! -f "$ENV_FILE" ]; then
   echo "ERROR: $ENV_FILE not found. Run setup skills first."

@@ -12,7 +12,7 @@ Partial entries are acceptable -- use PLACEHOLDER markers for any field the SE s
 
 ## Prerequisites
 
-- **Salesforce credentials** configured in `~/.tsm-ai/.env` (run `/salesforce-setup` first). Optional -- if SFDC is unavailable, the skill falls back to manual entry for all fields.
+- **Salesforce credentials** configured in `~/.fe-skills/.env` (run `/salesforce-setup` first). Optional -- if SFDC is unavailable, the skill falls back to manual entry for all fields.
 - **Jira credentials** configured (for verifying customer name mapping). Required keys: `ATLASSIAN_EMAIL`, `ATLASSIAN_TOKEN`.
 - **Slack credentials** configured (for verifying channel IDs). Required keys: `SLACK_TOKEN`, `SLACK_COOKIE`.
 

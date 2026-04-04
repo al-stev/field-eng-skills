@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Jira client with ~/.tsm-ai/.env authentication support.
+Jira client with ~/.fe-skills/.env authentication support.
 
 Provides get_client() for authenticated Jira API access and handle_api_call()
 for structured error handling. Auth uses basic_auth from ATLASSIAN_EMAIL and
-ATLASSIAN_TOKEN in ~/.tsm-ai/.env, configured by /atlassian-setup.
+ATLASSIAN_TOKEN in ~/.fe-skills/.env, configured by /atlassian-setup.
 """
 
 import json
@@ -22,32 +22,32 @@ DEFAULT_PROJECT = "WB"
 CUSTOMER_FIELD = "customfield_10083"
 ENG_TEAM_FIELD = "customfield_10084"
 
-TSM_ENV = Path.home() / '.tsm-ai' / '.env'
+ENV_FILE = Path.home() / '.fe-skills' / '.env'
 
 _env_perms_warned = False
 
 
 def _check_env_permissions() -> None:
-    """Warn once if ~/.tsm-ai/.env has permissions more open than 600."""
+    """Warn once if ~/.fe-skills/.env has permissions more open than 600."""
     global _env_perms_warned
-    if _env_perms_warned or not TSM_ENV.exists():
+    if _env_perms_warned or not ENV_FILE.exists():
         return
-    mode = TSM_ENV.stat().st_mode & 0o777
+    mode = ENV_FILE.stat().st_mode & 0o777
     if mode & 0o077:  # group or other has any access
         print(
-            f"WARNING: {TSM_ENV} has permissions {oct(mode)} (expected 0o600). "
-            f"Run: chmod 600 {TSM_ENV}",
+            f"WARNING: {ENV_FILE} has permissions {oct(mode)} (expected 0o600). "
+            f"Run: chmod 600 {ENV_FILE}",
             file=sys.stderr,
         )
         _env_perms_warned = True
 
 
 def _load_credential(key: str) -> str | None:
-    """Read a single value from ~/.tsm-ai/.env."""
-    if not TSM_ENV.exists():
+    """Read a single value from ~/.fe-skills/.env."""
+    if not ENV_FILE.exists():
         return None
     _check_env_permissions()
-    for line in TSM_ENV.read_text().splitlines():
+    for line in ENV_FILE.read_text().splitlines():
         if line.startswith(f'{key}='):
             return line.split('=', 1)[1]
     return None
@@ -60,9 +60,9 @@ def escape_jql_string(value: str) -> str:
 
 def get_client() -> JIRA:
     """
-    Create a JIRA client using ~/.tsm-ai/.env credentials.
+    Create a JIRA client using ~/.fe-skills/.env credentials.
 
-    Reads ATLASSIAN_EMAIL and ATLASSIAN_TOKEN from ~/.tsm-ai/.env.
+    Reads ATLASSIAN_EMAIL and ATLASSIAN_TOKEN from ~/.fe-skills/.env.
     These are configured by /atlassian-setup.
 
     Returns:
@@ -77,7 +77,7 @@ def get_client() -> JIRA:
 
     if not login or not password:
         raise FileNotFoundError(
-            "ATLASSIAN_EMAIL and/or ATLASSIAN_TOKEN not found in ~/.tsm-ai/.env. "
+            "ATLASSIAN_EMAIL and/or ATLASSIAN_TOKEN not found in ~/.fe-skills/.env. "
             "Run /atlassian-setup first."
         )
 
@@ -108,7 +108,7 @@ def handle_api_call(api_func: Callable, *args, **kwargs) -> Any:
         if e.status_code == 401:
             raise JIRAError(
                 status_code=401,
-                text="Authentication failed. Check ATLASSIAN_EMAIL/ATLASSIAN_TOKEN in ~/.tsm-ai/.env. "
+                text="Authentication failed. Check ATLASSIAN_EMAIL/ATLASSIAN_TOKEN in ~/.fe-skills/.env. "
                      "Run /atlassian-setup to reconfigure."
             )
         elif e.status_code == 403:

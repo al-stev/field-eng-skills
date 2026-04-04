@@ -56,7 +56,7 @@ scripts/                    -- Shared shell scripts
 
 ## Credentials
 
-All API credentials stored in `~/.tsm-ai/.env`. Run `/credential-status` to check health.
+All API credentials stored in `~/.fe-skills/.env`. Run `/credential-status` to check health.
 
 | Variable | Service | Instance |
 |----------|---------|----------|
@@ -70,7 +70,7 @@ All API credentials stored in `~/.tsm-ai/.env`. Run `/credential-status` to chec
 | `SFDC_SESSION_ID` | W&B Salesforce (session auth) | wandb.my.salesforce.com |
 | `SFDC_INSTANCE` | W&B Salesforce (session auth) | wandb.my.salesforce.com |
 
-BigQuery uses Application Default Credentials (ADC) -- no token in ~/.tsm-ai/.env. Run `gcloud auth application-default login` to configure. Verify with `/bigquery-setup`.
+BigQuery uses Application Default Credentials (ADC) -- no token in ~/.fe-skills/.env. Run `gcloud auth application-default login` to configure. Verify with `/bigquery-setup`.
 
 Asana PAT (`ASANA_TOKEN`) for SE action tracking. Asana uses a two-project model per customer: Actions project (day-to-day SE work, safe to share) and RAID Portfolio project (internal strategic view). Run `/raid` to manage RAID logs. Master portfolio holds all customer portfolios. Run `setup-customer` to onboard new customers into the portfolio structure.
 

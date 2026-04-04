@@ -19,7 +19,7 @@ bash .claude/skills/credential-status/scripts/check.sh
 
 The script will output a status table showing which credentials are:
 - **OK** — credential exists and API responds successfully
-- **MISSING** — credential key not found in `~/.tsm-ai/.env`
+- **MISSING** — credential key not found in `~/.fe-skills/.env`
 - **EXPIRED** — credential exists but API returns 401/403
 
 For expired credentials, run the corresponding setup or refresh skill:
@@ -34,4 +34,4 @@ For expired credentials, run the corresponding setup or refresh skill:
 - Verify: `bash .claude/skills/bigquery-setup/scripts/verify.sh`
 - Expected: "All checks passed" output
 - If failing: Run `gcloud auth application-default login`
-- Note: No entry in ~/.tsm-ai/.env -- ADC is managed by gcloud CLI
+- Note: No entry in ~/.fe-skills/.env -- ADC is managed by gcloud CLI
