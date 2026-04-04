@@ -124,8 +124,8 @@ Plans:
 **Milestone Goal:** Make the repo usable by any W&B SE -- integrate all analytics into the dashboard, migrate to the new Jira instance, consolidate skills, and document everything.
 
 - [x] **Phase 7: Jira Instance Migration** - Migrate all Jira skills and downstream consumers from wandb.atlassian.net to coreweave.atlassian.net (completed 2026-04-04)
-- [ ] **Phase 8: Panel Integration** - Integrate 9 deep-analytics page types as dashboard panels following the v2 panel contract
-- [ ] **Phase 9: Skill Audit and Consolidation** - Inventory all 35 skills, remove hardcoded user-specific values, update SKILL.md docs, complete composition rules
+- [x] **Phase 8: Panel Integration** - Integrate 9 deep-analytics page types as dashboard panels following the v2 panel contract (completed 2026-04-04)
+- [x] **Phase 9: Skill Audit and Consolidation** - Inventory all 35 skills, remove hardcoded user-specific values, update SKILL.md docs, complete composition rules (completed 2026-04-04)
 - [x] **Phase 10: Documentation** - Getting-started guide, skill reference, customer onboarding guide, architecture overview (completed 2026-04-04)
 
 ## Phase Details
@@ -159,11 +159,11 @@ Plans:
 **Plans**: 6 plans
 Plans:
 - [x] 08-01-PLAN.md -- Data pipeline: assemble.py analytics integration, panels.yaml manifest, shell.html icons
-- [ ] 08-02-PLAN.md -- User Intelligence panels: User Journey + Cohort Analysis
+- [x] 08-02-PLAN.md -- User Intelligence panels: User Journey + Cohort Analysis
 - [x] 08-03-PLAN.md -- User Intelligence panels: Engagement Decay + Team Detection
-- [ ] 08-04-PLAN.md -- Product Intelligence panels: Feature Velocity + SDK Versions
+- [x] 08-04-PLAN.md -- Product Intelligence panels: Feature Velocity + SDK Versions
 - [x] 08-05-PLAN.md -- Product Intelligence panels: Usage Correlation + Risk Scoring + Performance
-- [ ] 08-06-PLAN.md -- Overview aggregation update + end-to-end structural verification
+- [x] 08-06-PLAN.md -- Overview aggregation update + end-to-end structural verification
 **UI hint**: yes
 
 ### Phase 9: Skill Audit and Consolidation
@@ -209,6 +209,6 @@ Phases execute in numeric order: 7 -> 8 -> 9 -> 10
 | 5. Dashboard V2 -- Modular Folder-Based Architecture | v1.0 | 6/6 | Complete | 2026-04-01 |
 | 6. Dashboard V2 UX Polish | v1.0 | 3/3 | Complete | 2026-04-01 |
 | 7. Jira Instance Migration | v2.0 | 3/3 | Complete    | 2026-04-04 |
-| 8. Panel Integration | v2.0 | 0/6 | Planned | - |
-| 9. Skill Audit and Consolidation | v2.0 | 0/3 | Planned | - |
+| 8. Panel Integration | v2.0 | 6/6 | Complete    | 2026-04-04 |
+| 9. Skill Audit and Consolidation | v2.0 | 0/3 | Complete    | 2026-04-04 |
 | 10. Documentation | v2.0 | 2/2 | Complete    | 2026-04-04 |
