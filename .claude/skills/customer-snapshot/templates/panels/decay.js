@@ -236,49 +236,66 @@
       kpiHtml += '</div>';
 
       // --- Cold Detection Table ---
-      var coldUsers = (data.cold_users || []).slice().sort(function(a, b) {
-        return (b.decay_pct || 0) - (a.decay_pct || 0);
+      // Transform outputs data.users (not cold_users). Normalize field names.
+      var allUsers = (data.cold_users || data.users || []).slice();
+      // Filter to cooling/cold users for the decay table, sorted by severity
+      var statusOrder = { cold: 0, cooling: 1, warm: 2, hot: 3 };
+      var coldUsers = allUsers.filter(function(u) {
+        return u.status === 'cold' || u.status === 'cooling';
+      }).sort(function(a, b) {
+        var oa = statusOrder[a.status] != null ? statusOrder[a.status] : 9;
+        var ob = statusOrder[b.status] != null ? statusOrder[b.status] : 9;
+        if (oa !== ob) return oa - ob;
+        return (b.weeks_inactive || 0) - (a.weeks_inactive || 0);
       });
       var showLimit = 20;
       var hasMore = coldUsers.length > showLimit;
 
       var tableHtml = '<div class="full-width">' +
         '<div class="section-label">Cold Detection</div>' +
-        '<div class="panel-card">' +
-          '<table class="decay-table">' +
+        '<div class="panel-card">';
+
+      if (coldUsers.length === 0) {
+        tableHtml += '<div style="text-align:center;padding:32px;color:var(--text-tertiary);font-size:14px;">No cooling or cold users detected.</div>';
+      } else {
+        tableHtml += '<table class="decay-table">' +
             '<thead><tr>' +
               '<th>User</th>' +
               '<th>Status</th>' +
               '<th>Last Active</th>' +
-              '<th style="text-align:right">Days Inactive</th>' +
-              '<th style="text-align:right">Decay %</th>' +
+              '<th style="text-align:right">Weeks Inactive</th>' +
+              '<th style="text-align:right">Decay</th>' +
               '<th>Sparkline</th>' +
             '</tr></thead>' +
             '<tbody>';
 
-      for (var i = 0; i < coldUsers.length; i++) {
-        var user = coldUsers[i];
-        var hiddenClass = (i >= showLimit && hasMore) ? ' style="display:none" data-decay-extra="true"' : '';
-        var statusClass = 'status-' + (user.status || 'active');
-        var statusLabel = (user.status || 'active').toUpperCase();
-        var champHtml = user.is_champion ? '<span class="champion-badge">CHAMPION</span>' : '';
-        var displayName = esc(user.display_name || user.username || 'Unknown');
-        var lastActive = user.last_active ? user.last_active.slice(0, 10) : '--';
+        for (var i = 0; i < coldUsers.length; i++) {
+          var user = coldUsers[i];
+          var hiddenClass = (i >= showLimit && hasMore) ? ' style="display:none" data-decay-extra="true"' : '';
+          var statusClass = 'status-' + (user.status || 'active');
+          var statusLabel = (user.status || 'active').toUpperCase();
+          var champHtml = user.is_champion ? '<span class="champion-badge">CHAMPION</span>' : '';
+          var displayName = esc(user.display_name || user.username || 'Unknown');
+          var lastActive = user.last_active ? user.last_active.slice(0, 10) : '--';
+          // Compute decay from ratio (ratio = recent/peak; lower = more decay)
+          var decayPct = user.decay_pct != null ? user.decay_pct : (user.ratio != null ? Math.round((1 - user.ratio) * 100) : null);
+          var weeksInactive = user.weeks_inactive != null ? user.weeks_inactive : (user.days_inactive != null ? Math.round(user.days_inactive / 7) : null);
 
-        tableHtml += '<tr' + hiddenClass + '>' +
-          '<td>' + displayName + champHtml + '</td>' +
-          '<td><span class="status-badge ' + statusClass + '">' + statusLabel + '</span></td>' +
-          '<td style="font-family:JetBrains Mono,monospace;font-size:11px;color:var(--text-tertiary)">' + lastActive + '</td>' +
-          '<td style="text-align:right;font-family:JetBrains Mono,monospace;font-size:11px">' + (user.days_inactive != null ? user.days_inactive : '--') + '</td>' +
-          '<td style="text-align:right;font-family:JetBrains Mono,monospace;font-size:11px;color:' + decayColor(user.decay_pct || 0) + '">' + (user.decay_pct != null ? Math.round(user.decay_pct) + '%' : '--') + '</td>' +
-          '<td><div id="decay-spark-' + i + '" style="width:120px;height:32px;display:inline-block;"></div></td>' +
-        '</tr>';
-      }
+          tableHtml += '<tr' + hiddenClass + '>' +
+            '<td>' + displayName + champHtml + '</td>' +
+            '<td><span class="status-badge ' + statusClass + '">' + statusLabel + '</span></td>' +
+            '<td style="font-family:JetBrains Mono,monospace;font-size:11px;color:var(--text-tertiary)">' + lastActive + '</td>' +
+            '<td style="text-align:right;font-family:JetBrains Mono,monospace;font-size:11px">' + (weeksInactive != null ? weeksInactive : '--') + '</td>' +
+            '<td style="text-align:right;font-family:JetBrains Mono,monospace;font-size:11px;color:' + decayColor(decayPct || 0) + '">' + (decayPct != null ? Math.round(decayPct) + '%' : '--') + '</td>' +
+            '<td><div id="decay-spark-' + i + '" style="width:120px;height:32px;display:inline-block;"></div></td>' +
+          '</tr>';
+        }
 
-      tableHtml += '</tbody></table>';
+        tableHtml += '</tbody></table>';
 
-      if (hasMore) {
-        tableHtml += '<div class="decay-expand-toggle" id="decay-expand-btn">Show all ' + coldUsers.length + ' users</div>';
+        if (hasMore) {
+          tableHtml += '<div class="decay-expand-toggle" id="decay-expand-btn">Show all ' + coldUsers.length + ' users</div>';
+        }
       }
 
       tableHtml += '</div></div>';
@@ -293,7 +310,7 @@
             '</div>' +
           '</div>' +
           '<div>' +
-            '<div class="section-label">Decay Distribution</div>' +
+            '<div class="section-label">Status Distribution</div>' +
             '<div class="panel-card">' +
               '<div id="decay-dist-chart" style="width:100%;height:320px;"></div>' +
             '</div>' +
@@ -350,8 +367,16 @@
       setTimeout(function() {
         var trendEl = container.querySelector('#decay-trend-chart');
         if (!trendEl) return;
-        var trendChart = ChartHelpers.createChart(trendEl);
+
+        // Support both engagement_trend array and missing data
         var trendData = data.engagement_trend || [];
+        if (trendData.length === 0) {
+          trendEl.style.height = '60px';
+          trendEl.innerHTML = '<div style="font-family:Outfit,system-ui,sans-serif;font-size:14px;color:var(--text-tertiary);padding:16px 0;text-align:center;">Aggregate engagement trend data not available. Per-user sparklines are shown in the table above.</div>';
+          return;
+        }
+
+        var trendChart = ChartHelpers.createChart(trendEl);
         var dates = trendData.map(function(d) { return d.date; });
         var scores = trendData.map(function(d) { return d.score; });
 
@@ -416,7 +441,6 @@
           }]
         };
 
-        // Add dataZoom for 12+ points
         if (trendData.length > 12) {
           trendOption.dataZoom = [
             { type: 'inside' },
@@ -428,67 +452,130 @@
         charts.push(trendChart);
       }, 10);
 
-      // --- Decay Distribution chart ---
+      // --- Status Distribution chart (from status_counts or decay_distribution) ---
       setTimeout(function() {
         var distEl = container.querySelector('#decay-dist-chart');
         if (!distEl) return;
-        var distChart = ChartHelpers.createChart(distEl);
+
+        // Support both decay_distribution array and status_counts object
         var distData = data.decay_distribution || [];
-        var buckets = distData.map(function(d) { return d.bucket; });
-        var counts = distData.map(function(d) { return d.count; });
+        var statusCounts = data.status_counts || {};
 
-        // Color gradient by bucket position: green -> amber -> red
-        var barColors = distData.map(function(d, i) {
-          var ratio = distData.length > 1 ? i / (distData.length - 1) : 0;
-          if (ratio <= 0.3) return isDark() ? '#4ade80' : '#22c55e';
-          if (ratio <= 0.6) return isDark() ? '#fbbf24' : '#d97706';
-          return isDark() ? '#f87171' : '#ef4444';
-        });
+        if (distData.length === 0 && Object.keys(statusCounts).length > 0) {
+          // Build distribution from status_counts
+          var statusLabels = ['Hot', 'Warm', 'Cooling', 'Cold'];
+          var statusKeys = ['hot', 'warm', 'cooling', 'cold'];
+          var statusColors = [
+            isDark() ? '#4ade80' : '#22c55e',
+            isDark() ? '#60a5fa' : '#3b82f6',
+            isDark() ? '#fbbf24' : '#d97706',
+            isDark() ? '#f87171' : '#ef4444'
+          ];
+          var statusValues = statusKeys.map(function(k) { return statusCounts[k] || 0; });
 
-        distChart.setOption({
-          tooltip: {
-            trigger: 'axis',
-            axisPointer: { type: 'shadow' },
-            formatter: function(params) {
-              var p = params[0];
-              return '<strong>' + p.axisValue + '</strong><br/>Users: ' + p.value;
-            }
-          },
-          grid: { left: 48, right: 16, top: 16, bottom: 32 },
-          xAxis: {
-            type: 'category',
-            data: buckets,
-            axisLabel: {
-              color: isDark() ? '#5c6370' : '#8c8c8c',
-              fontSize: 11,
-              fontFamily: 'JetBrains Mono, monospace',
-              rotate: buckets.length > 6 ? 30 : 0
+          var distChart = ChartHelpers.createChart(distEl);
+          distChart.setOption({
+            tooltip: {
+              trigger: 'axis',
+              axisPointer: { type: 'shadow' },
+              formatter: function(params) {
+                var p = params[0];
+                return '<strong>' + p.axisValue + '</strong><br/>Users: ' + p.value;
+              }
             },
-            axisLine: { lineStyle: { color: isDark() ? '#1e2430' : '#e0ded9' } },
-            axisTick: { show: false }
-          },
-          yAxis: {
-            type: 'value',
-            name: 'Users',
-            nameTextStyle: { color: isDark() ? '#5c6370' : '#8c8c8c', fontSize: 11 },
-            axisLabel: {
-              color: isDark() ? '#5c6370' : '#8c8c8c',
-              fontSize: 11
+            grid: { left: 48, right: 16, top: 16, bottom: 32 },
+            xAxis: {
+              type: 'category',
+              data: statusLabels,
+              axisLabel: {
+                color: isDark() ? '#5c6370' : '#8c8c8c',
+                fontSize: 11,
+                fontFamily: 'JetBrains Mono, monospace'
+              },
+              axisLine: { lineStyle: { color: isDark() ? '#1e2430' : '#e0ded9' } },
+              axisTick: { show: false }
             },
-            splitLine: { lineStyle: { color: isDark() ? '#1e2430' : '#e0ded9', type: 'dashed' } }
-          },
-          series: [{
-            type: 'bar',
-            data: counts.map(function(val, i) {
-              return {
-                value: val,
-                itemStyle: { color: barColors[i], borderRadius: [3, 3, 0, 0] }
-              };
-            }),
-            barMaxWidth: 40
-          }]
-        });
-        charts.push(distChart);
+            yAxis: {
+              type: 'value',
+              name: 'Users',
+              nameTextStyle: { color: isDark() ? '#5c6370' : '#8c8c8c', fontSize: 11 },
+              axisLabel: {
+                color: isDark() ? '#5c6370' : '#8c8c8c',
+                fontSize: 11
+              },
+              splitLine: { lineStyle: { color: isDark() ? '#1e2430' : '#e0ded9', type: 'dashed' } }
+            },
+            series: [{
+              type: 'bar',
+              data: statusValues.map(function(val, i) {
+                return {
+                  value: val,
+                  itemStyle: { color: statusColors[i], borderRadius: [3, 3, 0, 0] }
+                };
+              }),
+              barMaxWidth: 60
+            }]
+          });
+          charts.push(distChart);
+        } else if (distData.length > 0) {
+          var distChart2 = ChartHelpers.createChart(distEl);
+          var buckets = distData.map(function(d) { return d.bucket; });
+          var counts = distData.map(function(d) { return d.count; });
+          var barColors = distData.map(function(d, i) {
+            var r = distData.length > 1 ? i / (distData.length - 1) : 0;
+            if (r <= 0.3) return isDark() ? '#4ade80' : '#22c55e';
+            if (r <= 0.6) return isDark() ? '#fbbf24' : '#d97706';
+            return isDark() ? '#f87171' : '#ef4444';
+          });
+
+          distChart2.setOption({
+            tooltip: {
+              trigger: 'axis',
+              axisPointer: { type: 'shadow' },
+              formatter: function(params) {
+                var p = params[0];
+                return '<strong>' + p.axisValue + '</strong><br/>Users: ' + p.value;
+              }
+            },
+            grid: { left: 48, right: 16, top: 16, bottom: 32 },
+            xAxis: {
+              type: 'category',
+              data: buckets,
+              axisLabel: {
+                color: isDark() ? '#5c6370' : '#8c8c8c',
+                fontSize: 11,
+                fontFamily: 'JetBrains Mono, monospace',
+                rotate: buckets.length > 6 ? 30 : 0
+              },
+              axisLine: { lineStyle: { color: isDark() ? '#1e2430' : '#e0ded9' } },
+              axisTick: { show: false }
+            },
+            yAxis: {
+              type: 'value',
+              name: 'Users',
+              nameTextStyle: { color: isDark() ? '#5c6370' : '#8c8c8c', fontSize: 11 },
+              axisLabel: {
+                color: isDark() ? '#5c6370' : '#8c8c8c',
+                fontSize: 11
+              },
+              splitLine: { lineStyle: { color: isDark() ? '#1e2430' : '#e0ded9', type: 'dashed' } }
+            },
+            series: [{
+              type: 'bar',
+              data: counts.map(function(val, i) {
+                return {
+                  value: val,
+                  itemStyle: { color: barColors[i], borderRadius: [3, 3, 0, 0] }
+                };
+              }),
+              barMaxWidth: 40
+            }]
+          });
+          charts.push(distChart2);
+        } else {
+          distEl.style.height = '60px';
+          distEl.innerHTML = '<div style="font-family:Outfit,system-ui,sans-serif;font-size:14px;color:var(--text-tertiary);padding:16px 0;text-align:center;">No distribution data available.</div>';
+        }
       }, 20);
 
       return { charts: charts };
@@ -496,24 +583,23 @@
 
     getHeadlineStats: function(data) {
       if (!data || !data.available) return [];
-      var coldCount = data.cold_users_count || 0;
-      var championRisk = 0;
-      var coldUsers = data.cold_users || [];
-      for (var i = 0; i < coldUsers.length; i++) {
-        if (coldUsers[i].is_champion && coldUsers[i].status === 'cold') {
-          championRisk++;
-        }
-      }
+      // Support both status_counts and cold_users_count
+      var sc = data.status_counts || {};
+      var coldCount = data.cold_users_count || sc.cold || 0;
+      var coolingCount = sc.cooling || 0;
+      var atRiskCount = coldCount + coolingCount;
+
       return [
         { label: 'Cold Users', value: String(coldCount), color: coldCount > 0 ? 'var(--red)' : 'var(--green)' },
-        { label: 'Champion Risk', value: String(championRisk), color: championRisk > 0 ? 'var(--red)' : 'var(--green)' }
+        { label: 'At Risk', value: String(atRiskCount), color: atRiskCount > 0 ? 'var(--amber)' : 'var(--green)' }
       ];
     },
 
     getAttentionItems: function(data) {
       if (!data || !data.available) return [];
       var items = [];
-      var coldCount = data.cold_users_count || 0;
+      var sc = data.status_counts || {};
+      var coldCount = data.cold_users_count || sc.cold || 0;
 
       if (coldCount >= 5) {
         items.push({
@@ -530,9 +616,9 @@
       }
 
       // Champion-specific alerts
-      var coldUsers = data.cold_users || [];
-      for (var i = 0; i < coldUsers.length; i++) {
-        var user = coldUsers[i];
+      var allUsers = data.cold_users || data.users || [];
+      for (var i = 0; i < allUsers.length; i++) {
+        var user = allUsers[i];
         if (user.is_champion && user.status === 'cold') {
           items.push({
             severity: 'high',

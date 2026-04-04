@@ -343,7 +343,7 @@
       var trendHtml = '<div class="full-width">' +
         '<div class="section-label">VERSION TREND</div>' +
         '<div class="panel-card">' +
-        '<div id="sdk-trend-chart" style="width:100%;height:320px;"></div>' +
+        '<div id="sdk-trend-chart" style="width:100%;height:380px;"></div>' +
         '</div></div>';
 
       // --- Upgrade Recommendations section ---
@@ -539,11 +539,12 @@
           legend: {
             data: versions.slice().reverse(),
             bottom: 0,
+            type: 'scroll',
             textStyle: { fontSize: 11, fontFamily: 'JetBrains Mono, monospace' },
             itemWidth: 12,
             itemHeight: 12
           },
-          grid: { left: 48, right: 16, top: 16, bottom: 40 },
+          grid: { left: 48, right: 16, top: 16, bottom: 60 },
           xAxis: {
             type: 'category',
             data: months,
@@ -567,9 +568,10 @@
         if (months.length >= 12) {
           trendOption.dataZoom = [
             { type: 'inside' },
-            { type: 'slider', height: 20, bottom: 0 }
+            { type: 'slider', height: 20, bottom: 24 }
           ];
-          trendOption.legend.bottom = 28;
+          trendOption.grid.bottom = 80;
+          trendOption.legend.bottom = 48;
         }
 
         trendChart.setOption(trendOption);

@@ -337,8 +337,8 @@ def _performance_handler(client, account_id, customer_name):
                 "slow_chart_data": PHASE4_DATA_CHECKS["slow_chart_data"],
             })
             if slow_avail.get("slow_chart_data", {}).get("available", False):
-                slow_users_df = run_query(client, slow_chart_users_query(deployment_type=dt),
-                                          account_id=account_id, maximum_bytes_billed=50_000_000_000)
+                slow_users_df = run_query(client, slow_chart_users_query(),
+                                          account_id=account_id, maximum_bytes_billed=200_000_000_000)
     except Exception:
         pass
 

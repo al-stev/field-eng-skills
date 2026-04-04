@@ -74,17 +74,23 @@ PHASE3_DATA_CHECKS = {
 
 PHASE4_SCHEMA_SPECS = {
     "`wandb-production.analytics.fct_application_performance`": [
-        "account_id", "date_day", "application_performance_index",
-        "slow_charts", "slow_project_search", "slow_artifact_creating",
-        "slow_run_sidebar", "slow_workspace_settings",
+        "account_id", "application_performance_index", "performance_category",
+        "slow_charts_user_ct", "slow_project_search_user_ct",
+        "slow_artifact_creating_user_ct", "slow_runs_query_user_ct",
+        "slow_run_groups_query_user_ct", "slow_project_page_user_ct",
+        "slow_report_metadata_user_ct", "slow_artifact_manifests_user_ct",
+        "slow_adag_lineage_user_ct",
         "users_facing_errors_ct", "error_count",
+        "total_active_users", "slow_users", "slow_users_pct",
+        "team_name", "entity_id",
     ],
     "`wandb-production.analytics.fct_onscreen_loader_latencies`": [
-        "account_id", "date_day", "latency_ms", "universal_user_id",
+        "account_id", "date_measured", "duration", "universal_user_id",
+        "component_id",
     ],
     "`wandb-production.analytics.agg_daily_team_members_slow_chart_loads`": [
-        "account_id", "date_day", "universal_user_id",
-        "slow_chart_loads", "total_chart_loads",
+        "account_id", "date_day", "username", "team",
+        "user_with_slow_charts", "org_with_slow_charts",
     ],
 }
 
@@ -92,14 +98,13 @@ PHASE4_DATA_CHECKS = {
     "perf_index": (
         "SELECT COUNT(*) AS cnt "
         "FROM `wandb-production.analytics.fct_application_performance` "
-        "WHERE account_id = @account_id "
-        "AND date_day >= DATE_SUB(CURRENT_DATE(), INTERVAL 90 DAY) LIMIT 1"
+        "WHERE account_id = @account_id LIMIT 1"
     ),
     "latency_data": (
         "SELECT COUNT(*) AS cnt "
         "FROM `wandb-production.analytics.fct_onscreen_loader_latencies` "
         "WHERE account_id = @account_id "
-        "AND date_day >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY) LIMIT 1"
+        "AND date_measured >= DATE_SUB(CURRENT_DATE(), INTERVAL 12 MONTH) LIMIT 1"
     ),
     "slow_chart_data": (
         "SELECT COUNT(*) AS cnt "
@@ -114,6 +119,7 @@ def check_data_availability(
     client: bigquery.Client,
     account_id: str,
     checks: dict[str, str],
+    maximum_bytes_billed: int = 10_000_000_000,
 ) -> dict[str, dict]:
     """
     Check data availability per account after schema validation passes.
@@ -126,6 +132,9 @@ def check_data_availability(
         client: Authenticated BigQuery client
         account_id: SFDC account ID
         checks: Dict of {check_name: SQL_with_@account_id_returning_count}
+        maximum_bytes_billed: Byte limit per check query (default 10GB).
+            Some tables (e.g. agg_daily_team_members_slow_chart_loads) are not
+            efficiently partitioned and need >1GB even for simple count queries.
 
     Returns:
         Dict of {check_name: {"available": bool, "count": int, "error": str|None}}
@@ -139,7 +148,7 @@ def check_data_availability(
                 query_parameters=[
                     ScalarQueryParameter("account_id", "STRING", account_id),
                 ],
-                maximum_bytes_billed=1_000_000_000,
+                maximum_bytes_billed=maximum_bytes_billed,
             )
             query_job = client.query(sql, job_config=job_config)
             rows = list(query_job.result())

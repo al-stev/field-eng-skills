@@ -1,4 +1,13 @@
-"""Performance Deep Dive transform -- application performance intelligence from BQ tables."""
+"""Performance Deep Dive transform -- application performance intelligence from BQ tables.
+
+Data model notes:
+- fct_application_performance is a SNAPSHOT table (one row per team/entity, no date column).
+  It provides aggregate performance scores, slowness user counts, and error totals.
+- fct_onscreen_loader_latencies is a per-event table with date_measured + duration (ms).
+  We alias duration -> latency_ms in the query for downstream consistency.
+- agg_daily_team_members_slow_chart_loads is a daily per-user table with string flags
+  (user_with_slow_charts IS NOT NULL = had slow charts). We count days in the query.
+"""
 
 from datetime import date
 from typing import Any
@@ -14,11 +23,11 @@ class PerformanceTransform(BaseTransform):
     Transforms performance query outputs into Performance Deep Dive PAGE_DATA.
 
     Input DataFrames:
-        perf_df: from performance_query() -- daily performance index + slowness + errors
-        latency_df: from latency_distribution_query() -- raw latency_ms values (may be empty)
-        slow_users_df: from slow_chart_users_query() -- per-user slow chart loads (may be empty)
+        perf_df: from performance_query() -- snapshot performance index + slowness + errors per team
+        latency_df: from latency_distribution_query() -- raw latency_ms values with component_id (may be empty)
+        slow_users_df: from slow_chart_users_query() -- per-user slow chart day counts (may be empty)
 
-    Output: PAGE_DATA with gauge scoring, latency histogram, error trending, slow users table.
+    Output: PAGE_DATA with gauge scoring, latency histogram, component breakdown, error summary, slow users table.
     """
 
     TIER_THRESHOLDS = {"good": 80, "fair": 50}  # >= 80 = good, >= 50 = fair, else poor
@@ -31,12 +40,17 @@ class PerformanceTransform(BaseTransform):
         (10000, float("inf"), "10s+"),
     ]
 
+    # Maps BQ column name -> display label for all slow_*_user_ct columns
     SLOWNESS_FEATURES = {
-        "slow_charts": "Slow Charts",
-        "slow_project_search": "Slow Project Search",
-        "slow_artifact_creating": "Slow Artifact Creating",
-        "slow_run_sidebar": "Slow Run Sidebar",
-        "slow_workspace_settings": "Slow Workspace Settings",
+        "slow_charts_user_ct": "Slow Charts",
+        "slow_project_search_user_ct": "Slow Project Search",
+        "slow_artifact_creating_user_ct": "Slow Artifact Creating",
+        "slow_adag_lineage_user_ct": "Slow ADAG Lineage",
+        "slow_run_groups_query_user_ct": "Slow Run Groups Query",
+        "slow_artifact_manifests_user_ct": "Slow Artifact Manifests",
+        "slow_project_page_user_ct": "Slow Project Page",
+        "slow_report_metadata_user_ct": "Slow Report Metadata",
+        "slow_runs_query_user_ct": "Slow Runs Query",
     }
 
     @classmethod
@@ -48,7 +62,7 @@ class PerformanceTransform(BaseTransform):
             "page_type": "performance",
             "kpis": [
                 {"value": "--", "label": "Performance Index"},
-                {"value": "--", "label": "Error Count (30d)"},
+                {"value": "--", "label": "Error Count"},
                 {"value": "--", "label": "P95 Chart Load"},
                 {"value": "--", "label": "Slow Chart Users"},
             ],
@@ -73,32 +87,34 @@ class PerformanceTransform(BaseTransform):
         if perf_df.empty:
             return self.empty_result("performance_data_unavailable")
 
-        perf_df = perf_df.copy()
-        perf_df["date_day"] = pd.to_datetime(perf_df["date_day"])
-        perf_df = perf_df.sort_values("date_day")
-
-        # 1. Performance index
+        # 1. Performance index (aggregated across all teams/entities)
         performance_index = self._compute_performance_index(perf_df)
 
-        # 2. Slowness breakdown
+        # 2. Slowness breakdown (summed across teams)
         slowness_breakdown = self._compute_slowness_breakdown(perf_df)
 
-        # 3. Error metrics
+        # 3. Error metrics (summed across teams)
         error_metrics = self._compute_error_metrics(perf_df)
 
-        # 4. Latency distribution
+        # 4. Latency distribution (from separate latency table)
         latency_distribution = self._compute_latency_distribution(latency_df)
 
-        # 5. Slow chart users
+        # 5. Component latency breakdown
+        component_latency = self._compute_component_latency(latency_df)
+
+        # 6. Slow chart users
         slow_chart_users = self._compute_slow_chart_users(slow_users_df)
 
-        # 6. Narrative
+        # 7. Per-team breakdown (if multiple teams)
+        team_breakdown = self._compute_team_breakdown(perf_df)
+
+        # 8. Narrative
         narrative = self._build_narrative(
             customer_name, performance_index, slowness_breakdown,
             error_metrics, latency_distribution, slow_chart_users,
         )
 
-        # 7. KPIs
+        # 9. KPIs
         p95_display = (
             f"{int(round(latency_distribution['p95']))}ms"
             if latency_distribution["p95"] != "--"
@@ -106,7 +122,7 @@ class PerformanceTransform(BaseTransform):
         )
         kpis = [
             {"value": str(round(performance_index["score"], 1)), "label": "Performance Index"},
-            {"value": str(int(error_metrics["error_count_30d"])), "label": "Error Count (30d)"},
+            {"value": str(int(error_metrics["error_count"])), "label": "Error Count"},
             {"value": p95_display, "label": "P95 Chart Load"},
             {"value": str(len(slow_chart_users)), "label": "Slow Chart Users"},
         ]
@@ -121,16 +137,31 @@ class PerformanceTransform(BaseTransform):
             "slowness_breakdown": slowness_breakdown,
             "error_metrics": error_metrics,
             "latency_distribution": latency_distribution,
+            "component_latency": component_latency,
             "slow_chart_users": slow_chart_users,
+            "team_breakdown": team_breakdown,
             "narrative": narrative,
             "kpis": kpis,
-            "data_source": "fct_application_performance + fct_onscreen_loader_latencies",
+            "data_source": "fct_application_performance (snapshot) + fct_onscreen_loader_latencies",
             "deployment_type": deployment_type,
         }
 
     def _compute_performance_index(self, perf_df: pd.DataFrame) -> dict:
-        """Compute average performance index and tier classification."""
-        score = float(perf_df["application_performance_index"].mean())
+        """Compute weighted-average performance index across all teams and tier classification.
+
+        The table is a snapshot: one row per team/entity. We weight by total_active_users
+        if available, otherwise use a simple mean.
+        """
+        if "total_active_users" in perf_df.columns:
+            weights = perf_df["total_active_users"].fillna(0).astype(float)
+            values = perf_df["application_performance_index"].fillna(0).astype(float)
+            total_weight = weights.sum()
+            if total_weight > 0:
+                score = float((values * weights).sum() / total_weight)
+            else:
+                score = float(values.mean())
+        else:
+            score = float(perf_df["application_performance_index"].mean())
 
         if score >= self.TIER_THRESHOLDS["good"]:
             tier = "good"
@@ -139,27 +170,38 @@ class PerformanceTransform(BaseTransform):
         else:
             tier = "poor"
 
-        # Component breakdown: average the last 7 days of each slow_* column
-        # and normalize to 0-100 scale (lower slow counts = higher component score)
-        last_7d = perf_df.tail(7)
+        # Performance category from BQ (if consistent across rows)
+        categories = perf_df["performance_category"].dropna().unique().tolist() if "performance_category" in perf_df.columns else []
+        category = categories[0] if len(categories) == 1 else (categories[0] if categories else tier.capitalize())
+
+        # Component breakdown: sum each slow_*_user_ct, normalize against total_active_users
+        total_active = int(perf_df["total_active_users"].sum()) if "total_active_users" in perf_df.columns else 1
         components = {}
         for col, label in self.SLOWNESS_FEATURES.items():
-            avg_slow = float(last_7d[col].mean()) if col in last_7d.columns else 0
-            # Normalize: 0 slow = 100 score, 100+ slow = 0 score
-            component_score = max(0, min(100, 100 - avg_slow))
-            components[col] = round(component_score, 1)
+            if col in perf_df.columns:
+                slow_count = int(perf_df[col].fillna(0).sum())
+                # Normalize: 0 slow users = 100, all users slow = 0
+                if total_active > 0:
+                    component_score = max(0, min(100, 100 * (1 - slow_count / total_active)))
+                else:
+                    component_score = 100.0
+                components[col] = round(component_score, 1)
+            else:
+                components[col] = 100.0
 
         return {
             "score": round(score, 1),
             "tier": tier,
+            "category": category,
             "components": components,
+            "total_active_users": int(perf_df["total_active_users"].sum()) if "total_active_users" in perf_df.columns else 0,
         }
 
     def _compute_slowness_breakdown(self, perf_df: pd.DataFrame) -> list[dict]:
-        """Sum each slow_* column and compute percentages, sorted by count descending."""
+        """Sum each slow_*_user_ct column across teams, compute percentages."""
         totals = {}
         for col, label in self.SLOWNESS_FEATURES.items():
-            totals[label] = int(perf_df[col].sum()) if col in perf_df.columns else 0
+            totals[label] = int(perf_df[col].fillna(0).sum()) if col in perf_df.columns else 0
 
         grand_total = sum(totals.values())
         breakdown = []
@@ -171,37 +213,30 @@ class PerformanceTransform(BaseTransform):
         return breakdown
 
     def _compute_error_metrics(self, perf_df: pd.DataFrame) -> dict:
-        """Compute error metrics with trend (last 15d vs prior 15d)."""
-        latest = perf_df.iloc[-1]
-        users_facing_errors = int(latest["users_facing_errors_ct"])
+        """Compute error metrics from snapshot data (no trend since no time series)."""
+        error_count = int(perf_df["error_count"].fillna(0).sum())
+        users_facing_errors = int(perf_df["users_facing_errors_ct"].fillna(0).sum())
+        total_active = int(perf_df["total_active_users"].fillna(0).sum()) if "total_active_users" in perf_df.columns else 0
 
-        # 30-day error count
-        last_30d = perf_df.tail(30)
-        error_count_30d = int(last_30d["error_count"].sum())
+        # Slow operations ratio (if available)
+        slow_ops_ratio = None
+        if "slow_operations_ratio" in perf_df.columns:
+            vals = perf_df["slow_operations_ratio"].dropna()
+            if not vals.empty:
+                slow_ops_ratio = round(float(vals.mean()), 4)
 
-        # Trend: last 15 days vs prior 15 days
-        if len(perf_df) >= 30:
-            recent_15d = perf_df.tail(15)["error_count"].sum()
-            prior_15d = perf_df.iloc[-30:-15]["error_count"].sum()
-        else:
-            half = len(perf_df) // 2
-            if half > 0:
-                recent_15d = perf_df.tail(half)["error_count"].sum()
-                prior_15d = perf_df.head(half)["error_count"].sum()
-            else:
-                recent_15d = error_count_30d
-                prior_15d = error_count_30d
-
-        error_trend = round(
-            ((recent_15d - prior_15d) / max(prior_15d, 1)) * 100, 1
-        )
+        # Bad experience tickets
+        bad_tickets = 0
+        if "num_bad_experience_tickets" in perf_df.columns:
+            bad_tickets = int(perf_df["num_bad_experience_tickets"].fillna(0).sum())
 
         return {
             "users_facing_errors": users_facing_errors,
-            "error_count": int(latest["error_count"]),
-            "error_count_30d": error_count_30d,
-            "error_trend": error_trend,
-            "trend_period": "30d",
+            "error_count": error_count,
+            "total_active_users": total_active,
+            "error_rate_pct": round(users_facing_errors / max(total_active, 1) * 100, 1),
+            "slow_operations_ratio": slow_ops_ratio,
+            "bad_experience_tickets": bad_tickets,
         }
 
     def _compute_latency_distribution(self, latency_df: pd.DataFrame) -> dict:
@@ -213,7 +248,7 @@ class PerformanceTransform(BaseTransform):
                 {"label": label, "count": 0, "pct": 0.0}
                 for _, _, label in bin_defs
             ]
-            return {"bins": empty_bins, "p50": "--", "p95": "--", "p99": "--"}
+            return {"bins": empty_bins, "p50": "--", "p95": "--", "p99": "--", "total_measurements": 0}
 
         latency_values = latency_df["latency_ms"].dropna().astype(float)
         total = len(latency_values)
@@ -223,13 +258,13 @@ class PerformanceTransform(BaseTransform):
                 {"label": label, "count": 0, "pct": 0.0}
                 for _, _, label in bin_defs
             ]
-            return {"bins": empty_bins, "p50": "--", "p95": "--", "p99": "--"}
+            return {"bins": empty_bins, "p50": "--", "p95": "--", "p99": "--", "total_measurements": 0}
 
         # Bin using fixed ranges
         bins = []
         for low, high, label in bin_defs:
             if high == float("inf"):
-                count = int(((latency_values >= low)).sum())
+                count = int((latency_values >= low).sum())
             else:
                 count = int(((latency_values >= low) & (latency_values < high)).sum())
             pct = round(count / total * 100, 1)
@@ -240,10 +275,46 @@ class PerformanceTransform(BaseTransform):
         p95 = round(float(np.percentile(latency_values, 95)), 1)
         p99 = round(float(np.percentile(latency_values, 99)), 1)
 
-        return {"bins": bins, "p50": p50, "p95": p95, "p99": p99}
+        # Date range
+        date_range = {}
+        if "date_measured" in latency_df.columns:
+            dates = pd.to_datetime(latency_df["date_measured"])
+            date_range = {
+                "earliest": dates.min().isoformat()[:10],
+                "latest": dates.max().isoformat()[:10],
+            }
+
+        return {
+            "bins": bins, "p50": p50, "p95": p95, "p99": p99,
+            "total_measurements": total, "date_range": date_range,
+        }
+
+    def _compute_component_latency(self, latency_df: pd.DataFrame) -> list[dict]:
+        """Per-component latency breakdown from fct_onscreen_loader_latencies."""
+        if latency_df.empty or "component_id" not in latency_df.columns or "latency_ms" not in latency_df.columns:
+            return []
+
+        components = []
+        for comp_id, group in latency_df.groupby("component_id"):
+            vals = group["latency_ms"].dropna().astype(float)
+            if len(vals) == 0:
+                continue
+            components.append({
+                "component": str(comp_id),
+                "count": len(vals),
+                "p50": round(float(np.percentile(vals, 50)), 1),
+                "p95": round(float(np.percentile(vals, 95)), 1),
+                "max": round(float(vals.max()), 1),
+            })
+
+        components.sort(key=lambda c: c["count"], reverse=True)
+        return components[:20]  # Top 20 components
 
     def _compute_slow_chart_users(self, slow_users_df: pd.DataFrame) -> list[dict]:
-        """Convert slow users DataFrame to sorted list of dicts."""
+        """Convert slow users DataFrame to sorted list of dicts.
+
+        Expected columns from query: username, team, total_days, slow_days, slow_pct, last_seen.
+        """
         if slow_users_df.empty:
             return []
 
@@ -258,17 +329,41 @@ class PerformanceTransform(BaseTransform):
                 last_seen = str(last_seen)
 
             username = str(row.get("username", "unknown"))
+            team = str(row.get("team", "unknown"))
             users.append({
                 "username": username,
                 "display_name": username,
-                "slow_loads": int(row.get("slow_loads", 0)),
-                "total_loads": int(row.get("total_loads", 0)),
+                "team": team,
+                "total_days": int(row.get("total_days", 0)),
+                "slow_days": int(row.get("slow_days", 0)),
                 "slow_pct": round(float(row.get("slow_pct", 0)), 1),
                 "last_seen": last_seen,
             })
 
         users.sort(key=lambda u: u["slow_pct"], reverse=True)
         return users
+
+    def _compute_team_breakdown(self, perf_df: pd.DataFrame) -> list[dict]:
+        """Per-team performance breakdown (only meaningful if multiple teams)."""
+        if len(perf_df) <= 1:
+            return []
+
+        teams = []
+        for _, row in perf_df.iterrows():
+            team_name = str(row.get("team_name", "unknown"))
+            teams.append({
+                "team": team_name,
+                "score": round(float(row.get("application_performance_index", 0)), 1),
+                "category": str(row.get("performance_category", "")),
+                "active_users": int(row.get("total_active_users", 0)),
+                "slow_users": int(row.get("slow_users", 0)),
+                "slow_pct": round(float(row.get("slow_users_pct", 0)), 1),
+                "error_count": int(row.get("error_count", 0)),
+                "users_facing_errors": int(row.get("users_facing_errors_ct", 0)),
+            })
+
+        teams.sort(key=lambda t: t["score"])
+        return teams
 
     def _build_narrative(
         self,
@@ -285,44 +380,63 @@ class PerformanceTransform(BaseTransform):
 
         score = perf_index["score"]
         tier = perf_index["tier"]
+        category = perf_index.get("category", tier.capitalize())
 
         # Performance assessment
         if tier == "good":
             highlights.append(
-                f"Application performance is healthy with a score of {score}/100."
+                f"Application performance is healthy with a score of {score}/100 ({category})."
             )
         elif tier == "fair":
             highlights.append(
-                f"Application performance is fair ({score}/100). Some areas need attention."
+                f"Application performance is fair ({score}/100, {category}). Some areas need attention."
             )
         else:
             highlights.append(
-                f"Application performance is degraded ({score}/100). Immediate investigation recommended."
+                f"Application performance is degraded ({score}/100, {category}). Immediate investigation recommended."
             )
+
+        # Active users context
+        total_active = perf_index.get("total_active_users", 0)
+        if total_active > 0:
+            highlights.append(f"{total_active} total active users across all teams.")
 
         # Slowest feature
         if slowness:
-            worst = slowness[0]
-            highlights.append(
-                f"Top slowness contributor: {worst['feature']} with {worst['count']} slow loads "
-                f"({worst['pct']}% of total)."
-            )
-            if worst["pct"] > 40:
-                recommendations.append(
-                    f"Investigate {worst['feature']} -- accounts for over 40% of all slow loads."
+            # Filter to features with non-zero counts
+            nonzero = [s for s in slowness if s["count"] > 0]
+            if nonzero:
+                worst = nonzero[0]
+                highlights.append(
+                    f"Top slowness contributor: {worst['feature']} with {worst['count']} affected users "
+                    f"({worst['pct']}% of total slow operations)."
                 )
+                if worst["pct"] > 40:
+                    recommendations.append(
+                        f"Investigate {worst['feature']} -- accounts for over 40% of all slow operations."
+                    )
+            else:
+                highlights.append("No users experiencing slow operations -- all performance dimensions clean.")
 
-        # Error trend
-        if errors["error_trend"] > 20:
+        # Error assessment
+        if errors["users_facing_errors"] > 0:
             highlights.append(
-                f"Error count is increasing: {errors['error_trend']}% change over 30 days."
+                f"{errors['users_facing_errors']} users facing errors "
+                f"({errors['error_rate_pct']}% of active users), "
+                f"{errors['error_count']} total errors."
             )
+            if errors["error_rate_pct"] > 10:
+                recommendations.append(
+                    "High error rate detected. Review error logs for recurring failure patterns."
+                )
+        else:
+            highlights.append("No users currently facing errors.")
+
+        # Bad experience tickets
+        if errors.get("bad_experience_tickets", 0) > 0:
             recommendations.append(
-                "Rising error count detected. Review error logs for new failure patterns."
-            )
-        elif errors["error_trend"] < -20:
-            highlights.append(
-                f"Error count is improving: {errors['error_trend']}% change over 30 days."
+                f"{errors['bad_experience_tickets']} bad experience ticket(s) on record. "
+                "Review ticket details for UX improvement opportunities."
             )
 
         # Latency
@@ -332,9 +446,10 @@ class PerformanceTransform(BaseTransform):
             )
 
         # Slow users
-        if len(slow_users) > 5:
+        slow_with_issues = [u for u in slow_users if u["slow_pct"] > 0]
+        if len(slow_with_issues) > 3:
             recommendations.append(
-                f"{len(slow_users)} users experiencing slow chart loads. "
+                f"{len(slow_with_issues)} users experiencing slow chart loads. "
                 "Check if specific projects or chart configurations are causing performance issues."
             )
 
@@ -344,8 +459,8 @@ class PerformanceTransform(BaseTransform):
             )
 
         executive_summary = (
-            f"{customer} application performance index: {score}/100 ({tier}). "
-            f"{errors['error_count_30d']} errors in the last 30 days affecting "
+            f"{customer} application performance index: {score}/100 ({category}). "
+            f"{errors['error_count']} errors affecting "
             f"{errors['users_facing_errors']} users."
         )
 

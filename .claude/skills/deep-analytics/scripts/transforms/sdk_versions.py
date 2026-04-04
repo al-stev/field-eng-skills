@@ -59,10 +59,9 @@ class SdkVersionsTransform(BaseTransform):
             axis=1,
         )
 
-        # Group to major.minor for cleaner display
-        sdk_versions["version_label"] = sdk_versions.apply(
-            lambda row: f"{row['major']}.{row['minor']}", axis=1
-        )
+        # Use full semver (major.minor.patch) for display — dropping patch
+        # makes versions like 0.78.0 look like the float 0.78
+        sdk_versions["version_label"] = sdk_versions["sdk_version"].str.strip()
 
         all_months = sorted(sdk_versions["month"].unique())
 
@@ -104,7 +103,7 @@ class SdkVersionsTransform(BaseTransform):
         # Get unique version labels sorted by semver
         unique_versions = sorted(
             sdk_versions["version_label"].unique(),
-            key=lambda v: tuple(int(x) for x in v.split(".")),
+            key=lambda v: tuple(int(x) for x in v.split(".") if x.isdigit()),
         )
         for month in all_months:
             month_data = sdk_versions[sdk_versions["month"] == month]
@@ -149,10 +148,15 @@ class SdkVersionsTransform(BaseTransform):
         # --- KPIs ---
         unique_versions_count = len(unique_versions)
         current_pct = round(freshness_counts["current"] / total_users_latest * 100) if total_users_latest > 0 else 0
-        latest_version_str = f"{latest_major}.{latest_minor}"
+        # Find the highest full version string for the latest major.minor
+        latest_subset_full = sdk_versions[
+            (sdk_versions["major"] == latest_major) & (sdk_versions["minor"] == latest_minor)
+        ]
+        latest_patch = latest_subset_full["patch"].max()
+        latest_version_str = f"{latest_major}.{latest_minor}.{latest_patch}"
 
         kpis = [
-            {"value": latest_version_str, "label": "Latest SDK Version"},
+            {"value": latest_version_str, "label": "Latest CLI Version"},
             {"value": f"{current_pct}%", "label": "On Latest Minor"},
             {"value": str(unique_versions_count), "label": "Versions in Use"},
             {"value": str(total_users_latest), "label": f"Users ({latest_month})"},

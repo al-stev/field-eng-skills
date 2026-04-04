@@ -258,7 +258,7 @@
               '<th>Team</th>' +
               '<th style="text-align:right">Members</th>' +
               '<th style="text-align:right">Events</th>' +
-              '<th style="text-align:right">Active Days</th>' +
+              '<th style="text-align:right">Last Active</th>' +
               '<th>Top Product Areas</th>' +
             '</tr></thead>' +
             '<tbody>';
@@ -266,7 +266,9 @@
       for (var t = 0; t < teams.length; t++) {
         var team = teams[t];
         var teamName = esc(team.name || 'Unknown');
-        var productAreas = (team.top_product_areas || []).slice(0, 4);
+        // Support both top_product_areas (array) and top_product (string)
+        var productAreas = team.top_product_areas || (team.top_product ? [team.top_product] : []);
+        productAreas = productAreas.slice(0, 4);
         var productHtml = productAreas.map(function(pa) {
           return '<span class="team-product-tag">' + esc(pa) + '</span>';
         }).join(' ');
@@ -296,7 +298,7 @@
           '<td style="font-weight:500;color:var(--text-primary)">' + teamName + champInfo + memberInfo + '</td>' +
           '<td style="text-align:right;color:var(--text-secondary)">' + fmt(team.member_count) + '</td>' +
           '<td style="text-align:right;color:var(--text-secondary)">' + fmt(team.total_events) + '</td>' +
-          '<td style="text-align:right;color:var(--text-secondary)">' + fmt(team.active_days) + '</td>' +
+          '<td style="text-align:right;color:var(--text-secondary);font-family:JetBrains Mono,monospace;font-size:11px;">' + esc(team.last_active || (team.active_days != null ? fmt(team.active_days) + 'd' : '--')) + '</td>' +
           '<td>' + productHtml + '</td>' +
         '</tr>';
       }
@@ -327,10 +329,22 @@
         var actEl = container.querySelector('#team-activity-chart');
         if (!actEl) return;
         var actChart = ChartHelpers.createChart(actEl);
-        var ta = data.team_activity || [];
-        var teamNames = ta.map(function(d) { return d.team; }).reverse();
-        var events = ta.map(function(d) { return d.events; }).reverse();
-        var users = ta.map(function(d) { return d.users; }).reverse();
+
+        // Normalize team_activity: supports both array of {team, events, users}
+        // and object {team_names, events, users} (parallel arrays from transform)
+        var rawTA = data.team_activity || [];
+        var teamNames, events, users;
+        if (Array.isArray(rawTA)) {
+          teamNames = rawTA.map(function(d) { return d.team; }).reverse();
+          events = rawTA.map(function(d) { return d.events; }).reverse();
+          users = rawTA.map(function(d) { return d.users; }).reverse();
+        } else if (rawTA.team_names) {
+          teamNames = (rawTA.team_names || []).slice().reverse();
+          events = (rawTA.events || []).slice().reverse();
+          users = (rawTA.users || []).slice().reverse();
+        } else {
+          teamNames = []; events = []; users = [];
+        }
 
         actChart.setOption({
           tooltip: {
@@ -403,27 +417,46 @@
         var hmEl = container.querySelector('#team-heatmap-chart');
         if (!hmEl) return;
         var hmChart = ChartHelpers.createChart(hmEl);
-        var heatData = data.team_product_heatmap || [];
+        var rawHeat = data.team_product_heatmap || [];
 
-        // Extract unique product areas and team names
-        var productSet = {};
-        var teamSet = {};
-        for (var h = 0; h < heatData.length; h++) {
-          productSet[heatData[h].product_area] = true;
-          teamSet[heatData[h].team] = true;
-        }
-        var productAreas = Object.keys(productSet);
-        var hmTeams = Object.keys(teamSet);
-
-        // Build matrix data: [productIndex, teamIndex, events]
-        var matrixData = [];
+        // Normalize: supports both array of {team, product_area, events}
+        // and object {team_names, product_areas, matrix} from transform
+        var productAreas, hmTeams, matrixData;
         var maxEvents = 0;
-        for (var m = 0; m < heatData.length; m++) {
-          var pIdx = productAreas.indexOf(heatData[m].product_area);
-          var tIdx = hmTeams.indexOf(heatData[m].team);
-          var evts = heatData[m].events || 0;
-          if (evts > maxEvents) maxEvents = evts;
-          matrixData.push([pIdx, tIdx, evts]);
+
+        if (Array.isArray(rawHeat)) {
+          // Original expected format
+          var productSet = {};
+          var teamSet = {};
+          for (var h = 0; h < rawHeat.length; h++) {
+            productSet[rawHeat[h].product_area] = true;
+            teamSet[rawHeat[h].team] = true;
+          }
+          productAreas = Object.keys(productSet);
+          hmTeams = Object.keys(teamSet);
+          matrixData = [];
+          for (var m = 0; m < rawHeat.length; m++) {
+            var pIdx = productAreas.indexOf(rawHeat[m].product_area);
+            var tIdx = hmTeams.indexOf(rawHeat[m].team);
+            var evts = rawHeat[m].events || 0;
+            if (evts > maxEvents) maxEvents = evts;
+            matrixData.push([pIdx, tIdx, evts]);
+          }
+        } else if (rawHeat.team_names && rawHeat.product_areas && rawHeat.matrix) {
+          // Transform format: {team_names, product_areas, matrix: [[teamIdx, productIdx, events]]}
+          hmTeams = rawHeat.team_names || [];
+          productAreas = rawHeat.product_areas || [];
+          matrixData = [];
+          var rawMatrix = rawHeat.matrix || [];
+          for (var rm = 0; rm < rawMatrix.length; rm++) {
+            var entry = rawMatrix[rm];
+            var eVal = entry[2] || 0;
+            if (eVal > maxEvents) maxEvents = eVal;
+            // Transform matrix is [teamIdx, productIdx, events], chart needs [productIdx, teamIdx, events]
+            matrixData.push([entry[1], entry[0], eVal]);
+          }
+        } else {
+          productAreas = []; hmTeams = []; matrixData = [];
         }
 
         hmChart.setOption({

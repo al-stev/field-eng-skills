@@ -148,6 +148,10 @@
 
   PanelRegistry.register({
     id: 'cohort',
+    group: 'user-intel',
+    label: 'Cohort Analysis',
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>',
+    dataKey: 'analytics.cohort',
 
     render: function(container, data, config) {
       var charts = [];
@@ -174,10 +178,76 @@
         html += '<div class="time-period">' + escapeHtml(data.period.start || '') + ' to ' + escapeHtml(data.period.end || '') + '</div>';
       }
 
+      // --- Normalize data shapes ---
+      // Transform outputs cohort_matrix as {cohort_labels, cohort_sizes, period_labels, matrix}
+      // where matrix entries are [cohortIdx, periodIdx, retentionPct].
+      // Normalize to array of {cohort, size, periods: [...]} for rendering.
+      var rawCM = data.cohort_matrix || {};
+      var matrix = [];
+      if (Array.isArray(rawCM)) {
+        // Already in expected array format
+        matrix = rawCM;
+      } else if (rawCM.cohort_labels && rawCM.matrix) {
+        var cmLabels = rawCM.cohort_labels || [];
+        var cmSizes = rawCM.cohort_sizes || {};
+        var cmPeriodLabels = rawCM.period_labels || [];
+        var maxPeriodIdx = 0;
+        for (var mi = 0; mi < rawCM.matrix.length; mi++) {
+          if (rawCM.matrix[mi][1] > maxPeriodIdx) maxPeriodIdx = rawCM.matrix[mi][1];
+        }
+        // Build row-based structure
+        for (var li = 0; li < cmLabels.length; li++) {
+          var periods = [];
+          for (var pi = 0; pi <= maxPeriodIdx; pi++) { periods.push(null); }
+          matrix.push({
+            cohort: cmLabels[li],
+            size: cmSizes[cmLabels[li]] || cmSizes[li] || null,
+            periods: periods
+          });
+        }
+        // Fill in retention values
+        for (var ei = 0; ei < rawCM.matrix.length; ei++) {
+          var entry = rawCM.matrix[ei];
+          var cIdx = entry[0], pIdx = entry[1], retPct = entry[2];
+          if (matrix[cIdx]) {
+            matrix[cIdx].periods[pIdx] = retPct;
+          }
+        }
+      }
+
+      // Normalize retention_curve: {periods, values} -> [{period, retention_pct}]
+      var rawRC = data.retention_curve || [];
+      var rc = [];
+      if (Array.isArray(rawRC)) {
+        rc = rawRC;
+      } else if (rawRC.periods && rawRC.values) {
+        for (var ri = 0; ri < rawRC.periods.length; ri++) {
+          rc.push({ period: ri, period_label: rawRC.periods[ri], retention_pct: rawRC.values[ri] });
+        }
+      }
+
+      // Normalize lifecycle: {months, new_users, retained, resurrected, churned} -> [{month, new, retained, resurrected, churned}]
+      var rawLC = data.lifecycle;
+      var lc = null;
+      if (rawLC && Array.isArray(rawLC) && rawLC.length > 0) {
+        lc = rawLC;
+      } else if (rawLC && rawLC.months && rawLC.months.length > 0) {
+        lc = [];
+        for (var lci = 0; lci < rawLC.months.length; lci++) {
+          lc.push({
+            month: rawLC.months[lci],
+            'new': rawLC.new_users ? rawLC.new_users[lci] : 0,
+            new_users: rawLC.new_users ? rawLC.new_users[lci] : 0,
+            retained: rawLC.retained ? rawLC.retained[lci] : 0,
+            resurrected: rawLC.resurrected ? rawLC.resurrected[lci] : 0,
+            churned: rawLC.churned ? rawLC.churned[lci] : 0
+          });
+        }
+      }
+
       // --- RETENTION HEATMAP section ---
       html += '<div class="section-label">RETENTION HEATMAP</div>';
       html += '<div class="full-width"><div class="panel-card">';
-      var matrix = data.cohort_matrix || [];
       if (matrix.length > 0) {
         var heatmapHeight = Math.max(400, matrix.length * 32 + 120);
         html += '<div id="cohort-heatmap" style="width:100%;height:' + heatmapHeight + 'px;"></div>';
@@ -187,8 +257,6 @@
       html += '</div></div>';
 
       // --- Two-col: Retention Curve + User Lifecycle ---
-      var rc = data.retention_curve || [];
-      var lc = data.lifecycle;
       var hasLifecycle = lc && Array.isArray(lc) && lc.length > 0;
 
       if (rc.length > 0 || hasLifecycle) {
@@ -312,7 +380,7 @@
         var curveEl = container.querySelector('#cohort-curve');
         if (curveEl) {
           var curveChart = ChartHelpers.createChart(curveEl);
-          var curvePeriods = rc.map(function(r) { return r.period != null ? 'M+' + r.period : ''; });
+          var curvePeriods = rc.map(function(r) { return r.period_label || (r.period != null ? 'M+' + r.period : ''); });
           var curveValues = rc.map(function(r) { return r.retention_pct; });
           var blueColor = ChartHelpers.getColor('blue') || '#60a5fa';
 
@@ -512,10 +580,20 @@
 
       var stats = [];
 
-      // M+1 retention from retention_curve
-      var rc = data.retention_curve || [];
-      if (rc.length >= 2) {
-        var m1 = rc[1];
+      // Normalize retention_curve for headline stats
+      var rawRC = data.retention_curve || [];
+      var rc = [];
+      if (Array.isArray(rawRC)) {
+        rc = rawRC;
+      } else if (rawRC.periods && rawRC.values) {
+        for (var i = 0; i < rawRC.values.length; i++) {
+          rc.push({ retention_pct: rawRC.values[i] });
+        }
+      }
+
+      // First retention point (M+1 or first period)
+      if (rc.length >= 1) {
+        var m1 = rc[0];
         var pct = m1 ? m1.retention_pct : null;
         if (pct !== null && pct !== undefined) {
           var retColor = pct >= 70 ? 'var(--green)' : pct >= 40 ? 'var(--amber)' : 'var(--red)';
@@ -528,11 +606,17 @@
       }
 
       // Cohort count
-      var matrix = data.cohort_matrix || [];
-      if (matrix.length > 0) {
+      var rawCM = data.cohort_matrix || [];
+      var cohortCount = 0;
+      if (Array.isArray(rawCM)) {
+        cohortCount = rawCM.length;
+      } else if (rawCM.cohort_labels) {
+        cohortCount = rawCM.cohort_labels.length;
+      }
+      if (cohortCount > 0) {
         stats.push({
           label: 'Cohorts',
-          value: String(matrix.length),
+          value: String(cohortCount),
           color: 'var(--text-primary)'
         });
       }
@@ -545,10 +629,20 @@
 
       var items = [];
 
-      // Check M+1 retention
-      var rc = data.retention_curve || [];
-      if (rc.length >= 2) {
-        var m1 = rc[1];
+      // Normalize retention_curve
+      var rawRC = data.retention_curve || [];
+      var rc = [];
+      if (Array.isArray(rawRC)) {
+        rc = rawRC;
+      } else if (rawRC.periods && rawRC.values) {
+        for (var i = 0; i < rawRC.values.length; i++) {
+          rc.push({ retention_pct: rawRC.values[i] });
+        }
+      }
+
+      // Check first retention point
+      if (rc.length >= 1) {
+        var m1 = rc[0];
         var pct = m1 ? m1.retention_pct : null;
         if (pct !== null && pct < 40) {
           items.push({

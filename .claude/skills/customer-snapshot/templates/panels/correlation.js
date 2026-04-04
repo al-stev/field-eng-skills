@@ -236,7 +236,7 @@
       container.innerHTML = privacyHtml + statsHtml +
         '<div class="section-label">PRODUCT CORRELATION MATRIX</div>' +
         '<div class="full-width panel-card">' +
-          '<div id="corr-heatmap" style="width:100%;height:400px;"></div>' +
+          '<div id="corr-heatmap" style="width:100%;height:500px;"></div>' +
         '</div>' +
         '<div class="two-col">' +
           '<div class="panel-card" id="corr-positioning"></div>' +
@@ -278,7 +278,7 @@
                 '<div>' + val[2] + '% co-occurrence, ' + val[3] + '% retention</div>';
             }
           }),
-          grid: { left: 140, right: 80, top: 40, bottom: 80 },
+          grid: { left: 140, right: 80, top: 100, bottom: 80 },
           xAxis: {
             type: 'category',
             data: areas,

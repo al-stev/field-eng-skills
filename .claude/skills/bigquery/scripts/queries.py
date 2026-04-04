@@ -944,99 +944,87 @@ def cross_account_arr_breadth_query() -> str:
 
 
 def performance_query() -> str:
-    """Performance index and slowness metrics from fct_application_performance."""
+    """Performance index and slowness metrics from fct_application_performance.
+
+    Note: This table is a snapshot (one row per team/entity), NOT a daily time series.
+    It has no date column. Rows are keyed by (account_id, entity_id, team_name).
+    """
     perf = _ref("fct_application_performance")
     return f"""
     SELECT
-        date_day,
+        team_name,
+        entity_id,
         application_performance_index,
-        slow_charts,
-        slow_project_search,
-        slow_artifact_creating,
-        slow_run_sidebar,
-        slow_workspace_settings,
+        performance_category,
+        slow_charts_user_ct,
+        slow_project_search_user_ct,
+        slow_artifact_creating_user_ct,
+        slow_adag_lineage_user_ct,
+        slow_run_groups_query_user_ct,
+        slow_artifact_manifests_user_ct,
+        slow_project_page_user_ct,
+        slow_report_metadata_user_ct,
+        slow_runs_query_user_ct,
         users_facing_errors_ct,
-        error_count
+        error_count,
+        num_bad_experience_tickets,
+        total_active_users,
+        slow_users,
+        slow_users_pct,
+        slow_operations_ratio
     FROM {perf}
     WHERE account_id = @account_id
-        AND date_day >= DATE_SUB(CURRENT_DATE(), INTERVAL 90 DAY)
-    ORDER BY date_day
     """
 
 
 def latency_distribution_query() -> str:
-    """Chart load latency data from fct_onscreen_loader_latencies."""
+    """Chart load latency data from fct_onscreen_loader_latencies.
+
+    Note: Uses date_measured (not date_day) and duration (not latency_ms).
+    Includes component_id for per-component latency breakdown.
+    Uses 12-month window since some accounts have stale data.
+    """
     latency = _ref("fct_onscreen_loader_latencies")
     return f"""
     SELECT
-        latency_ms,
-        universal_user_id
+        date_measured,
+        duration AS latency_ms,
+        universal_user_id,
+        component_id
     FROM {latency}
     WHERE account_id = @account_id
-        AND date_day >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)
+        AND date_measured >= DATE_SUB(CURRENT_DATE(), INTERVAL 12 MONTH)
     """
 
 
 def slow_chart_users_query(deployment_type: str = "cloud") -> str:
-    """Slow chart load breakdown per user from agg_daily_team_members_slow_chart_loads.
+    """Per-user slow chart load summary from agg_daily_team_members_slow_chart_loads.
+
+    Note: The real table has username/team columns (no universal_user_id) and uses
+    user_with_slow_charts as a string flag (non-NULL = had slow charts that day).
+    We count total active days vs slow-chart days per user.
 
     Args:
-        deployment_type: 'cloud', 'dedicated-cloud', or 'server'.
+        deployment_type: 'cloud', 'dedicated-cloud', or 'server'. (Both paths
+            use the same query since this table already has usernames.)
     """
     slow = _ref("agg_daily_team_members_slow_chart_loads")
-    if deployment_type in ("dedicated-cloud", "server"):
-        local_users = _ref("intermediate_local_users")
-        return f"""
-    WITH user_slow AS (
-        SELECT
-            universal_user_id,
-            local_user_id,
-            SUM(slow_chart_loads) AS slow_loads,
-            SUM(total_chart_loads) AS total_loads,
-            MAX(date_day) AS last_seen
-        FROM {slow}
-        WHERE account_id = @account_id
-            AND date_day >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)
-        GROUP BY universal_user_id, local_user_id
-    )
-    SELECT
-        us.universal_user_id,
-        COALESCE(lu.local_username, 'unknown') AS username,
-        us.slow_loads,
-        us.total_loads,
-        SAFE_DIVIDE(us.slow_loads, us.total_loads) * 100 AS slow_pct,
-        us.last_seen
-    FROM user_slow us
-    LEFT JOIN {local_users} lu
-        ON us.local_user_id = lu.local_user_id
-    WHERE us.total_loads > 0
-    ORDER BY slow_pct DESC
-    """
-    dim_users = _ref("dim_users")
     return f"""
-    WITH user_slow AS (
-        SELECT
-            universal_user_id,
-            SUM(slow_chart_loads) AS slow_loads,
-            SUM(total_chart_loads) AS total_loads,
-            MAX(date_day) AS last_seen
-        FROM {slow}
-        WHERE account_id = @account_id
-            AND date_day >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)
-        GROUP BY universal_user_id
-    )
     SELECT
-        us.universal_user_id,
-        COALESCE(du.local_username, 'unknown') AS username,
-        us.slow_loads,
-        us.total_loads,
-        SAFE_DIVIDE(us.slow_loads, us.total_loads) * 100 AS slow_pct,
-        us.last_seen
-    FROM user_slow us
-    LEFT JOIN {dim_users} du
-        ON us.universal_user_id = du.universal_user_id
-        AND du.account_id = @account_id
-    WHERE us.total_loads > 0
+        username,
+        team,
+        COUNT(*) AS total_days,
+        COUNTIF(user_with_slow_charts IS NOT NULL) AS slow_days,
+        SAFE_DIVIDE(
+            COUNTIF(user_with_slow_charts IS NOT NULL),
+            COUNT(*)
+        ) * 100 AS slow_pct,
+        MAX(date_day) AS last_seen
+    FROM {slow}
+    WHERE account_id = @account_id
+        AND date_day >= DATE_SUB(CURRENT_DATE(), INTERVAL 90 DAY)
+        AND username IS NOT NULL
+    GROUP BY username, team
     ORDER BY slow_pct DESC
     """
 
