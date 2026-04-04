@@ -175,7 +175,11 @@ Plans:
   2. Running `grep -r` for known user-specific patterns (GIDs, channel IDs, email addresses) in committed skill code returns zero matches -- all such values live in customers.yaml or ~/.tsm-ai/.env
   3. Every skill directory contains a SKILL.md that accurately describes current behavior, parameters, output format, and example usage -- verified by spot-checking 5+ skills against actual behavior
   4. skill-composition.md covers all multi-skill workflows including the new dashboard generation pipeline and Jira migration changes
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+- [ ] 09-01-PLAN.md -- Skill inventory (SKILL-INVENTORY.md), hardcoded value scan and fix, CLAUDE.md update
+- [ ] 09-02-PLAN.md -- SKILL.md standardization and accuracy audit across all 35 skills
+- [ ] 09-03-PLAN.md -- Composition rules update (Dashboard Generation + Lattice workflows) and cross-cutting verification
 
 ### Phase 10: Documentation
 **Goal**: A new W&B SE can go from zero to running their first skill and generating a customer dashboard by following the repo's documentation, without needing to ask the original author
@@ -203,5 +207,5 @@ Phases execute in numeric order: 7 -> 8 -> 9 -> 10
 | 6. Dashboard V2 UX Polish | v1.0 | 3/3 | Complete | 2026-04-01 |
 | 7. Jira Instance Migration | v2.0 | 2/3 | In Progress | - |
 | 8. Panel Integration | v2.0 | 0/6 | Planned | - |
-| 9. Skill Audit and Consolidation | v2.0 | 0/? | Not started | - |
+| 9. Skill Audit and Consolidation | v2.0 | 0/3 | Planned | - |
 | 10. Documentation | v2.0 | 0/? | Not started | - |
