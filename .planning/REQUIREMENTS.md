@@ -28,8 +28,8 @@
 
 - [x] **AUDIT-01**: Skill inventory published -- complete list of all skills with one-line descriptions, entry-point vs building-block classification, and dependency graph
 - [x] **AUDIT-02**: No hardcoded user-specific values (GIDs, channel IDs, email addresses) exist in committed skill code -- all user-specific config lives in customers.yaml or ~/.tsm-ai/.env
-- [ ] **AUDIT-03**: Every skill's SKILL.md has accurate, up-to-date documentation that matches current behavior
-- [ ] **AUDIT-04**: Skill composition rules (skill-composition.md) are complete and cover all multi-skill workflows
+- [x] **AUDIT-03**: Every skill's SKILL.md has accurate, up-to-date documentation that matches current behavior
+- [x] **AUDIT-04**: Skill composition rules (skill-composition.md) are complete and cover all multi-skill workflows
 
 ## Documentation
 
@@ -72,8 +72,8 @@
 | PANEL-10 | Phase 8 | Complete |
 | AUDIT-01 | Phase 9 | Complete |
 | AUDIT-02 | Phase 9 | Complete |
-| AUDIT-03 | Phase 9 | Pending |
-| AUDIT-04 | Phase 9 | Pending |
+| AUDIT-03 | Phase 9 | Complete |
+| AUDIT-04 | Phase 9 | Complete |
 | DOCS-01 | Phase 10 | Pending |
 | DOCS-02 | Phase 10 | Pending |
 | DOCS-03 | Phase 10 | Pending |
