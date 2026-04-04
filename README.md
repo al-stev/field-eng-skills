@@ -74,27 +74,13 @@ Claude Code skills for W&B Solutions Engineers. Hooks into W&B Jira, CoreWeave S
    gcloud auth application-default set-quota-project wandb-sa-sandbox
    ```
 
-5. **Install Python dependencies** (per-skill, using uv):
-   ```bash
-   cd .claude/skills/jira && uv sync
-   cd .claude/skills/slack && uv sync
-   cd .claude/skills/asana && uv sync
-   cd .claude/skills/bigquery && uv sync
-   cd .claude/skills/salesforce && uv sync
-   cd .claude/skills/confluence && uv sync
-   cd .claude/skills/gcalendar && uv sync
-   cd .claude/skills/gdocs && uv sync
-   cd .claude/skills/gmail && uv sync
-   cd .claude/skills/gong && uv sync
-   ```
-
-6. **First skill run:**
+5. **First skill run:**
    ```
    /jira list --customer GResearch
    ```
    If this returns issues, your Jira credentials are working and you are ready to go.
 
-7. **Install globally** (available in any project):
+6. **Install globally** (available in any project):
    ```bash
    ln -s $(pwd)/.claude/skills/* ~/.claude/skills/
    ln -s $(pwd)/.claude/rules/* ~/.claude/rules/
