@@ -31,9 +31,19 @@ Claude Code skills for W&B Solutions Engineers. Integrates with W&B Jira (corewe
     credential-status/      -- Check health of all configured credentials
     customer-setup/         -- Interactive customer onboarding (SFDC + SE overlays -> customers.yaml)
     customer-snapshot/      -- Customer intelligence dashboard from Jira + Slack data
+    deep-analytics/         -- Deep analytics HTML pages from BigQuery data (user journey, cohort, decay, velocity, team, risk, correlation, SDK, performance)
+    gcalendar/              -- Google Calendar via Apps Script + Chrome CDP (Okta SSO)
+    gcalendar-setup/        -- One-time Google Calendar Apps Script setup
+    gdocs/                  -- Google Docs via Apps Script + Chrome CDP (Okta SSO)
+    gdocs-setup/            -- One-time Google Docs Apps Script setup
     ghosted/                -- Customer silence tracker (Waiting on Customer thread monitoring)
+    gmail/                  -- Gmail via Apps Script + Chrome CDP (Okta SSO, read-only)
+    gmail-setup/            -- One-time Gmail Apps Script setup
+    gong/                   -- Gong call recordings, transcripts, AI summaries (cookie-based + CDP)
+    gong-setup/             -- One-time Gong credential setup
     jira/                   -- W&B Jira queries, issue creation, FE-UPDATE (coreweave.atlassian.net)
     jira-check/             -- Jira issue triage and FE-UPDATE pipeline
+    lattice/                -- Weekly Lattice update generator mapped to IC5 growth areas
     maction/                -- Meeting notes to Asana actions + RAID items
     nag/                    -- Stale/overdue task scanner across customer projects
     pre-read/               -- Meeting pre-read document generation

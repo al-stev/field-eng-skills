@@ -39,10 +39,34 @@ PROJECT_ROOT = Path(__file__).parent.parent.parent.parent.parent
 COOKIE_REFRESH_SCRIPT = PROJECT_ROOT / 'scripts' / 'gong-cookie-refresh.sh'
 CDP_FETCH_SCRIPT = PROJECT_ROOT / 'scripts' / 'gmail-cdp-fetch.sh'
 
-# W&B Gong instance defaults (company-level, same for all W&B users)
-# Override via GONG_BASE_URL / GONG_WORKSPACE_ID in ~/.tsm-ai/.env if needed
-GONG_BASE_URL = _load_credential('GONG_BASE_URL') or 'https://us-39259.app.gong.io'
-WORKSPACE_ID = _load_credential('GONG_WORKSPACE_ID') or '315301294163453491'
+# Gong instance configuration -- loaded from ~/.tsm-ai/.env (no hardcoded fallbacks)
+# Set via /gong-setup: GONG_BASE_URL (e.g. https://us-39259.app.gong.io)
+#                      GONG_WORKSPACE_ID (found in DevTools network tab workspace-id= param)
+GONG_BASE_URL = _load_credential('GONG_BASE_URL')
+WORKSPACE_ID = _load_credential('GONG_WORKSPACE_ID')
+
+
+def _require_gong_config() -> tuple[str, str]:
+    """
+    Validate that GONG_BASE_URL and GONG_WORKSPACE_ID are configured.
+
+    Returns:
+        Tuple of (base_url, workspace_id)
+
+    Raises:
+        ValueError: If either credential is missing
+    """
+    if not GONG_BASE_URL:
+        raise ValueError(
+            "GONG_BASE_URL not found in ~/.tsm-ai/.env. "
+            "Run /gong-setup to configure."
+        )
+    if not WORKSPACE_ID:
+        raise ValueError(
+            "GONG_WORKSPACE_ID not found in ~/.tsm-ai/.env. "
+            "Run /gong-setup to configure."
+        )
+    return GONG_BASE_URL, WORKSPACE_ID
 
 
 def get_session() -> requests.Session:
@@ -54,7 +78,10 @@ def get_session() -> requests.Session:
 
     Raises:
         FileNotFoundError: If GONG_COOKIE not found
+        ValueError: If GONG_BASE_URL or GONG_WORKSPACE_ID not configured
     """
+    base_url, _ = _require_gong_config()
+
     cookie_header = _load_credential('GONG_COOKIE')
 
     if not cookie_header:
@@ -74,7 +101,7 @@ def get_session() -> requests.Session:
             name, value = pair.split('=', 1)
             # Extract domain from GONG_BASE_URL (e.g. 'us-54638.app.gong.io')
             from urllib.parse import urlparse
-            domain = urlparse(GONG_BASE_URL).hostname or 'app.gong.io'
+            domain = urlparse(base_url).hostname or 'app.gong.io'
             session.cookies.set(name.strip(), value.strip(), domain=domain)
 
     return session
