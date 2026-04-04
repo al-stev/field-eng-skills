@@ -75,7 +75,7 @@ uv run --project .claude/skills/gmail python .claude/skills/gmail/scripts/setup_
   --key "YOUR_API_KEY"
 ```
 
-This saves the credentials as `GMAIL_APPSCRIPT_URL` and `GMAIL_APPSCRIPT_KEY` in `~/.tsm-ai/.env`, then verifies by listing your Gmail labels via CDP.
+This saves the credentials as `GMAIL_APPSCRIPT_URL` and `GMAIL_APPSCRIPT_KEY` in `~/.fe-skills/.env`, then verifies by listing your Gmail labels via CDP.
 
 ## Step 5: Verify Manually (Optional)
 
@@ -113,7 +113,7 @@ The Apps Script uses the built-in `GmailApp` service to read your Gmail. It's de
 
 ### `unauthorized` error
 
-- The `GMAIL_APPSCRIPT_KEY` in `~/.tsm-ai/.env` must match the `API_KEY` constant in your Apps Script code
+- The `GMAIL_APPSCRIPT_KEY` in `~/.fe-skills/.env` must match the `API_KEY` constant in your Apps Script code
 - Re-check both values
 
 ### "Google hasn't verified this app"

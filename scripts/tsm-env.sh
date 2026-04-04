@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Sourceable helper for reading/writing credentials in ~/.tsm-ai/.env.
+# Sourceable helper for reading/writing credentials in ~/.fe-skills/.env.
 # Usage: source scripts/tsm-env.sh; tsm_load KEY; tsm_save KEY VALUE
 
-TSM_ENV="$HOME/.tsm-ai/.env"
+TSM_ENV="$HOME/.fe-skills/.env"
 
 tsm_load() {   # tsm_load KEY → prints value
     grep "^$1=" "$TSM_ENV" 2>/dev/null | head -1 | cut -d= -f2-

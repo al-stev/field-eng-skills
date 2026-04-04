@@ -14,8 +14,8 @@ Tracks threads where you're waiting on a customer reply. Two modes:
 
 ## Prerequisites
 
-- **Asana** -- `ASANA_TOKEN` in `~/.tsm-ai/.env` (run `/asana-setup` if not configured)
-- **Slack** -- `SLACK_TOKEN` and `SLACK_COOKIE` in `~/.tsm-ai/.env` (run `/slack-setup` if not configured)
+- **Asana** -- `ASANA_TOKEN` in `~/.fe-skills/.env` (run `/asana-setup` if not configured)
+- **Slack** -- `SLACK_TOKEN` and `SLACK_COOKIE` in `~/.fe-skills/.env` (run `/slack-setup` if not configured)
 - **Customer registry** -- Customer must exist in `templates/customers.yaml` with `action_tracker_id` set
 
 ## Modes

@@ -12,9 +12,9 @@ Refer to `.claude/rules/asana.md` for Asana conventions and `.claude/rules/atlas
 
 ## Prerequisites
 
-- **Asana** -- `ASANA_TOKEN` in `~/.tsm-ai/.env` (run `/asana-setup` if not configured)
-- **Jira** -- `ATLASSIAN_EMAIL` and `ATLASSIAN_TOKEN` in `~/.tsm-ai/.env` (run `/atlassian-setup` if not configured)
-- **Slack** -- `SLACK_TOKEN` and `SLACK_COOKIE` in `~/.tsm-ai/.env` (run `/slack-setup` if not configured)
+- **Asana** -- `ASANA_TOKEN` in `~/.fe-skills/.env` (run `/asana-setup` if not configured)
+- **Jira** -- `ATLASSIAN_EMAIL` and `ATLASSIAN_TOKEN` in `~/.fe-skills/.env` (run `/atlassian-setup` if not configured)
+- **Slack** -- `SLACK_TOKEN` and `SLACK_COOKIE` in `~/.fe-skills/.env` (run `/slack-setup` if not configured)
 - **Customer registry** -- Customer must exist in `templates/customers.yaml`
 
 Not all sources are required. The skill produces output from whatever sources are available and notes gaps.

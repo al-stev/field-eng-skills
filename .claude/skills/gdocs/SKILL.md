@@ -15,7 +15,7 @@ Read and write access to Google Docs for fetching, creating, updating, and appen
 
 ## Prerequisites
 
-- `GDOCS_APPSCRIPT_URL` and `GDOCS_APPSCRIPT_KEY` configured in `~/.tsm-ai/.env` (run `/gdocs-setup` if not done)
+- `GDOCS_APPSCRIPT_URL` and `GDOCS_APPSCRIPT_KEY` configured in `~/.fe-skills/.env` (run `/gdocs-setup` if not done)
 - Chrome debug instance running: `./scripts/chrome-debug.sh start`
 - Signed into Okta in the Chrome debug instance
 - Python dependencies installed: `cd .claude/skills/gdocs && uv sync`
@@ -195,7 +195,7 @@ The `message` field is present on write operations (`Document created`, `Documen
 ## Error Checking
 
 Common errors:
-- **`unauthorized`**: API key mismatch — check `GDOCS_APPSCRIPT_KEY` in `~/.tsm-ai/.env` matches the key in your Apps Script
+- **`unauthorized`**: API key mismatch — check `GDOCS_APPSCRIPT_KEY` in `~/.fe-skills/.env` matches the key in your Apps Script
 - **`not_found`**: Document not found or no access — verify the document ID and sharing permissions
 - **`permission_denied`**: The Apps Script's Google account doesn't have access to the document
 - **`missing_param`**: Required parameter not provided (e.g., title for create, content for update)

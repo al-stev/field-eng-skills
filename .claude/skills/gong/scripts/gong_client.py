@@ -20,11 +20,11 @@ from typing import Any, Callable
 import requests
 
 
-TSM_ENV = Path.home() / '.tsm-ai' / '.env'
+TSM_ENV = Path.home() / '.fe-skills' / '.env'
 
 
 def _load_credential(key: str) -> str | None:
-    """Read a single value from ~/.tsm-ai/.env."""
+    """Read a single value from ~/.fe-skills/.env."""
     if not TSM_ENV.exists():
         return None
     for line in TSM_ENV.read_text().splitlines():
@@ -39,7 +39,7 @@ PROJECT_ROOT = Path(__file__).parent.parent.parent.parent.parent
 COOKIE_REFRESH_SCRIPT = PROJECT_ROOT / 'scripts' / 'gong-cookie-refresh.sh'
 CDP_FETCH_SCRIPT = PROJECT_ROOT / 'scripts' / 'gmail-cdp-fetch.sh'
 
-# Gong instance configuration -- loaded from ~/.tsm-ai/.env (no hardcoded fallbacks)
+# Gong instance configuration -- loaded from ~/.fe-skills/.env (no hardcoded fallbacks)
 # Set via /gong-setup: GONG_BASE_URL (e.g. https://us-39259.app.gong.io)
 #                      GONG_WORKSPACE_ID (found in DevTools network tab workspace-id= param)
 GONG_BASE_URL = _load_credential('GONG_BASE_URL')
@@ -58,12 +58,12 @@ def _require_gong_config() -> tuple[str, str]:
     """
     if not GONG_BASE_URL:
         raise ValueError(
-            "GONG_BASE_URL not found in ~/.tsm-ai/.env. "
+            "GONG_BASE_URL not found in ~/.fe-skills/.env. "
             "Run /gong-setup to configure."
         )
     if not WORKSPACE_ID:
         raise ValueError(
-            "GONG_WORKSPACE_ID not found in ~/.tsm-ai/.env. "
+            "GONG_WORKSPACE_ID not found in ~/.fe-skills/.env. "
             "Run /gong-setup to configure."
         )
     return GONG_BASE_URL, WORKSPACE_ID
@@ -86,7 +86,7 @@ def get_session() -> requests.Session:
 
     if not cookie_header:
         raise FileNotFoundError(
-            "GONG_COOKIE not found in ~/.tsm-ai/.env. Run /gong-setup first."
+            "GONG_COOKIE not found in ~/.fe-skills/.env. Run /gong-setup first."
         )
 
     session = requests.Session()

@@ -20,9 +20,9 @@ Manage RAID logs (Risks, Assumptions, Issues, Dependencies) for customer account
 
 ## Prerequisites
 
-- **Asana** -- `ASANA_TOKEN` in `~/.tsm-ai/.env` (run `/asana-setup` if not configured)
-- **Jira** -- `ATLASSIAN_EMAIL` and `ATLASSIAN_TOKEN` in `~/.tsm-ai/.env` (for scan mode)
-- **Slack** -- `SLACK_TOKEN` and `SLACK_COOKIE` in `~/.tsm-ai/.env` (for scan mode)
+- **Asana** -- `ASANA_TOKEN` in `~/.fe-skills/.env` (run `/asana-setup` if not configured)
+- **Jira** -- `ATLASSIAN_EMAIL` and `ATLASSIAN_TOKEN` in `~/.fe-skills/.env` (for scan mode)
+- **Slack** -- `SLACK_TOKEN` and `SLACK_COOKIE` in `~/.fe-skills/.env` (for scan mode)
 - **Customer registry** -- Customer must exist in `templates/customers.yaml` with `raid_tracker_id` set
 
 Not all credentials are required for every mode. View mode needs only Asana. Scan mode needs all three.

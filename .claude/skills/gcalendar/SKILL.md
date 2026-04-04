@@ -15,7 +15,7 @@ Read and write access to Google Calendar for listing calendars, viewing events, 
 
 ## Prerequisites
 
-- `GCALENDAR_APPSCRIPT_URL` and `GCALENDAR_APPSCRIPT_KEY` configured in `~/.tsm-ai/.env` (run `/gcalendar-setup` if not done)
+- `GCALENDAR_APPSCRIPT_URL` and `GCALENDAR_APPSCRIPT_KEY` configured in `~/.fe-skills/.env` (run `/gcalendar-setup` if not done)
 - Chrome debug instance running: `./scripts/chrome-debug.sh start`
 - Signed into Okta in the Chrome debug instance
 - Python dependencies installed: `cd .claude/skills/gcalendar && uv sync`
@@ -156,7 +156,7 @@ uv run --project .claude/skills/gcalendar python .claude/skills/gcalendar/script
 ## Error Checking
 
 Common errors:
-- **`unauthorized`**: API key mismatch — check `GCALENDAR_APPSCRIPT_KEY` in `~/.tsm-ai/.env` matches the key in your Apps Script
+- **`unauthorized`**: API key mismatch — check `GCALENDAR_APPSCRIPT_KEY` in `~/.fe-skills/.env` matches the key in your Apps Script
 - **`not_found`**: Event or calendar ID not found — verify the ID
 - **Chrome not running**: Start with `./scripts/chrome-debug.sh start`
 - **Timeout**: Okta session may have expired — sign in again in the Chrome debug instance

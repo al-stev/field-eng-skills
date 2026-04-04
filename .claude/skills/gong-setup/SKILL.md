@@ -22,7 +22,7 @@ One-time setup for Gong access used by the `/gong` skill.
 | `GONG_BASE_URL` | Region-specific Gong URL (e.g., `https://us-39259.app.gong.io`) | This setup skill (Step 2b) |
 | `GONG_WORKSPACE_ID` | W&B workspace ID in Gong (e.g., `315301294163453491`) | This setup skill (Step 2b) |
 
-All three credentials are stored in `~/.tsm-ai/.env`. `GONG_BASE_URL` and `GONG_WORKSPACE_ID` are required by the Gong client for constructing API URLs and scoping requests to the W&B workspace. The client reads these from `~/.tsm-ai/.env` at runtime.
+All three credentials are stored in `~/.fe-skills/.env`. `GONG_BASE_URL` and `GONG_WORKSPACE_ID` are required by the Gong client for constructing API URLs and scoping requests to the W&B workspace. The client reads these from `~/.fe-skills/.env` at runtime.
 
 ## Which method to use
 
@@ -48,14 +48,14 @@ This launches an isolated Chrome window with Gong pre-loaded. If it's your first
 ./scripts/gong-cookie-refresh.sh
 ```
 
-This extracts all cookies for `app.gong.io` via CDP, saves them as `GONG_COOKIE` in `~/.tsm-ai/.env`, and auto-discovers the base URL from the `cell` JWT cookie.
+This extracts all cookies for `app.gong.io` via CDP, saves them as `GONG_COOKIE` in `~/.fe-skills/.env`, and auto-discovers the base URL from the `cell` JWT cookie.
 
 ### Step 2b: Set Workspace ID and Base URL
 
 The cookie refresh script discovers the base URL automatically, but the workspace ID must be set manually. For the W&B instance these are already known:
 
 ```bash
-# Add to ~/.tsm-ai/.env (one-time)
+# Add to ~/.fe-skills/.env (one-time)
 source scripts/tsm-env.sh
 tsm_save GONG_BASE_URL "https://us-39259.app.gong.io"
 tsm_save GONG_WORKSPACE_ID "315301294163453491"
@@ -93,12 +93,12 @@ Use this if auto-refresh isn't available or isn't working.
 
 ### Step 2: Save the Cookies
 
-Add the cookie string to `~/.tsm-ai/.env`:
+Add the cookie string to `~/.fe-skills/.env`:
 
 ```bash
-mkdir -p ~/.tsm-ai && chmod 700 ~/.tsm-ai
-echo 'GONG_COOKIE=YOUR-COOKIE-STRING-HERE' >> ~/.tsm-ai/.env
-chmod 600 ~/.tsm-ai/.env
+mkdir -p ~/.fe-skills && chmod 700 ~/.fe-skills
+echo 'GONG_COOKIE=YOUR-COOKIE-STRING-HERE' >> ~/.fe-skills/.env
+chmod 600 ~/.fe-skills/.env
 ```
 
 Replace `YOUR-COOKIE-STRING-HERE` with the full cookie string from Step 1.

@@ -76,7 +76,7 @@ uv run --project .claude/skills/gdocs python .claude/skills/gdocs/scripts/setup_
   --key "YOUR_API_KEY"
 ```
 
-This saves the credentials as `GDOCS_APPSCRIPT_URL` and `GDOCS_APPSCRIPT_KEY` in `~/.tsm-ai/.env`, then verifies by sending a `ping` action via CDP.
+This saves the credentials as `GDOCS_APPSCRIPT_URL` and `GDOCS_APPSCRIPT_KEY` in `~/.fe-skills/.env`, then verifies by sending a `ping` action via CDP.
 
 ## Step 5: Verify Manually (Optional)
 
@@ -124,7 +124,7 @@ The Apps Script uses the built-in `DocumentApp` service to access Google Docs (r
 
 ### `unauthorized` error
 
-- The `GDOCS_APPSCRIPT_KEY` in `~/.tsm-ai/.env` must match the `API_KEY` constant in your Apps Script code
+- The `GDOCS_APPSCRIPT_KEY` in `~/.fe-skills/.env` must match the `API_KEY` constant in your Apps Script code
 - Re-check both values
 
 ### `not_found` or `permission_denied` error

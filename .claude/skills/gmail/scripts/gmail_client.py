@@ -14,7 +14,7 @@ from typing import Any, Callable
 from urllib.parse import urlencode
 
 
-TSM_ENV = Path.home() / '.tsm-ai' / '.env'
+TSM_ENV = Path.home() / '.fe-skills' / '.env'
 
 # CDP fetch script path (relative to this file)
 # __file__ = .claude/skills/gmail/scripts/gmail_client.py
@@ -22,7 +22,7 @@ CDP_FETCH_SCRIPT = Path(__file__).parent.parent.parent.parent.parent / 'scripts'
 
 
 def _load_credential(key: str) -> str | None:
-    """Read a single value from ~/.tsm-ai/.env."""
+    """Read a single value from ~/.fe-skills/.env."""
     if not TSM_ENV.exists():
         return None
     for line in TSM_ENV.read_text().splitlines():
@@ -33,7 +33,7 @@ def _load_credential(key: str) -> str | None:
 
 def get_session() -> tuple:
     """
-    Load Apps Script URL and API key from ~/.tsm-ai/.env.
+    Load Apps Script URL and API key from ~/.fe-skills/.env.
 
     Returns:
         Tuple of (base_url, api_key)
@@ -47,11 +47,11 @@ def get_session() -> tuple:
 
     if not url:
         raise FileNotFoundError(
-            "GMAIL_APPSCRIPT_URL not found in ~/.tsm-ai/.env. Run /gmail-setup first."
+            "GMAIL_APPSCRIPT_URL not found in ~/.fe-skills/.env. Run /gmail-setup first."
         )
     if not key:
         raise FileNotFoundError(
-            "GMAIL_APPSCRIPT_KEY not found in ~/.tsm-ai/.env. Run /gmail-setup first."
+            "GMAIL_APPSCRIPT_KEY not found in ~/.fe-skills/.env. Run /gmail-setup first."
         )
 
     if not url.startswith('https://script.google.com/'):

@@ -12,9 +12,9 @@ The dashboard is designed for a Solutions Engineer preparing for customer calls 
 
 ## Prerequisites
 
-- **Jira** -- `ATLASSIAN_EMAIL` and `ATLASSIAN_TOKEN` in `~/.tsm-ai/.env` (run `/atlassian-setup` if not configured)
-- **Slack** -- `SLACK_TOKEN` and `SLACK_COOKIE` in `~/.tsm-ai/.env` (run `/slack-setup` if not configured) -- optional, for sentiment analysis
-- **Asana** -- `ASANA_TOKEN` in `~/.tsm-ai/.env` (run `/asana-setup` if not configured) -- optional, for SE Actions panel
+- **Jira** -- `ATLASSIAN_EMAIL` and `ATLASSIAN_TOKEN` in `~/.fe-skills/.env` (run `/atlassian-setup` if not configured)
+- **Slack** -- `SLACK_TOKEN` and `SLACK_COOKIE` in `~/.fe-skills/.env` (run `/slack-setup` if not configured) -- optional, for sentiment analysis
+- **Asana** -- `ASANA_TOKEN` in `~/.fe-skills/.env` (run `/asana-setup` if not configured) -- optional, for SE Actions panel
 - **BigQuery** -- ADC configured via `gcloud auth application-default login` (run `/bigquery-setup` if not configured) -- optional, for usage analytics panels
 - **Customer registry** -- Customer must exist in `templates/customers.yaml`
 

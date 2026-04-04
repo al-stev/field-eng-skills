@@ -75,7 +75,7 @@ uv run --project .claude/skills/gcalendar python .claude/skills/gcalendar/script
   --key "YOUR_API_KEY"
 ```
 
-This saves the credentials as `GCALENDAR_APPSCRIPT_URL` and `GCALENDAR_APPSCRIPT_KEY` in `~/.tsm-ai/.env`, then verifies by listing your calendars via CDP.
+This saves the credentials as `GCALENDAR_APPSCRIPT_URL` and `GCALENDAR_APPSCRIPT_KEY` in `~/.fe-skills/.env`, then verifies by listing your calendars via CDP.
 
 ## Step 5: Verify Manually (Optional)
 
@@ -113,7 +113,7 @@ The Apps Script uses the built-in `CalendarApp` service to access your Google Ca
 
 ### `unauthorized` error
 
-- The `GCALENDAR_APPSCRIPT_KEY` in `~/.tsm-ai/.env` must match the `API_KEY` constant in your Apps Script code
+- The `GCALENDAR_APPSCRIPT_KEY` in `~/.fe-skills/.env` must match the `API_KEY` constant in your Apps Script code
 - Re-check both values
 
 ### "Google hasn't verified this app"

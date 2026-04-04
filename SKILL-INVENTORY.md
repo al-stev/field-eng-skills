@@ -107,8 +107,8 @@ Scan of all committed `.py` and `.sh` source files under `.claude/skills/` for u
 
 | File | Line | Value | Issue | Fix |
 |------|------|-------|-------|-----|
-| `gong/scripts/gong_client.py` | 44 | `'https://us-39259.app.gong.io'` | Hardcoded W&B Gong base URL as silent fallback | Removed fallback; now requires `GONG_BASE_URL` in `~/.tsm-ai/.env` |
-| `gong/scripts/gong_client.py` | 45 | `'315301294163453491'` | Hardcoded W&B Gong workspace ID as silent fallback | Removed fallback; now requires `GONG_WORKSPACE_ID` in `~/.tsm-ai/.env` |
+| `gong/scripts/gong_client.py` | 44 | `'https://us-39259.app.gong.io'` | Hardcoded W&B Gong base URL as silent fallback | Removed fallback; now requires `GONG_BASE_URL` in `~/.fe-skills/.env` |
+| `gong/scripts/gong_client.py` | 45 | `'315301294163453491'` | Hardcoded W&B Gong workspace ID as silent fallback | Removed fallback; now requires `GONG_WORKSPACE_ID` in `~/.fe-skills/.env` |
 
 ### Accepted (workspace-level constants, not user-specific)
 

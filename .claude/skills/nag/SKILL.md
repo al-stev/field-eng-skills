@@ -13,7 +13,7 @@ Your personal task hygiene scanner. Finds overdue and stale tasks across all you
 
 ## Prerequisites
 
-- **Asana** -- `ASANA_TOKEN` in `~/.tsm-ai/.env` (run `/asana-setup` if not configured)
+- **Asana** -- `ASANA_TOKEN` in `~/.fe-skills/.env` (run `/asana-setup` if not configured)
 - **Customer registry** -- Customers in `templates/customers.yaml` with `action_tracker_id` set
 
 ## Pipeline

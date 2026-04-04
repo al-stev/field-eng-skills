@@ -15,7 +15,7 @@ Read-only access to Gmail for searching messages, reading emails and threads, an
 
 ## Prerequisites
 
-- `GMAIL_APPSCRIPT_URL` and `GMAIL_APPSCRIPT_KEY` configured in `~/.tsm-ai/.env` (run `/gmail-setup` if not done)
+- `GMAIL_APPSCRIPT_URL` and `GMAIL_APPSCRIPT_KEY` configured in `~/.fe-skills/.env` (run `/gmail-setup` if not done)
 - Chrome debug instance running: `./scripts/chrome-debug.sh start`
 - Signed into Okta in the Chrome debug instance
 - Python dependencies installed: `cd .claude/skills/gmail && uv sync`
@@ -172,7 +172,7 @@ All Python tools perform read-only operations and require no user confirmation. 
 ## Error Checking
 
 Common errors:
-- **`unauthorized`**: API key mismatch — check `GMAIL_APPSCRIPT_KEY` in `~/.tsm-ai/.env` matches the key in your Apps Script
+- **`unauthorized`**: API key mismatch — check `GMAIL_APPSCRIPT_KEY` in `~/.fe-skills/.env` matches the key in your Apps Script
 - **`not_found`**: Message or thread ID not found — verify the ID
 - **Chrome not running**: Start with `./scripts/chrome-debug.sh start`
 - **Timeout**: Okta session may have expired — sign in again in the Chrome debug instance

@@ -2,7 +2,7 @@
 """
 Google Docs Apps Script setup helper.
 
-Saves the Apps Script web app URL and API key to ~/.tsm-ai/.env,
+Saves the Apps Script web app URL and API key to ~/.fe-skills/.env,
 then verifies connectivity via CDP (Chrome debug instance).
 
 Usage:
@@ -17,14 +17,14 @@ import sys
 from pathlib import Path
 
 
-TSM_ENV = Path.home() / '.tsm-ai' / '.env'
+TSM_ENV = Path.home() / '.fe-skills' / '.env'
 
 # CDP fetch script path (relative to this file)
 CDP_FETCH_SCRIPT = Path(__file__).parent.parent.parent.parent.parent / 'scripts' / 'gmail-cdp-fetch.sh'
 
 
 def _save_credential(key: str, value: str) -> None:
-    """Upsert a key=value in ~/.tsm-ai/.env."""
+    """Upsert a key=value in ~/.fe-skills/.env."""
     env_dir = TSM_ENV.parent
     env_dir.mkdir(parents=True, exist_ok=True)
     os.chmod(str(env_dir), 0o700)
@@ -68,7 +68,7 @@ def main():
         }), file=sys.stderr)
         sys.exit(1)
 
-    # Save credentials to ~/.tsm-ai/.env
+    # Save credentials to ~/.fe-skills/.env
     _save_credential('GDOCS_APPSCRIPT_URL', args.url)
     _save_credential('GDOCS_APPSCRIPT_KEY', args.key)
 
