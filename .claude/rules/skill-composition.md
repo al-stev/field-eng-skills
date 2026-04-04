@@ -22,13 +22,15 @@ Build a picture of a customer's issue landscape and current engagement state.
 
 ## Customer Snapshot
 
-Generate an intelligence dashboard summarizing a customer's Jira issues, Slack sentiment, Asana actions, trending metrics, and executive summary.
+Generate a v2 modular intelligence dashboard summarizing a customer's Jira issues, Slack sentiment, Asana actions, BigQuery usage metrics, deep-analytics panels, and executive summary. Triggered by `/customer-snapshot CustomerName`.
 
-1. **jira** — Pull all open issues for the customer. Include components, labels, priority, and status.
-2. **asana** — Fetch SE action tasks from the customer's Asana project (if configured).
-3. **bigquery** — Fetch usage data from BigQuery if sfdc_account_id is configured. Provides seat utilization, Weave ingestion, tracked hours, account health, product areas. Renders as ECharts charts in the Usage panel.
-4. **customer-snapshot** — Generate HTML dashboard with intelligence panels, SE actions, theme clustering, and filter controls.
-5. Output saved to `customers/<name>/trackers/YYYY-MM-DD-dashboard.html`.
+1. **jira** — Pull all open issues for the customer with comment metadata (`issues.py list --customer X --with-comments`). Provides issue health buckets, attention callouts, response cadence, and FE-UPDATE tracking.
+2. **asana** — Fetch SE action tasks from the customer's Asana project (if configured). Computes overdue, stale, and section-based summary counts.
+3. **bigquery** — Fetch usage data from BigQuery if sfdc_account_id is configured. Provides seat utilization, Weave ingestion, tracked hours, account health, product areas, and power users.
+4. **slack** — Fetch channel history for sentiment analysis. Claude scores overall tone, identifies hot threads, and produces structured sentiment JSON.
+5. **customer-snapshot (assemble.py)** — Deterministic assembler: accepts Jira, BQ, Asana, and sentiment JSON files, applies component/parent normalization, theme clustering, trending metrics computation, Asana task transformation, and runs all 9 deep-analytics transforms (cohort, risk, team, journey, decay, velocity, SDK, correlation, performance) via BigQuery.
+6. **customer-snapshot (compose.py)** — Reads panels.yaml manifest, determines active panels based on data availability, assembles dashboard folder: copies shell.html template, generates panel JS files, writes data.js with INTELLIGENCE_DATA, archives previous snapshots to history/, bundles lib/ (ECharts, chart-helpers, panel-registry).
+7. Output: `customers/<name>/dashboard/` folder with index.html, data.js, panels/ JS files, lib/, history/ — opens in browser from file:// protocol. Includes up to 15 panels (6 operational + 9 analytics) when BQ data is available.
 
 ## Communication Prep
 
@@ -126,3 +128,30 @@ Keep SE task backlog clean and current.
 1. **nag** — Scan for overdue and stale tasks (`/nag`).
 2. **asana** — Address flagged items: complete, reschedule, or move sections.
 3. **ghosted** — Check customer silence on waiting items (`/ghosted`).
+
+## Dashboard Generation
+
+Generate a v2 modular dashboard for a customer with all available data panels. This is the deterministic pipeline behind `/customer-snapshot`.
+
+1. **jira** — Fetch all open issues with comment metadata: `issues.py list --customer CustomerName --max-results 200 --with-comments`. Save JSON to temp file.
+2. **bigquery** — Fetch usage metrics: `usage.py --customer CustomerName --format json`. Save JSON to temp file.
+3. **asana** — Fetch SE action tasks from the customer's Asana project: `query.py tasks --project-gid <action_tracker_id> --limit 100 --pretty`. Save JSON to temp file.
+4. **slack** — Fetch channel history for each configured channel. Claude analyzes messages and produces structured sentiment JSON. Save to temp file.
+5. **customer-snapshot (assemble.py)** — Deterministic assembler that accepts `--jira`, `--bq`, `--asana`, `--sentiment` JSON file paths plus `--customer`, `--days`, `--months`, `--audience` flags. Applies component/parent normalization, theme clustering, trending metrics, Asana task transformation. Runs all 9 deep-analytics BigQuery transforms (user journey, cohort, engagement decay, team detection, feature velocity, SDK versions, usage correlation, risk scoring, performance). Outputs complete INTELLIGENCE_DATA JSON.
+6. **customer-snapshot (compose.py)** — Dashboard folder composer that accepts `--customer`, `--data` (INTELLIGENCE_DATA JSON path), `--output` (target directory). Reads `panels.yaml` manifest to determine active panels based on data availability. Copies `shell.html` template, writes `data.js`, copies active panel JS files to `panels/`, bundles `lib/` (ECharts, chart-helpers, panel-registry), archives previous data.js to `history/`, computes diff against previous snapshot.
+7. Output: `customers/<name>/dashboard/` folder with `index.html`, `data.js`, `panels/*.js`, `lib/`, `history/` — opens in browser from `file://` protocol.
+
+## Lattice Weekly Update
+
+Generate a weekly Lattice update by gathering activity across data sources and mapping to IC5 growth areas.
+
+1. **slack** — Search for the user's messages and mentions across workspace channels (past 7 days). Filter out standup bot responses, emoji-only, and automated workflow messages.
+2. **asana** — Fetch completed and in-progress tasks from the past week across all customer projects.
+3. **jira** — Fetch issues the user commented on or transitioned in the past week. Identify new P0/P1 escalations and stale/blocked issues.
+4. **gcalendar** — Fetch meeting events from the past week (customer calls, internal meetings, cross-functional syncs). Also fetch next week's events for plans auto-draft.
+5. **gong** — Fetch call recordings and AI spotlight summaries from the past week (optional, degrades gracefully if GONG_COOKIE not set).
+6. **bigquery** — Fetch usage trends for configured customers (optional, degrades gracefully).
+7. **lattice** — Maps gathered activities to IC5 growth areas (Expertise & Impact, Collaborate & Multiply, Ownership & Execution). Generates Lattice-ready output for 4 fields (focus, plans, challenges, reflections) + internal growth area scorecard with milestone tracking.
+8. Output: Lattice-ready text to terminal (copy-paste into Lattice) + weekly archive file in `weekly-updates/YYYY-WNN.md`.
+
+Privacy: No Gmail search, no Slack 1:1 DMs. Two review checkpoints: after activity categorisation and after final draft.
