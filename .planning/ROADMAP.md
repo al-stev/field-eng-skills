@@ -123,7 +123,7 @@ Plans:
 
 **Milestone Goal:** Make the repo usable by any W&B SE -- integrate all analytics into the dashboard, migrate to the new Jira instance, consolidate skills, and document everything.
 
-- [ ] **Phase 7: Jira Instance Migration** - Migrate all Jira skills and downstream consumers from wandb.atlassian.net to coreweave.atlassian.net
+- [x] **Phase 7: Jira Instance Migration** - Migrate all Jira skills and downstream consumers from wandb.atlassian.net to coreweave.atlassian.net (completed 2026-04-04)
 - [ ] **Phase 8: Panel Integration** - Integrate 9 deep-analytics page types as dashboard panels following the v2 panel contract
 - [ ] **Phase 9: Skill Audit and Consolidation** - Inventory all 35 skills, remove hardcoded user-specific values, update SKILL.md docs, complete composition rules
 - [x] **Phase 10: Documentation** - Getting-started guide, skill reference, customer onboarding guide, architecture overview (completed 2026-04-04)
@@ -144,7 +144,7 @@ Plans:
 Plans:
 - [x] 07-01-PLAN.md -- Core migration: Jira API client, health checker, rules, project docs
 - [x] 07-02-PLAN.md -- Dashboard templates, downstream skill docs, test fixtures
-- [ ] 07-03-PLAN.md -- Live validation, custom field discovery, worktree cleanup
+- [x] 07-03-PLAN.md -- Live validation, custom field discovery, worktree cleanup
 
 ### Phase 8: Panel Integration
 **Goal**: SE can generate a v2 dashboard with all 15 panels (6 existing + 9 new analytics) and each new panel surfaces its analytical dimension inline alongside operational data, giving a single-pane view of customer health
@@ -208,7 +208,7 @@ Phases execute in numeric order: 7 -> 8 -> 9 -> 10
 | 4. Privacy-Sensitive and Exploratory Pages | v1.0 | 3/3 | Complete | 2026-03-27 |
 | 5. Dashboard V2 -- Modular Folder-Based Architecture | v1.0 | 6/6 | Complete | 2026-04-01 |
 | 6. Dashboard V2 UX Polish | v1.0 | 3/3 | Complete | 2026-04-01 |
-| 7. Jira Instance Migration | v2.0 | 2/3 | In Progress | - |
+| 7. Jira Instance Migration | v2.0 | 3/3 | Complete    | 2026-04-04 |
 | 8. Panel Integration | v2.0 | 0/6 | Planned | - |
 | 9. Skill Audit and Consolidation | v2.0 | 0/3 | Planned | - |
 | 10. Documentation | v2.0 | 2/2 | Complete    | 2026-04-04 |
