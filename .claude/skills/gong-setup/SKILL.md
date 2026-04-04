@@ -14,6 +14,16 @@ One-time setup for Gong access used by the `/gong` skill.
 - Access to `https://app.gong.io` (requires Gong login via Okta SSO)
 - Signed in to Gong in your browser
 
+## Credentials
+
+| Variable | Purpose | Set by |
+|----------|---------|--------|
+| `GONG_COOKIE` | Session cookie string for Gong API auth | This setup skill (auto or manual) |
+| `GONG_BASE_URL` | Region-specific Gong URL (e.g., `https://us-39259.app.gong.io`) | This setup skill (Step 2b) |
+| `GONG_WORKSPACE_ID` | W&B workspace ID in Gong (e.g., `315301294163453491`) | This setup skill (Step 2b) |
+
+All three credentials are stored in `~/.tsm-ai/.env`. `GONG_BASE_URL` and `GONG_WORKSPACE_ID` are required by the Gong client for constructing API URLs and scoping requests to the W&B workspace. The client reads these from `~/.tsm-ai/.env` at runtime.
+
 ## Which method to use
 
 Use Method 1 if you have Chrome debug running. Use Method 2 for one-off access.

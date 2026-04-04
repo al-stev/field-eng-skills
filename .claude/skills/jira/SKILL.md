@@ -50,7 +50,7 @@ uv run --project .claude/skills/jira python .claude/skills/jira/scripts/<tool>.p
 
 ## Customer Queries
 
-The `--customer` flag filters issues by the Customer field (customfield_10083). This is the key SE workflow for finding all tickets for a specific customer.
+The `--customer` flag filters issues by the Customer field (customfield_16678). This is the key SE workflow for finding all tickets for a specific customer.
 
 ```bash
 # All bugs for GResearch
@@ -92,8 +92,8 @@ uv run --project .claude/skills/jira python .claude/skills/jira/scripts/issues.p
 | `--summary` | Issue summary (required) |
 | `--description` | Detailed description |
 | `--priority` | P0, P1, P2, P3, P4 |
-| `--customer` | Customer name (sets customfield_10083) |
-| `--eng-team` | Eng Team name (sets customfield_10084) |
+| `--customer` | Customer name (sets customfield_16678) |
+| `--eng-team` | Eng Team name (sets customfield_16680) |
 | `--labels` | Space-separated labels |
 | `--parent` | Parent issue key |
 | `--project` | Project key (default: WB) |

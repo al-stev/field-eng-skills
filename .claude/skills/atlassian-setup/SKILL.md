@@ -116,4 +116,4 @@ jira init
 
 - **401 Unauthorized**: Check that `ATLASSIAN_EMAIL` and `ATLASSIAN_TOKEN` in `~/.tsm-ai/.env` have the correct values, and that file permissions are `600`.
 - **Confluence API returns HTML instead of JSON**: Make sure the URL includes `/wiki/api/v2/` — missing `/wiki` is the most common mistake.
-- **Wrong Jira instance**: Both Jira and Confluence are at `coreweave.atlassian.net`. The W&B project key is `WB`.
+- **Wrong Jira instance**: Both W&B Jira and CoreWeave Confluence are now at `coreweave.atlassian.net`. The previous W&B-specific instance was migrated to CoreWeave in Phase 7.
