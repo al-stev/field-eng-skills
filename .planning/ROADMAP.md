@@ -193,7 +193,7 @@ Plans:
 **Plans**: 2 plans
 Plans:
 - [ ] 10-01-PLAN.md -- Credential path rename (~/.tsm-ai/ to ~/.fe-skills/) across all code and docs
-- [ ] 10-02-PLAN.md -- README.md rewrite: getting-started, skill reference, customer onboarding, architecture overview
+- [x] 10-02-PLAN.md -- README.md rewrite: getting-started, skill reference, customer onboarding, architecture overview
 
 ## Progress
 
@@ -211,4 +211,4 @@ Phases execute in numeric order: 7 -> 8 -> 9 -> 10
 | 7. Jira Instance Migration | v2.0 | 2/3 | In Progress | - |
 | 8. Panel Integration | v2.0 | 0/6 | Planned | - |
 | 9. Skill Audit and Consolidation | v2.0 | 0/3 | Planned | - |
-| 10. Documentation | v2.0 | 0/2 | Not started | - |
+| 10. Documentation | v2.0 | 1/2 | In Progress|  |
