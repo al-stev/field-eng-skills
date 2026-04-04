@@ -1,8 +1,8 @@
 # W&B Field Engineering Skills
 
-Claude Code skills for W&B Solutions Engineers. Integrates with W&B Jira, CoreWeave Slack, and CoreWeave Confluence to automate customer engagement workflows.
+Claude Code skills for W&B Solutions Engineers. Hooks into W&B Jira, CoreWeave Slack, Confluence, Asana, Salesforce, BigQuery, and more — so you spend less time copy-pasting between tabs.
 
-> **Note:** These skills access live systems (Jira, Slack, Confluence, Asana, Salesforce, BigQuery, Google Calendar, Gmail, Gong). Write operations require explicit user confirmation. Read operations are safe to run freely.
+> **Heads up:** These skills talk to live systems. Reads are safe to run freely. Writes always ask before doing anything.
 
 35 skills across customer engagement, action tracking, data sources, reporting, and setup.
 
@@ -107,7 +107,7 @@ Claude Code skills for W&B Solutions Engineers. Integrates with W&B Jira, CoreWe
 | Skill | Invocation | What it does |
 |-------|-----------|--------------|
 | **cadence-prep** | `/cadence-prep GResearch` | Prepares a customer cadence call agenda. Gathers Jira issues, Slack threads, Asana actions, product updates, and carry-forward items. Publishes to Confluence and optionally generates styled HTML. |
-| **customer-snapshot** | `/customer-snapshot GResearch` | Generates an interactive intelligence dashboard from Jira + Slack + Asana + BigQuery data. Up to 15 panels covering issues, usage, sentiment, analytics, and executive summary. |
+| **customer-snapshot** | `/customer-snapshot GResearch` | Builds a dashboard from Jira + Slack + Asana + BigQuery data. Up to 15 panels covering issues, usage, sentiment, analytics, and executive summary. |
 | **jira-check** | `/jira-check GResearch` | Reviews customer Jira issues for staleness, drafts FE-UPDATE comments, and identifies issues needing attention. Runs across all customers when invoked without a name. |
 | **pre-read** | `/pre-read GResearch` | Generates a structured pre-read document for a customer meeting by synthesizing Slack threads, Jira issues, and manual context. |
 | **rats** | `/rats` | Searches your recent Slack posts and produces categorized output (Highlights, Lowlights, Learnings, Risks) for the team Roses & Thorns page. |
@@ -116,7 +116,7 @@ Example:
 ```
 /customer-snapshot GResearch
 ```
-Fetches Jira issues, BQ usage data, Asana tasks, and Slack sentiment in parallel, runs 9 analytics transforms, and produces `customers/g-research/dashboard/index.html` -- open it in your browser.
+Pulls Jira issues, BQ usage data, Asana tasks, and Slack sentiment in parallel, runs 9 analytics transforms, and drops the result in `customers/g-research/dashboard/index.html`.
 
 ### Asana Action Tracking
 
@@ -125,7 +125,7 @@ Fetches Jira issues, BQ usage data, Asana tasks, and Slack sentiment in parallel
 | **asana** | `/asana tasks --project-gid GID` | Query and manage SE action items in Asana. Supports projects, tasks, sections, search, and write operations (create, update, move, complete). |
 | **raid** | `/raid GResearch` | View, scan for, or add RAID items (Risks, Assumptions, Issues, Dependencies). Manages Asana-native RAID logs with portfolio visibility across accounts. |
 | **ghosted** | `/ghosted` | Track customer silence on Slack threads. Monitors "Waiting on Customer" tasks for unresponsive threads. |
-| **nag** | `/nag` | Scan your Asana tasks for overdue and stale items across all customers. Your personal task hygiene scanner. |
+| **nag** | `/nag` | Scan your Asana tasks for overdue and stale items across all customers. |
 | **maction** | `/maction GResearch <notes>` | Extract action items and RAID signals from meeting notes or transcripts. Creates tracked Asana tasks from Granola summaries or pasted text. |
 
 Example:
@@ -143,9 +143,9 @@ Scans all customer projects for overdue tasks and items that have not been updat
 | **confluence** | `/confluence search --title "Meeting Notes"` | Read, create, and update pages in CoreWeave Confluence (coreweave.atlassian.net). Supports CQL search, folders, attachments, and labels. |
 | **salesforce** | `/salesforce account-detail --account-id ID` | Read-only Salesforce queries for account data (ARR, contract dates, team members, field discovery). Supports SSO/session auth for W&B's org. |
 | **bigquery** | (building-block) | BigQuery usage data queries -- seat utilization, product areas, Weave ingestion, tracked hours, account health. Consumed by customer-snapshot, usage-report, deep-analytics, and lattice. |
-| **gcalendar** | `/gcalendar events today` | Google Calendar via Apps Script + Chrome CDP. List calendars, get events, check availability. Handles Okta SSO transparently. |
-| **gdocs** | `/gdocs get --id DOC_ID` | Google Docs via Apps Script + Chrome CDP. Read and write documents. Handles Okta SSO transparently. |
-| **gmail** | `/gmail search --query "is:unread"` | Gmail via Apps Script + Chrome CDP. Search messages, read threads, list labels. Read-only. Handles Okta SSO transparently. |
+| **gcalendar** | `/gcalendar events today` | Google Calendar via Apps Script + Chrome CDP. List calendars, get events, check availability. Okta SSO handled automatically. |
+| **gdocs** | `/gdocs get --id DOC_ID` | Google Docs via Apps Script + Chrome CDP. Read and write documents. Okta SSO handled automatically. |
+| **gmail** | `/gmail search --query "is:unread"` | Gmail via Apps Script + Chrome CDP. Search messages, read threads, list labels. Read-only. Okta SSO handled automatically. |
 | **gong** | `/gong calls list --limit 10` | Gong call recordings, transcripts, and AI summaries. Cookie-based auth with automatic CDP fallback and credential refresh. |
 
 Example:
@@ -158,7 +158,7 @@ Returns all open Jira issues for Isomorphic Labs with comment metadata (last com
 
 | Skill | Invocation | What it does |
 |-------|-----------|--------------|
-| **customer-snapshot** | `/customer-snapshot GResearch` | Full intelligence dashboard with up to 15 panels (6 operational + 9 analytics). Runs the assemble.py/compose.py pipeline. |
+| **customer-snapshot** | `/customer-snapshot GResearch` | The whole dashboard — up to 15 panels (6 operational + 9 analytics). Runs the assemble.py/compose.py pipeline. |
 | **usage-report** | `/usage-report GResearch` | Standalone ECharts usage report from BigQuery. Default is external (customer-facing, QBR-ready). Add `--internal` for SE prep with real names and churn risk. |
 | **deep-analytics** | `/deep-analytics --customer GResearch --page cohort` | Individual deep-analytics pages (cohort, risk, journey, decay, velocity, team, SDK, correlation, performance). |
 | **lattice** | `/lattice` | Weekly Lattice update generator. Gathers Slack, Asana, Jira, Calendar, and Gong activity, maps to IC5 growth areas. |
@@ -212,7 +212,7 @@ Skills are designed to compose. Common multi-skill workflows documented in [`.cl
 
 ## Customer Onboarding
 
-Walkthrough for onboarding a new customer, using "Acme Corp" as the example.
+How to add a new customer, start to finish. Using "Acme Corp" as the example.
 
 ### Step 1: Look up the customer in Salesforce
 
@@ -220,7 +220,7 @@ Walkthrough for onboarding a new customer, using "Acme Corp" as the example.
 /salesforce account-search --name "Acme Corp"
 ```
 
-Note the 18-character Salesforce Account ID (e.g., `0012E00002ABcdEFGH`). This is how all skills identify the customer for business data (ARR, contracts, account team).
+Grab the 18-character Salesforce Account ID (e.g., `0012E00002ABcdEFGH`). Skills use this to pull business data (ARR, contracts, account team) at runtime.
 
 ### Step 2: Run customer setup
 
@@ -228,11 +228,11 @@ Note the 18-character Salesforce Account ID (e.g., `0012E00002ABcdEFGH`). This i
 /customer-setup "Acme Corp"
 ```
 
-This interactive skill:
-- Pulls account data from Salesforce using the account ID
-- Prompts you for Slack channel IDs (look up with `/slack search "acme"`)
-- Asks for deployment type (saas / dedicated-cloud / server)
-- Creates an entry in `templates/customers.yaml`
+It will:
+- Pull account data from Salesforce
+- Ask you for Slack channel IDs (look them up with `/slack search "acme"`)
+- Ask for deployment type (saas / dedicated-cloud / server)
+- Write an entry to `templates/customers.yaml`
 
 ### Step 3: Verify customers.yaml entry
 
@@ -303,7 +303,7 @@ Copy the output GIDs into `customers.yaml`:
 /customer-snapshot "Acme Corp"
 ```
 
-This runs the full pipeline -- fetches Jira issues, BigQuery usage data, Asana tasks, and Slack sentiment, then produces the dashboard folder.
+Runs the full pipeline — Jira issues, BigQuery usage, Asana tasks, Slack sentiment — and drops a dashboard folder in `customers/acme-corp/dashboard/`.
 
 ### Step 6: Open in browser
 
@@ -311,13 +311,13 @@ This runs the full pipeline -- fetches Jira issues, BigQuery usage data, Asana t
 open customers/acme-corp/dashboard/index.html
 ```
 
-The dashboard shows whatever data is available. Panels with missing data sources display appropriate empty states rather than failing.
+The dashboard shows whatever data is available. Panels with missing data sources show empty states instead of breaking.
 
 ## Architecture
 
 ### Dashboard Pipeline
 
-When you run `/customer-snapshot CustomerName`, a deterministic two-stage pipeline produces the dashboard:
+Running `/customer-snapshot CustomerName` kicks off a two-stage pipeline:
 
 1. **Data fetch** -- Jira issues, BQ usage metrics, Asana tasks, and Slack channel history are fetched in parallel and saved as JSON files.
 2. **assemble.py** -- Accepts `--jira`, `--bq`, `--asana`, `--sentiment` JSON file paths. Applies component/parent normalization, theme clustering, trending metrics computation, and Asana task transformation. Runs all 9 deep-analytics BigQuery transforms (cohort, risk, team, journey, decay, velocity, SDK, correlation, performance). Outputs a single `INTELLIGENCE_DATA` JSON object.
@@ -364,7 +364,7 @@ graph LR
 
 ### Panel Architecture
 
-The dashboard is a folder-based modular system. Each panel is an individual JS file that registers itself with the `PanelRegistry`:
+Each panel is a standalone JS file that registers itself with the `PanelRegistry`:
 
 ```javascript
 PanelRegistry.register({
@@ -390,7 +390,7 @@ PanelRegistry.register({
 | Product Intelligence | Feature Velocity, SDK Versions, Usage Correlation, Risk Scoring, Performance |
 | Activity & Comms | SE Actions, Slack |
 
-Panels with no data are hidden from navigation automatically -- if BigQuery is not configured, the 9 analytics panels simply do not appear.
+Panels with no data get hidden from navigation. No BigQuery configured? The 9 analytics panels just don't show up.
 
 ### Panel Lifecycle
 
