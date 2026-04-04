@@ -8,33 +8,31 @@ A comprehensive toolkit of Claude Code skills that help W&B Solutions Engineers 
 
 Give SEs named-user, team-level, and trend-aware intelligence so they can have specific, data-driven conversations with customers instead of generic "usage is growing/declining" narratives — while automating the operational overhead of customer management.
 
-## Current Milestone: v2.0 Dashboard Integration + Skill Consolidation
+## Current State
 
-**Goal:** Make the repo usable by any W&B SE — integrate all analytics into the dashboard, consolidate skills, and document everything.
+**Shipped:** v1.0 BQ Deep Analytics (2026-04-01), v2.0 Dashboard Integration + Skill Consolidation (2026-04-04)
 
-**Target features:**
-- Integrate 9 deep-analytics page types as dashboard panels (cohort, risk scoring, team detection, user journey, engagement decay, feature velocity, SDK versions, usage correlation, performance)
-- Audit and consolidate 35 skills — fold setup skills into parents, reduce surface area, remove hardcoded values
-- Getting-started guide, skill inventory, entry-point documentation
-- Ensure nothing is specific to one SE (no hardcoded GIDs, channel IDs, etc.)
-- Jira instance migration — validate skills work against new instance, investigate broken filters, update any instance-specific config
+The repo is usable by any W&B SE. All 9 analytics dimensions are integrated as dashboard panels, 35 skills are documented with consistent SKILL.md format, Jira migrated to coreweave.atlassian.net, credential storage standardized at `~/.fe-skills/.env`, and README.md serves as a single getting-started guide with architecture overview.
 
 ## Requirements
 
-### Validated (v1.0)
+### Validated (v1.0 + v2.0)
 
-- [x] 9 deep-analytics page types — transforms, BQ queries, and handlers for all 9 analytical dimensions
-- [x] Modular dashboard — shell + panel registry + compose.py producing folder-based dashboards
-- [x] 6 dashboard panels — Overview, Issues, Support, Usage, Actions, Slack
-- [x] Deterministic pipeline — assemble.py → compose.py → dashboard folder
-- [x] BQ usage data — seat utilization, product adoption, Weave ingestion, tracked hours, account health
-- [x] Jira integration — issue analysis with health buckets, attention callouts, theme clustering
-- [x] Slack sentiment analysis — channel history fetch and structured scoring
-- [x] Asana action tracking — portfolio structure with Actions + RAID projects per customer
+- [x] 9 deep-analytics page types — transforms, BQ queries, and handlers for all 9 analytical dimensions — v1.0
+- [x] Modular dashboard — shell + panel registry + compose.py producing folder-based dashboards — v1.0
+- [x] 15 dashboard panels — 6 operational + 9 analytics, all following PanelRegistry contract — v2.0
+- [x] Deterministic pipeline — assemble.py → compose.py → dashboard folder — v1.0
+- [x] BQ usage data — seat utilization, product adoption, Weave ingestion, tracked hours, account health — v1.0
+- [x] Jira integration — migrated to coreweave.atlassian.net, issue analysis with health buckets — v2.0
+- [x] Slack sentiment analysis — channel history fetch and structured scoring — v1.0
+- [x] Asana action tracking — portfolio structure with Actions + RAID projects per customer — v1.0
+- [x] 35 skills documented — SKILL-INVENTORY.md, standardized SKILL.md format, no hardcoded values — v2.0
+- [x] Composition rules — 15 multi-skill workflows in skill-composition.md — v2.0
+- [x] Documentation — README.md as single front door (Quick Start, Skills, Onboarding, Architecture) — v2.0
 
-### Active (v2.0)
+### Active
 
-See REQUIREMENTS.md (to be defined)
+(No active milestone — run `/gsd:new-milestone` to start one)
 
 ### Out of Scope
 
@@ -99,10 +97,13 @@ See REQUIREMENTS.md (to be defined)
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Separate pages per direction (not tabs in existing reports) | Enables parallel prototyping with subagents, each page is independently deployable and testable | — Pending |
-| All 9 directions in scope for v1 | User wants full query + render pipeline for all directions | — Pending |
-| Split direction 8 into SDK Versions (8a) + Performance (8b) | SDK versions are high-confidence BQ data, performance is exploratory Datadog territory | — Pending |
-| Self-contained HTML with ECharts | Consistent with existing report ecosystem, no server dependency | — Pending |
+| Separate pages per direction (not tabs in existing reports) | Enables parallel prototyping with subagents, each page is independently deployable and testable | ✓ Good |
+| All 9 directions in scope for v1 | User wants full query + render pipeline for all directions | ✓ Good |
+| Split direction 8 into SDK Versions (8a) + Performance (8b) | SDK versions are high-confidence BQ data, performance is exploratory Datadog territory | ✓ Good |
+| Self-contained HTML with ECharts | Consistent with existing report ecosystem, no server dependency | ✓ Good |
+| Credential path ~/.fe-skills/.env | Replaced legacy ~/.tsm-ai/ — meaningful name for new SEs | ✓ Good — v2.0 |
+| Single README as front door | All docs in one file, no docs/ folder scatter | ✓ Good — v2.0 |
+| assemble.py uses deep-analytics venv | Only venv with pandas + BQ deps needed for transforms | ✓ Good — v2.0 |
 
 ## Evolution
 
@@ -122,4 +123,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-03 — v2.0 milestone started*
+*Last updated: 2026-04-04 — v2.0 milestone completed*
