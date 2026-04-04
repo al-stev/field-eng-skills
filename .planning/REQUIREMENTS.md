@@ -10,8 +10,8 @@
 - [x] **PANEL-03**: SE can view team detection as a dashboard panel showing team breakdown, per-team activity, and adoption patterns
 - [x] **PANEL-04**: SE can view user journey as a dashboard panel showing adoption funnel/Sankey from first activity through product stages
 - [x] **PANEL-05**: SE can view engagement decay as a dashboard panel showing cold-detection table ranking users by activity decline
-- [ ] **PANEL-06**: SE can view feature velocity as a dashboard panel showing sparkline grid of monthly events per product area with momentum indicators
-- [ ] **PANEL-07**: SE can view SDK version distribution as a dashboard panel showing version freshness, distribution donut, and upgrade recommendations
+- [x] **PANEL-06**: SE can view feature velocity as a dashboard panel showing sparkline grid of monthly events per product area with momentum indicators
+- [x] **PANEL-07**: SE can view SDK version distribution as a dashboard panel showing version freshness, distribution donut, and upgrade recommendations
 - [x] **PANEL-08**: SE can view usage correlation as a dashboard panel showing product combination heatmap with SE-internal privacy controls
 - [x] **PANEL-09**: SE can view performance metrics as a dashboard panel showing performance index and latency breakdown (graceful empty state if data unavailable)
 - [x] **PANEL-10**: All 9 new panels follow the existing panel contract (PanelRegistry.register, getHeadlineStats, getAttentionItems) and render in the v2 dashboard shell
@@ -26,8 +26,8 @@
 
 ## Skill Audit
 
-- [ ] **AUDIT-01**: Skill inventory published -- complete list of all skills with one-line descriptions, entry-point vs building-block classification, and dependency graph
-- [ ] **AUDIT-02**: No hardcoded user-specific values (GIDs, channel IDs, email addresses) exist in committed skill code -- all user-specific config lives in customers.yaml or ~/.tsm-ai/.env
+- [x] **AUDIT-01**: Skill inventory published -- complete list of all skills with one-line descriptions, entry-point vs building-block classification, and dependency graph
+- [x] **AUDIT-02**: No hardcoded user-specific values (GIDs, channel IDs, email addresses) exist in committed skill code -- all user-specific config lives in customers.yaml or ~/.tsm-ai/.env
 - [ ] **AUDIT-03**: Every skill's SKILL.md has accurate, up-to-date documentation that matches current behavior
 - [ ] **AUDIT-04**: Skill composition rules (skill-composition.md) are complete and cover all multi-skill workflows
 
@@ -65,13 +65,13 @@
 | PANEL-03 | Phase 8 | Complete |
 | PANEL-04 | Phase 8 | Complete |
 | PANEL-05 | Phase 8 | Complete |
-| PANEL-06 | Phase 8 | Pending |
-| PANEL-07 | Phase 8 | Pending |
+| PANEL-06 | Phase 8 | Complete |
+| PANEL-07 | Phase 8 | Complete |
 | PANEL-08 | Phase 8 | Complete |
 | PANEL-09 | Phase 8 | Complete |
 | PANEL-10 | Phase 8 | Complete |
-| AUDIT-01 | Phase 9 | Pending |
-| AUDIT-02 | Phase 9 | Pending |
+| AUDIT-01 | Phase 9 | Complete |
+| AUDIT-02 | Phase 9 | Complete |
 | AUDIT-03 | Phase 9 | Pending |
 | AUDIT-04 | Phase 9 | Pending |
 | DOCS-01 | Phase 10 | Pending |
