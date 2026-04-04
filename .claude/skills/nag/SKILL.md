@@ -11,6 +11,11 @@ requires-credentials: ASANA_TOKEN
 
 Your personal task hygiene scanner. Finds overdue and stale tasks across all your customer Asana projects. "You have 4 overdue items across 3 customers." This watches YOUR tasks, not the customer's silence (that's /ghosted).
 
+## Prerequisites
+
+- **Asana** -- `ASANA_TOKEN` in `~/.tsm-ai/.env` (run `/asana-setup` if not configured)
+- **Customer registry** -- Customers in `templates/customers.yaml` with `action_tracker_id` set
+
 ## Pipeline
 
 ### Step 1: Determine scope

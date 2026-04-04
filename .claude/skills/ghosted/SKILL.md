@@ -12,6 +12,14 @@ requires-credentials: ASANA_TOKEN, SLACK_TOKEN, SLACK_COOKIE
 
 Tracks threads where you're waiting on a customer reply. Two modes:
 
+## Prerequisites
+
+- **Asana** -- `ASANA_TOKEN` in `~/.tsm-ai/.env` (run `/asana-setup` if not configured)
+- **Slack** -- `SLACK_TOKEN` and `SLACK_COOKIE` in `~/.tsm-ai/.env` (run `/slack-setup` if not configured)
+- **Customer registry** -- Customer must exist in `templates/customers.yaml` with `action_tracker_id` set
+
+## Modes
+
 - **Track mode**: Low-friction capture -- paste a Slack thread URL, creates an Asana task in "Waiting on Customer" so it's tracked.
 - **Scan mode**: Checks all "Waiting on Customer" tasks that have Slack thread URLs. Reads each thread back. If the customer hasn't replied since the task was created/moved to Waiting, surfaces it. "GResearch has ghosted you on 3 threads."
 

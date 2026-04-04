@@ -18,6 +18,15 @@ auto-refresh: false
 
 Manage RAID logs (Risks, Assumptions, Issues, Dependencies) for customer accounts. RAID logs are the management-visibility layer that makes Asana useful for the whole team, not just the individual SE.
 
+## Prerequisites
+
+- **Asana** -- `ASANA_TOKEN` in `~/.tsm-ai/.env` (run `/asana-setup` if not configured)
+- **Jira** -- `ATLASSIAN_EMAIL` and `ATLASSIAN_TOKEN` in `~/.tsm-ai/.env` (for scan mode)
+- **Slack** -- `SLACK_TOKEN` and `SLACK_COOKIE` in `~/.tsm-ai/.env` (for scan mode)
+- **Customer registry** -- Customer must exist in `templates/customers.yaml` with `raid_tracker_id` set
+
+Not all credentials are required for every mode. View mode needs only Asana. Scan mode needs all three.
+
 Refer to `.claude/rules/asana.md` for shared constants (workspace GID, project GIDs, custom field definitions, section names).
 
 ## Two-Project Model

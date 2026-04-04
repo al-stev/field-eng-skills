@@ -388,7 +388,7 @@ Within each theme, use two clearly labeled subsections:
 
 ### {Theme 1: e.g., Artifact Upload Performance}
 - **Status:** {resolved / active / stale}
-- **Jira:** [WB-123](https://wandb.atlassian.net/browse/WB-123), [WB-456](https://wandb.atlassian.net/browse/WB-456)
+- **Jira:** [WB-123](https://coreweave.atlassian.net/browse/WB-123), [WB-456](https://coreweave.atlassian.net/browse/WB-456)
 
 **Technical Summary:** What broke, why, what was done, what remains. 2-4 sentences. An engineer or SA can scan just these halves across all themes.
 
@@ -410,7 +410,7 @@ Surface the Jira landscape prominently. This section answers: "How well are we t
 ### P0/P1 Issues (all statuses)
 | Key | Summary | Status | Assignee | Last Update | Stale? |
 |-----|---------|--------|----------|-------------|--------|
-| [WB-123](https://wandb.atlassian.net/browse/WB-123) | ... | Triage | Unassigned | 2025-01-15 | YES |
+| [WB-123](https://coreweave.atlassian.net/browse/WB-123) | ... | Triage | Unassigned | 2025-01-15 | YES |
 | ... | ... | ... | ... | ... | ... |
 
 ### Stale Issues (no activity 30+ days, any priority)
@@ -530,7 +530,7 @@ Compact appendix for traceability. Most readers won't need this — the inline l
 ### Jira Issues (full list)
 | Key | Summary | Status | Priority | Last Update |
 |-----|---------|--------|----------|-------------|
-| [WB-123](https://wandb.atlassian.net/browse/WB-123) | SDK crash on large artifact upload | In Review | P1 | 2025-03-01 |
+| [WB-123](https://coreweave.atlassian.net/browse/WB-123) | SDK crash on large artifact upload | In Review | P1 | 2025-03-01 |
 | ... | ... | ... | ... | ... |
 ```
 

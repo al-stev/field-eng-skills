@@ -6,9 +6,57 @@ argument-hint: "<customer-name> (required)"
 
 # Customer Snapshot
 
-Generate professional, interactive intelligence dashboards from W&B Jira data and Slack channel history for customer call prep. The output is a single self-contained HTML file with custom CSS bar charts, pill filters, collapsible theme sections, sentiment analysis, trending metrics, executive summary, internal/external audience toggle, and light/dark mode support.
+Generate professional, interactive intelligence dashboards from W&B Jira data, Slack channel history, Asana actions, and BigQuery usage analytics for customer call prep. The output is a folder-based dashboard (`customers/<name>/dashboard/`) with modular panel architecture: `index.html` (shell), `data.js` (refreshable data layer), `panels/*.js` (individual visualization panels), and `lib/` (shared libraries including ECharts).
 
 The dashboard is designed for a Solutions Engineer preparing for customer calls -- professional enough to screen-share or send to colleagues. The internal/external toggle allows hiding candid analysis when screen-sharing.
+
+## Prerequisites
+
+- **Jira** -- `ATLASSIAN_EMAIL` and `ATLASSIAN_TOKEN` in `~/.tsm-ai/.env` (run `/atlassian-setup` if not configured)
+- **Slack** -- `SLACK_TOKEN` and `SLACK_COOKIE` in `~/.tsm-ai/.env` (run `/slack-setup` if not configured) -- optional, for sentiment analysis
+- **Asana** -- `ASANA_TOKEN` in `~/.tsm-ai/.env` (run `/asana-setup` if not configured) -- optional, for SE Actions panel
+- **BigQuery** -- ADC configured via `gcloud auth application-default login` (run `/bigquery-setup` if not configured) -- optional, for usage analytics panels
+- **Customer registry** -- Customer must exist in `templates/customers.yaml`
+
+Not all data sources are required. The dashboard degrades gracefully -- panels with unavailable data show appropriate empty states.
+
+## V2 Architecture
+
+The v2 dashboard uses a deterministic two-stage pipeline:
+
+1. **assemble.py** -- Deterministic data assembler. Accepts `--jira`, `--bq`, `--asana`, `--sentiment` JSON file arguments, applies component/parent normalization, theme clustering, trending metrics computation, and Asana task transformation. Outputs complete INTELLIGENCE_DATA JSON.
+2. **compose.py** -- Folder composition. Takes INTELLIGENCE_DATA JSON and assembles template files (shell.html, panel JS, lib/) into a working dashboard folder. Only `data.js` changes on each refresh -- shell and panel templates are stable.
+
+### Output Structure
+
+```
+customers/<name>/dashboard/
+  index.html        -- Main shell (loads panels dynamically)
+  data.js           -- INTELLIGENCE_DATA constant (refreshable)
+  panels/           -- Individual visualization panel JS files
+  lib/              -- Shared libraries (echarts.min.js)
+  history/          -- Archived previous data.js snapshots
+```
+
+### CLI Usage
+
+```bash
+# Step 1: Assemble data from sources
+uv run --project .claude/skills/customer-snapshot python \
+    .claude/skills/customer-snapshot/templates/assemble.py \
+    --customer "GResearch" \
+    --jira /path/to/jira.json \
+    --bq /path/to/bq.json \
+    --asana /path/to/asana.json \
+    --sentiment /path/to/sentiment.json \
+    --output /path/to/data.json
+
+# Step 2: Compose dashboard folder
+uv run --project .claude/skills/customer-snapshot python \
+    .claude/skills/customer-snapshot/templates/compose.py \
+    --customer "GResearch" --data /path/to/data.json \
+    --output customers/g-research/dashboard/
+```
 
 ## Pipeline
 
@@ -174,7 +222,7 @@ const INTELLIGENCE_DATA = {
       created: "2026-01-15",
       updated: "2026-03-08",
       resolutiondate: null,  // or ISO date string for resolved issues
-      url: "https://wandb.atlassian.net/browse/WB-1234",
+      url: "https://coreweave.atlassian.net/browse/WB-1234",
       components: ["Weave Python SDK"],
       parent: "WB-900",
       parent_summary: "Weave SDK Improvements",
@@ -313,19 +361,21 @@ For priority mapping: use P0/P1/P2/P3 directly from Jira. If priority uses names
 
 ### Step 8: Generate the intelligence dashboard
 
-1. Read `templates/intelligence-dashboard.html` from this skill directory
-2. Replace the sample `INTELLIGENCE_DATA` constant with the real data object
-3. Save to: `customers/<kebab-case-name>/trackers/YYYY-MM-DD-dashboard.html`
-   - Example: `customers/g-research/trackers/2026-03-17-dashboard.html`
-4. Create the directory path if it doesn't exist
-5. Open the file: `open <path>`
+Use the v2 two-stage pipeline:
 
-The template handles all rendering -- charts, filters, theme sections, sentiment panel, trending, exec summary, animations. You only inject the data.
+1. Save data source JSON files to temp directory
+2. Run `assemble.py` with `--jira`, `--bq`, `--asana`, `--sentiment` arguments to produce INTELLIGENCE_DATA JSON
+3. Run `compose.py` with `--customer`, `--data`, `--output` to assemble the dashboard folder
+4. Output folder: `customers/<kebab-case-name>/dashboard/`
+   - Example: `customers/g-research/dashboard/`
+5. Open the dashboard: `open customers/g-research/dashboard/index.html`
+
+The shell template and panel JS files handle all rendering -- charts, filters, theme sections, sentiment panel, trending, exec summary, animations. The `data.js` file contains the INTELLIGENCE_DATA constant and is the only file that changes on each refresh. Previous data.js snapshots are archived in `history/`.
 
 ### Step 9: Present to the user
 
 Tell the user:
-- File path
+- Dashboard folder path and how to open it (`open .../dashboard/index.html`)
 - Brief summary: total issues, sentiment score (or "not configured"), backlog trajectory
 - Usage stats if available (seat utilization %, Weave ingestion %, trend direction)
 - Asana action counts if available (e.g., "8 open actions, 1 overdue")

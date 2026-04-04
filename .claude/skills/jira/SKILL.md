@@ -7,13 +7,13 @@ requires-credentials:
   - ATLASSIAN_EMAIL
   - ATLASSIAN_TOKEN
 setup-skill: atlassian-setup
-service-url: https://wandb.atlassian.net
+service-url: https://coreweave.atlassian.net
 auto-refresh: false
 ---
 
 # Jira Issue Management
 
-Manage issues in the W&B Jira instance (wandb.atlassian.net) using Python tools with the `jira` SDK.
+Manage issues in the W&B Jira instance (coreweave.atlassian.net) using Python tools with the `jira` SDK.
 
 Refer to `.claude/rules/atlassian.md` for shared Atlassian constants and FE-UPDATE convention.
 
@@ -22,7 +22,7 @@ Refer to `.claude/rules/atlassian.md` for shared Atlassian constants and FE-UPDA
 | Property | Value |
 |---|---|
 | Project | `WB` (W&B Eng) |
-| Instance | `wandb.atlassian.net` |
+| Instance | `coreweave.atlassian.net` |
 
 ## Prerequisites
 
@@ -50,7 +50,7 @@ uv run --project .claude/skills/jira python .claude/skills/jira/scripts/<tool>.p
 
 ## Customer Queries
 
-The `--customer` flag filters issues by the Customer field (customfield_10083). This is the key SE workflow for finding all tickets for a specific customer.
+The `--customer` flag filters issues by the Customer field (customfield_16678). This is the key SE workflow for finding all tickets for a specific customer.
 
 ```bash
 # All bugs for GResearch
@@ -92,8 +92,8 @@ uv run --project .claude/skills/jira python .claude/skills/jira/scripts/issues.p
 | `--summary` | Issue summary (required) |
 | `--description` | Detailed description |
 | `--priority` | P0, P1, P2, P3, P4 |
-| `--customer` | Customer name (sets customfield_10083) |
-| `--eng-team` | Eng Team name (sets customfield_10084) |
+| `--customer` | Customer name (sets customfield_16678) |
+| `--eng-team` | Eng Team name (sets customfield_16680) |
 | `--labels` | Space-separated labels |
 | `--parent` | Parent issue key |
 | `--project` | Project key (default: WB) |
@@ -204,7 +204,7 @@ uv run --project .claude/skills/jira python .claude/skills/jira/scripts/issues.p
 ### Open issue in browser
 
 ```
-https://wandb.atlassian.net/browse/WB-123
+https://coreweave.atlassian.net/browse/WB-123
 ```
 
 ## Multi-Project Support

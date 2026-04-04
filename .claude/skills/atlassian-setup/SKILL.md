@@ -13,7 +13,7 @@ One-time setup for Atlassian tooling used by W&B SE skills (Jira, Confluence).
 
 | Service | Instance | Used for |
 |---|---|---|
-| Jira | `wandb.atlassian.net` | Customer bugs, feature requests, escalations (WB project) |
+| Jira | `coreweave.atlassian.net` | Customer bugs, feature requests, escalations (WB project) |
 | Confluence | `coreweave.atlassian.net` | Internal documentation, knowledge base |
 
 Both instances use the same API token (tied to your Atlassian ID).
@@ -74,7 +74,7 @@ When prompted, use these values:
 | Prompt | Value |
 |---|---|
 | Installation type | **Cloud** |
-| Link | `https://wandb.atlassian.net` |
+| Link | `https://coreweave.atlassian.net` |
 | Login type | Choose the option that uses API token |
 | Project | `WB` |
 | Board | (select the appropriate WB board) |
@@ -116,4 +116,4 @@ jira init
 
 - **401 Unauthorized**: Check that `ATLASSIAN_EMAIL` and `ATLASSIAN_TOKEN` in `~/.tsm-ai/.env` have the correct values, and that file permissions are `600`.
 - **Confluence API returns HTML instead of JSON**: Make sure the URL includes `/wiki/api/v2/` — missing `/wiki` is the most common mistake.
-- **Wrong Jira instance**: The W&B Jira is at `wandb.atlassian.net`, not `coreweave.atlassian.net`. Confluence is at `coreweave.atlassian.net`.
+- **Wrong Jira instance**: Both W&B Jira and CoreWeave Confluence are now at `coreweave.atlassian.net`. The previous W&B-specific instance was migrated to CoreWeave in Phase 7.

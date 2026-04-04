@@ -12,6 +12,13 @@ requires-credentials: ASANA_TOKEN
 
 Turns meeting notes into tracked work. Extracts two types of items:
 
+## Prerequisites
+
+- **Asana** -- `ASANA_TOKEN` in `~/.tsm-ai/.env` (run `/asana-setup` if not configured)
+- **Customer registry** -- Customer must exist in `templates/customers.yaml` with `action_tracker_id` (for actions) and optionally `raid_tracker_id` (for RAID items)
+
+## Output
+
 - **Action items** -> Asana tasks in the customer's Actions project
 - **RAID items** (risks, assumptions, dependencies mentioned in the meeting) -> Asana tasks in the RAID project
 
