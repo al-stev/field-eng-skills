@@ -32,7 +32,14 @@ Input is typically Granola summary format but can be a full transcript, pasted t
 - **Meeting notes**: the rest of the input. Can be:
   - Pasted text (Granola summary, transcript, bullet points)
   - File path to a `.md` or `.txt` file
+  - **Slack thread URL** (e.g., `https://coreweave.slack.com/archives/C06NX624Q9G/p1234567890`) — fetch the full thread using the Slack skill, then process the thread content as meeting notes
   - If notes are very short (< 50 words), ask user if they want to paste more
+
+**Slack URL handling:** If the input contains a Slack thread URL, fetch the thread first:
+```bash
+uv run --project .claude/skills/slack python .claude/skills/slack/scripts/threads.py --url "<slack_url>" --pretty
+```
+Use the thread content as the meeting notes input for all subsequent steps. Include the Slack URL as a source link in the Confluence meeting notes entry.
 
 ### Step 2: Extract action items
 

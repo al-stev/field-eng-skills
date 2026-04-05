@@ -86,6 +86,24 @@ Claude Code skills for W&B Solutions Engineers. Hooks into W&B Jira, CoreWeave S
    ln -s $(pwd)/.claude/rules/* ~/.claude/rules/
    ```
 
+## Day-to-Day Commands
+
+Five commands cover 90% of daily SE work. Everything else gets pulled in automatically.
+
+| When | Command | What happens |
+|------|---------|-------------|
+| After a meeting | `/maction <customer> <paste notes or Slack URL>` | Asana tasks + RAID items + Confluence meeting notes + feedback |
+| Before a meeting | `/cadence-prep <customer>` | Gathers Jira + Slack + Asana into a meeting agenda |
+| Quick meeting brief | `/pre-read <customer>` | Synthesizes Slack + Jira into a pre-read doc |
+| Check on a customer | `/customer-snapshot <customer>` | Full dashboard with 15 panels |
+| Status update | `/3p-update <customer>` | Progress/Plans/Problems from Asana + Jira + Slack |
+| What am I behind on? | `/nag` | Overdue and stale Asana tasks across all customers |
+| Biweekly retro | `/rats` | Roses & Thorns from your recent Slack activity |
+| New customer | `/customer-setup <customer>` | SFDC + Slack + Asana + Confluence + customers.yaml |
+| Track a Slack thread | `/maction <customer> <slack-url>` | Fetches thread, extracts actions, creates Asana tasks |
+
+The other skills are building blocks (jira, slack, bigquery — composed automatically), setup skills (run once), or specialist tools. See full list below.
+
 ## Skills
 
 ### Customer Engagement
