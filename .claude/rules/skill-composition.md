@@ -97,13 +97,18 @@ Generate a standalone usage visualization for a customer from BigQuery data. Two
 
 ## Customer Onboarding
 
-Set up a new customer's full Asana structure with portfolio, projects, and metadata.
+Set up a new customer's full structure across Asana, Confluence, and the customer registry.
 
-1. **asana** — Run `setup-customer` to create customer portfolio + Actions project + RAID project + add to master portfolio + populate custom fields (SE Owner, Account Exec, Deployment Type, Customer Health).
-2. **salesforce** — Look up SFDC account for ARR, contract dates, account team (if `/customer-setup` available).
-3. **jira** — Verify the Jira customer name mapping. Search for issues using the customer name to confirm it matches.
-4. **slack** — Look up Slack channel IDs for the customer's ext-* and supp-* channels.
-5. Update `templates/customers.yaml` with the new GIDs (action_tracker_id, raid_tracker_id, portfolio_id) and customer metadata.
+1. **customer-setup** — Run `/customer-setup CustomerName` to orchestrate the full onboarding flow:
+   - Queries Salesforce for account data
+   - Prompts for Slack channels, cadence schedule, deployment type
+   - Verifies Jira customer name mapping
+   - Creates Asana portfolio + Actions project + RAID project
+   - Creates Confluence pages (Meeting Notes, Ongoing Issues with live Jira macros, Feedback) under W&B EMEA Account Management
+   - Writes everything to `templates/customers.yaml` including `confluence_pages` IDs
+2. **asana** — Review created portfolio structure, adjust custom fields if needed.
+3. **jira** — Verify issues appear correctly with the customer name mapping.
+4. **customer-snapshot** — Generate first dashboard to verify all integrations work.
 
 ## Customer Silence Check
 

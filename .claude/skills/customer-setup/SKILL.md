@@ -216,6 +216,50 @@ Build contacts list from SE input (account team data is pulled from SFDC at runt
 - `org` -- Organization (e.g., W&B, G-Research)
 - `role` -- Contact role
 
+### Step 5.5: Confluence Page Setup
+
+Create the customer's Confluence page tree under the W&B EMEA Account Management page (ID: `1393229828`) in the FE space. This gives the customer a place for meeting notes, ongoing issues, and feedback.
+
+1. **Create customer parent page:**
+   ```bash
+   uv run --project .claude/skills/confluence python .claude/skills/confluence/scripts/pages.py create \
+     --title "<CustomerName>" --body "<p><CustomerName> account page.</p>" \
+     --parent-id 1393229828 --space fe --pretty
+   ```
+
+2. **Create three child pages** under the new customer page:
+   ```bash
+   # Meeting Notes
+   uv run --project .claude/skills/confluence python .claude/skills/confluence/scripts/pages.py create \
+     --title "<CustomerName> - Meeting Notes" \
+     --body '<p>This page is for all individual meeting notes and summaries.</p><p>Rules:</p><ul><li><p>Create one collapsible/foldable bullet per meeting.</p></li><li><p>Bullet title format MUST be: &quot;YYYY-MM-DD — &lt;Short Title&gt; (&lt;Participants&gt;)&quot;</p></li><li><p>Each meeting bullet MUST include a link to the Gong call, Granola notes, and/or Slack thread(s).</p></li><li><p>Each meeting bullet MUST include context (summary, notes, action items).</p></li></ul>' \
+     --parent-id <customer_page_id> --space fe --pretty
+
+   # Ongoing Issues & Requests (with live Jira macros)
+   uv run --project .claude/skills/confluence python .claude/skills/confluence/scripts/pages.py create \
+     --title "<CustomerName> - Ongoing Issues & Requests" \
+     --body '<h2>Open Bugs</h2><ac:structured-macro ac:name="jira" ac:schema-version="1"><ac:parameter ac:name="columns">key,summary,status,priority,created,updated</ac:parameter><ac:parameter ac:name="maximumIssues">50</ac:parameter><ac:parameter ac:name="jqlQuery">project = "WB" AND "Customer (WB)" IN ("<jira_customer>") AND issuetype = Bug AND status NOT IN ("Done", "Archive", "Merged") ORDER BY priority DESC, updated DESC</ac:parameter></ac:structured-macro><h2>Feature Requests</h2><ac:structured-macro ac:name="jira" ac:schema-version="1"><ac:parameter ac:name="columns">key,summary,status,priority,created,updated</ac:parameter><ac:parameter ac:name="maximumIssues">50</ac:parameter><ac:parameter ac:name="jqlQuery">project = "WB" AND "Customer (WB)" IN ("<jira_customer>") AND issuetype = "Feature Request" AND status NOT IN ("Done", "Archive", "Merged") ORDER BY priority DESC, updated DESC</ac:parameter></ac:structured-macro><h2>All Open Issues</h2><ac:structured-macro ac:name="jira" ac:schema-version="1"><ac:parameter ac:name="columns">key,summary,issuetype,status,priority,created,updated</ac:parameter><ac:parameter ac:name="maximumIssues">100</ac:parameter><ac:parameter ac:name="jqlQuery">project = "WB" AND "Customer (WB)" IN ("<jira_customer>") AND status NOT IN ("Done", "Archive", "Merged") ORDER BY priority DESC, updated DESC</ac:parameter></ac:structured-macro>' \
+     --parent-id <customer_page_id> --space fe --pretty
+
+   # Feedback
+   uv run --project .claude/skills/confluence python .claude/skills/confluence/scripts/pages.py create \
+     --title "<CustomerName> - Feedback" \
+     --body '<p>This page tracks customer feedback — NPS scores, survey responses, and qualitative sentiment signals from the customer'\''s perspective. Only include feedback originating from the customer, not our internal assessments.</p><h1>OPEN</h1><p>(feedback items actively being addressed)</p><h1>BACKLOG</h1><p>(acknowledged but not actioned)</p><h1>COMPLETED</h1><p>(resolved)</p>' \
+     --parent-id <customer_page_id> --space fe --pretty
+   ```
+
+3. **Record page IDs** in the customer's entry as `confluence_pages`:
+   ```yaml
+   confluence_pages:
+     meeting_notes: "<meeting_notes_page_id>"
+     ongoing_issues: "<ongoing_issues_page_id>"
+     feedback: "<feedback_page_id>"
+   ```
+
+**Note:** Include all `jira_customer_variants` in the Jira macro `IN` clause for the Ongoing Issues page. Use `status NOT IN ("Done", "Archive", "Merged")` — do NOT use status names with parentheses (they break the Confluence Jira macro parser).
+
+**If Confluence credentials are not configured:** Skip this step and note that Confluence pages can be created later by re-running `/customer-setup`.
+
 ### Step 6: Write to Registry
 
 Use Claude's Read tool to read the current `templates/customers.yaml`, then use Claude's Edit tool to add or update the customer entry.
