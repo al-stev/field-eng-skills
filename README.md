@@ -100,7 +100,8 @@ Five commands cover 90% of daily SE work. Everything else gets pulled in automat
 | What am I behind on? | `/nag` | Overdue and stale Asana tasks across all customers |
 | Biweekly retro | `/rats` | Roses & Thorns from your recent Slack activity |
 | New customer | `/customer-setup <customer>` | SFDC + Slack + Asana + Confluence + customers.yaml |
-| Track a Slack thread | `/maction <customer> <slack-url>` | Fetches thread, extracts actions, creates Asana tasks |
+| Save a Slack thread | `/track <slack-url>` | Creates an Asana task due tomorrow, auto-detects customer from channel |
+| Deep dive a Slack thread | `/maction <customer> <slack-url>` | Fetches thread, extracts actions + RAID + Confluence notes |
 
 The other skills are building blocks (jira, slack, bigquery — composed automatically), setup skills (run once), or specialist tools. See full list below.
 
