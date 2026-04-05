@@ -115,11 +115,12 @@ Monitor customer responsiveness on tracked threads.
 
 ## Meeting Follow-Up
 
-Turn meeting notes into tracked actions and RAID items.
+Turn meeting notes into tracked actions, RAID items, Confluence meeting notes, and customer feedback — all from a single transcript paste.
 
-1. **maction** — Extract action items and RAID signals from meeting notes (`/maction GResearch <notes>`).
+1. **maction** — Extract action items, RAID signals, customer feedback, and meeting summary from notes (`/maction GResearch <notes>`). Creates Asana tasks, publishes meeting notes to Confluence, and captures feedback. All in one pass.
 2. **asana** — Review and adjust created tasks (move sections, update priority, add details).
 3. **raid** — Review RAID log after maction additions (`/raid GResearch`).
+4. **confluence** — Meeting notes and feedback are published automatically by maction if `confluence_pages` is configured in customers.yaml. Manual edits via `/confluence`.
 
 ## Task Hygiene
 

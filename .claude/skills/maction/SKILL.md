@@ -1,11 +1,11 @@
 ---
 name: maction
-description: "Extract action items and RAID items from meeting notes or transcripts. Use when the
-  user shares meeting notes, Granola output, call transcript, or asks to create actions from a
-  meeting. Trigger for /maction, 'create actions from this meeting', 'extract actions from notes',
-  'meeting to tasks'."
+description: "Extract action items, RAID items, and feedback from meeting notes or transcripts. Creates Asana tasks, publishes meeting notes to Confluence, and captures customer feedback. Use when the user shares meeting notes, Granola output, call transcript, or asks to create actions from a meeting. Trigger for /maction, 'create actions from this meeting', 'extract actions from notes', 'meeting to tasks'."
 argument-hint: "<customer-name> <meeting-notes or paste>"
-requires-credentials: ASANA_TOKEN
+requires-credentials:
+  - ASANA_TOKEN
+  - ATLASSIAN_EMAIL
+  - ATLASSIAN_TOKEN
 ---
 
 # Meeting Notes to Actions + RAID Pipeline
@@ -67,6 +67,64 @@ For each RAID item, determine:
 | **Source** | "Cadence call [date]" or "Meeting notes [date]" |
 | **Visibility** | Default Internal (Risks/Assumptions always internal; Dependencies may be Shared) |
 
+### Step 3.5: Extract customer feedback signals
+
+Analyze the meeting notes for customer-originating feedback -- their words, their sentiment, their satisfaction signals. This is NOT your internal assessment of the customer; it's what THEY expressed.
+
+| Signal Type | What to Look For |
+|-------------|-----------------|
+| **NPS/CSAT** | Any mention of scores, surveys, ratings |
+| **Praise** | Customer expressing satisfaction ("this is great", "really happy with", "exactly what we needed") |
+| **Complaint** | Customer expressing dissatisfaction ("frustrated", "doesn't work", "been waiting", "considering alternatives") |
+| **Feature ask** | Customer requesting something directly ("we really need", "wish you had", "when will you support") |
+| **Churn signal** | Customer mentioning competitors, evaluating alternatives, questioning value |
+
+For each feedback item, determine:
+
+| Field | How to Infer |
+|-------|-------------|
+| **Summary** | One-line description of the feedback |
+| **Type** | NPS, Praise, Complaint, Feature Ask, or Churn Signal |
+| **Status** | OPEN (needs response/action) or BACKLOG (noted, no action needed) |
+| **Direct quote** | The customer's actual words if available (in italics) |
+| **Source links** | Gong, Granola, or Slack links if provided in the input |
+
+If no feedback signals are detected, skip this step silently -- not every meeting has customer feedback.
+
+### Step 3.6: Compose meeting notes entry
+
+Prepare a Confluence meeting notes entry in the standard FE format. The entry is a collapsible section with:
+
+- **Title**: `YYYY-MM-DD -- <Short Title> (<Participants>)`
+- **Source Links**: Links to Gong call, Granola notes, Slack threads (from the input)
+- **Summary**: 3-5 bullet points covering what was discussed
+- **Action Items**: List of actions extracted in Step 2 (with owners)
+- **Key Decisions**: Any decisions made during the meeting
+- **RAID Signals**: Any risks/dependencies flagged in Step 3
+
+The Confluence storage format for one entry:
+
+```xml
+<ac:structured-macro ac:name="expand" ac:schema-version="1">
+  <ac:parameter ac:name="title">YYYY-MM-DD -- Short Title (Participants)</ac:parameter>
+  <ac:rich-text-body>
+    <p><time datetime="YYYY-MM-DD" /></p>
+    <p><strong>Source Links:</strong></p>
+    <ul>
+      <li><p>Gong: <a href="URL">Call title</a> (or "Not recorded")</p></li>
+      <li><p>Granola: <a href="URL">Notes title</a> (or "None")</p></li>
+      <li><p>Slack: <a href="URL">Thread context</a> (or "None")</p></li>
+    </ul>
+    <h3>Summary</h3>
+    <ul><li><p>Key point 1</p></li>...</ul>
+    <h3>Action Items</h3>
+    <ul><li><p>[Owner] Action description -- Due: YYYY-MM-DD</p></li>...</ul>
+    <h3>Decisions</h3>
+    <ul><li><p>Decision made</p></li>...</ul>
+  </ac:rich-text-body>
+</ac:structured-macro>
+```
+
 ### Step 4: Present proposals to user
 
 Show all extracted items in a clear format before creation:
@@ -82,6 +140,15 @@ PROPOSED ACTIONS (for [Customer] Actions project):
 PROPOSED RAID ITEMS (for [Customer] RAID Log):
 R1. [Risk] Champion VP Eng may be leaving -- Impact: High, Likelihood: Medium -- Source: Cadence call 2026-03-24
 D1. [Dependency] Blocked on eng shipping SDK v2.1 hotfix -- Impact: High, Likelihood: High -- Source: Cadence call 2026-03-24
+
+CONFLUENCE MEETING NOTES (will be appended to [Customer] - Meeting Notes):
+Title: 2026-03-24 -- Cadence Call (Allan, Customer Lead)
+Summary: 3 bullet points
+Sources: Granola link, Gong link
+
+[If feedback found:]
+CUSTOMER FEEDBACK (will be appended to [Customer] - Feedback):
+F1. [Complaint] "We've been waiting three weeks for this fix" -- Status: OPEN
 
 Confirm: create all (y), select items (s), or cancel (n)?
 ```
@@ -110,7 +177,61 @@ uv run --project .claude/skills/asana python .claude/skills/asana/scripts/mutate
 
 After creation, set custom fields on RAID items (Category, Impact, Likelihood, Status=Open, Source, Visibility) via `mutate.py update` with `--custom-fields` or through the Asana API directly.
 
-### Step 6: Summary
+### Step 6: Publish meeting notes to Confluence
+
+Look up `confluence_pages.meeting_notes` from the customer's entry in `templates/customers.yaml`. If configured:
+
+1. **Fetch the current page** to get the existing body:
+   ```bash
+   uv run --project .claude/skills/confluence python .claude/skills/confluence/scripts/pages.py get --id <meeting_notes_page_id> --pretty
+   ```
+
+2. **Prepend** the new collapsible entry (from Step 3.6) to the TOP of the existing body, after any intro text. New entries go at the top so the most recent meeting is first.
+
+3. **Update the page** with the combined body:
+   ```bash
+   uv run --project .claude/skills/confluence python .claude/skills/confluence/scripts/pages.py update \
+     --id <meeting_notes_page_id> --title "<existing title>" \
+     --body "<intro text><new entry><existing entries>" --pretty
+   ```
+
+**If `confluence_pages` is not configured for this customer:** Skip silently and note in the summary that Confluence publishing was skipped.
+
+### Step 6.5: Publish feedback to Confluence
+
+Only run this step if feedback items were extracted in Step 3.5.
+
+Look up `confluence_pages.feedback` from `templates/customers.yaml`. If configured:
+
+1. **Fetch the current page** to get the existing body.
+
+2. For each feedback item, create an expandable entry in the same format as the FE team's existing pages:
+   ```xml
+   <ac:structured-macro ac:name="expand" ac:schema-version="1">
+     <ac:parameter ac:name="title">YYYY-MM-DD [Type] Short description [Updated YYYY-MM-DD]</ac:parameter>
+     <ac:rich-text-body>
+       <p><time datetime="YYYY-MM-DD" /></p>
+       <p>Summary: <em>"Direct customer quote if available"</em></p>
+       <p>Context from meeting notes.</p>
+       <p><strong>Links:</strong></p>
+       <ul>
+         <li><p>Gong: <a href="URL">Call</a> (or None)</p></li>
+         <li><p>Granola: <a href="URL">Notes</a> (or None)</p></li>
+       </ul>
+       <p><strong>Status:</strong></p>
+       <ul><li><p>Current status and any planned response.</p></li></ul>
+     </ac:rich-text-body>
+   </ac:structured-macro>
+   ```
+
+3. **Insert** the new entry under the appropriate section header (OPEN or BACKLOG) in the existing page body.
+
+4. **Update the page.**
+
+**If no feedback signals found:** Skip this step entirely.
+**If `confluence_pages` is not configured:** Skip silently.
+
+### Step 7: Summary
 
 After all items are created, output a summary:
 
@@ -118,7 +239,9 @@ After all items are created, output a summary:
 Created:
 - 3 action items in [Customer] Actions project
 - 2 RAID items in [Customer] RAID Log
-Links: [task URLs]
+- Meeting notes published to Confluence (2026-03-24 -- Cadence Call)
+- 1 feedback item published to Confluence
+Links: [task URLs, Confluence page URLs]
 ```
 
 ## Granola Format Notes

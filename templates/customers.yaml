@@ -58,6 +58,10 @@ customers:
     raid_tracker: asana
     raid_tracker_id: "1213810620810350"
     portfolio_id: "1213798947751056"
+    confluence_pages:
+      meeting_notes: "1393721364"
+      ongoing_issues: "1393393681"
+      feedback: "1393754114"
     deployment_type: server
     cadence:
       type: weekly
