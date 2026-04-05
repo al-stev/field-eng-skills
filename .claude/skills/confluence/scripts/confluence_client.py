@@ -23,7 +23,7 @@ logging.getLogger("atlassian").setLevel(logging.CRITICAL)
 # Constants
 CONFLUENCE_URL = "https://coreweave.atlassian.net/wiki"
 FE_SPACE_KEY = "FE"
-FE_SPACE_ID = "282199076"
+FE_SPACE_ID = "681410596"
 PERSONAL_SPACE_KEY = "~712020cfd6bd1badc345a895e7bcf488706f05"
 PERSONAL_SPACE_ID = "658472966"
 
