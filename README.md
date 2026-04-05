@@ -128,7 +128,7 @@ Scans all customer projects for overdue tasks and items that have not been updat
 | **slack** | `/slack search "keyword"` | Search messages, read channel history, fetch threads, and look up users in the CoreWeave Slack workspace. |
 | **confluence** | `/confluence search --title "Meeting Notes"` | Read, create, and update pages in CoreWeave Confluence (coreweave.atlassian.net). Supports CQL search, folders, attachments, and labels. |
 | **salesforce** | `/salesforce account-detail --account-id ID` | Read-only Salesforce queries for account data (ARR, contract dates, team members, field discovery). Supports SSO/session auth for W&B's org. |
-| **bigquery** | (building-block) | BigQuery usage data queries -- seat utilization, product areas, Weave ingestion, tracked hours, account health. Consumed by customer-snapshot, usage-report, deep-analytics, and lattice. |
+| **bigquery** | (building-block) | BigQuery usage data queries -- seat utilization, product areas, Weave ingestion, tracked hours, account health. Consumed by customer-snapshot, usage-report, deep-analytics. |
 | **gcalendar** | `/gcalendar events today` | Google Calendar via Apps Script + Chrome CDP. List calendars, get events, check availability. Okta SSO handled automatically. |
 | **gdocs** | `/gdocs get --id DOC_ID` | Google Docs via Apps Script + Chrome CDP. Read and write documents. Okta SSO handled automatically. |
 | **gmail** | `/gmail search --query "is:unread"` | Gmail via Apps Script + Chrome CDP. Search messages, read threads, list labels. Read-only. Okta SSO handled automatically. |
@@ -147,7 +147,6 @@ Returns all open Jira issues for Isomorphic Labs with comment metadata (last com
 | **customer-snapshot** | `/customer-snapshot GResearch` | The whole dashboard — up to 15 panels (6 operational + 9 analytics). Runs the assemble.py/compose.py pipeline. |
 | **usage-report** | `/usage-report GResearch` | Standalone ECharts usage report from BigQuery. Default is external (customer-facing, QBR-ready). Add `--internal` for SE prep with real names and churn risk. |
 | **deep-analytics** | `/deep-analytics --customer GResearch --page cohort` | Individual deep-analytics pages (cohort, risk, journey, decay, velocity, team, SDK, correlation, performance). |
-| **lattice** | `/lattice` | Weekly Lattice update generator. Gathers Slack, Asana, Jira, Calendar, and Gong activity, maps to IC5 growth areas. |
 | **3p-update** | `/3p-update GResearch` | 3P (Progress/Plans/Problems) update from Asana tasks, Jira activity, and Slack signals. |
 | **rats** | `/rats` | Roses & Thorns biweekly update from Slack activity. |
 
@@ -194,7 +193,6 @@ Skills are designed to compose. Common multi-skill workflows documented in [`.cl
 - **Customer Silence Check** -- ghosted + asana: monitor responsiveness on tracked threads
 - **Meeting Follow-Up** -- maction + asana + raid: turn meeting notes into tracked work
 - **Task Hygiene** -- nag + asana + ghosted: keep backlog clean and current
-- **Lattice Weekly Update** -- slack + asana + jira + gcalendar + gong + bigquery + lattice: weekly performance update mapped to IC5 growth areas
 
 ## Customer Onboarding
 

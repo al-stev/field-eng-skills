@@ -43,7 +43,6 @@ Claude Code skills for W&B Solutions Engineers. Integrates with W&B Jira (corewe
     gong-setup/             -- One-time Gong credential setup
     jira/                   -- W&B Jira queries, issue creation, FE-UPDATE (coreweave.atlassian.net)
     jira-check/             -- Jira issue triage and FE-UPDATE pipeline
-    lattice/                -- Weekly Lattice update generator mapped to IC5 growth areas
     maction/                -- Meeting notes to Asana actions + RAID items
     nag/                    -- Stale/overdue task scanner across customer projects
     pre-read/               -- Meeting pre-read document generation

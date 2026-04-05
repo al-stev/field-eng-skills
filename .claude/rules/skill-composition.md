@@ -147,17 +147,3 @@ Generate a v2 modular dashboard for a customer with all available data panels. T
 6. **customer-snapshot (compose.py)** — Dashboard folder composer that accepts `--customer`, `--data` (INTELLIGENCE_DATA JSON path), `--output` (target directory). Reads `panels.yaml` manifest to determine active panels based on data availability. Copies `shell.html` template, writes `data.js`, copies active panel JS files to `panels/`, bundles `lib/` (ECharts, chart-helpers, panel-registry), archives previous data.js to `history/`, computes diff against previous snapshot.
 7. Output: `customers/<name>/dashboard/` folder with `index.html`, `data.js`, `panels/*.js`, `lib/`, `history/` — opens in browser from `file://` protocol.
 
-## Lattice Weekly Update
-
-Generate a weekly Lattice update by gathering activity across data sources and mapping to IC5 growth areas.
-
-1. **slack** — Search for the user's messages and mentions across workspace channels (past 7 days). Filter out standup bot responses, emoji-only, and automated workflow messages.
-2. **asana** — Fetch completed and in-progress tasks from the past week across all customer projects.
-3. **jira** — Fetch issues the user commented on or transitioned in the past week. Identify new P0/P1 escalations and stale/blocked issues.
-4. **gcalendar** — Fetch meeting events from the past week (customer calls, internal meetings, cross-functional syncs). Also fetch next week's events for plans auto-draft.
-5. **gong** — Fetch call recordings and AI spotlight summaries from the past week (optional, degrades gracefully if GONG_COOKIE not set).
-6. **bigquery** — Fetch usage trends for configured customers (optional, degrades gracefully).
-7. **lattice** — Maps gathered activities to IC5 growth areas (Expertise & Impact, Collaborate & Multiply, Ownership & Execution). Generates Lattice-ready output for 4 fields (focus, plans, challenges, reflections) + internal growth area scorecard with milestone tracking.
-8. Output: Lattice-ready text to terminal (copy-paste into Lattice) + weekly archive file in `weekly-updates/YYYY-WNN.md`.
-
-Privacy: No Gmail search, no Slack 1:1 DMs. Two review checkpoints: after activity categorisation and after final draft.

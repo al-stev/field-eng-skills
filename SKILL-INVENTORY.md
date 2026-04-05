@@ -34,7 +34,6 @@ All Claude Code skills available in this repository. Each skill is invoked via `
 | gong-setup | One-time Gong session cookie setup | setup | -- | `/gong-setup` |
 | jira | W&B Jira issue queries, creation, FE-UPDATE comments | entry-point | ATLASSIAN_EMAIL, ATLASSIAN_TOKEN | `/jira [subcommand] [args...]` |
 | jira-check | Jira issue triage and FE-UPDATE maintenance pipeline | entry-point | ATLASSIAN_EMAIL, ATLASSIAN_TOKEN, SLACK_TOKEN, SLACK_COOKIE | `/jira-check [customer-name]` |
-| lattice | Weekly Lattice update generator mapped to IC5 growth areas | entry-point | SLACK_TOKEN, SLACK_COOKIE, ASANA_TOKEN, ATLASSIAN_EMAIL, ATLASSIAN_TOKEN, GCALENDAR_APPSCRIPT_URL, GCALENDAR_APPSCRIPT_KEY | `/lattice [--days N]` |
 | maction | Extract action items and RAID items from meeting notes into Asana tasks | entry-point | ASANA_TOKEN | `/maction <customer-name> <notes>` |
 | nag | Scan Asana tasks for overdue and stale items across customer projects | entry-point | ASANA_TOKEN | `/nag [customer-name]` |
 | pre-read | Generate structured pre-read documents for customer meetings from Slack + Jira | entry-point | ATLASSIAN_EMAIL, ATLASSIAN_TOKEN, SLACK_TOKEN, SLACK_COOKIE | `/pre-read [customer-name]` |
@@ -53,16 +52,16 @@ All Claude Code skills available in this repository. Each skill is invoked via `
 Skills that are consumed by other skills as data sources or building blocks.
 
 ### bigquery
-  consumed by: customer-snapshot, usage-report, deep-analytics, lattice
+  consumed by: customer-snapshot, usage-report, deep-analytics
 
 ### jira
-  consumed by: customer-snapshot, jira-check, cadence-prep, pre-read, 3p-update, lattice, raid
+  consumed by: customer-snapshot, jira-check, cadence-prep, pre-read, 3p-update, raid
 
 ### slack
-  consumed by: customer-snapshot, ghosted, cadence-prep, pre-read, 3p-update, lattice, rats, raid, jira-check
+  consumed by: customer-snapshot, ghosted, cadence-prep, pre-read, 3p-update, rats, raid, jira-check
 
 ### asana
-  consumed by: customer-snapshot, ghosted, nag, maction, raid, 3p-update, lattice, cadence-prep
+  consumed by: customer-snapshot, ghosted, nag, maction, raid, 3p-update, cadence-prep
 
 ### confluence
   consumed by: cadence-prep, 3p-update
@@ -71,13 +70,13 @@ Skills that are consumed by other skills as data sources or building blocks.
   consumed by: customer-setup
 
 ### gcalendar
-  consumed by: lattice
+  consumed by: 
 
 ### gong
-  consumed by: lattice
+  consumed by: 
 
 ### gmail
-  consumed by: lattice
+  consumed by: 
 
 ## Composition Workflows
 
