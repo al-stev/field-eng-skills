@@ -501,7 +501,7 @@ def cmd_flag(args):
     """Flag or unflag an issue.
 
     Uses the REST API v2 directly with customfield_10021 because the
-    'flagged' field is not on the TSM project edit screens, so the
+    'flagged' field is not on the WB project edit screens, so the
     standard issue.update() path rejects it.
     """
     client = get_client()
@@ -636,7 +636,7 @@ def main():
 
     # view
     view_parser = subparsers.add_parser("view", help="View a single issue", parents=[pretty_parser])
-    view_parser.add_argument("--key", required=True, help="Issue key (e.g. TSM-123)")
+    view_parser.add_argument("--key", required=True, help="Issue key (e.g. WB-123)")
 
     # list
     list_parser = subparsers.add_parser("list", help="List issues with filters", parents=[pretty_parser])

@@ -14,7 +14,7 @@ from typing import Any, Callable
 from urllib.parse import urlencode
 
 
-TSM_ENV = Path.home() / '.fe-skills' / '.env'
+FE_ENV = Path.home() / '.fe-skills' / '.env'
 
 # CDP fetch script path (relative to this file)
 # __file__ = .claude/skills/gmail/scripts/gmail_client.py
@@ -23,9 +23,9 @@ CDP_FETCH_SCRIPT = Path(__file__).parent.parent.parent.parent.parent / 'scripts'
 
 def _load_credential(key: str) -> str | None:
     """Read a single value from ~/.fe-skills/.env."""
-    if not TSM_ENV.exists():
+    if not FE_ENV.exists():
         return None
-    for line in TSM_ENV.read_text().splitlines():
+    for line in FE_ENV.read_text().splitlines():
         if line.startswith(f'{key}='):
             return line.split('=', 1)[1]
     return None

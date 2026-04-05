@@ -5,7 +5,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-source "$SCRIPT_DIR/tsm-env.sh"
+source "$SCRIPT_DIR/fe-env.sh"
 
 CDP_PORT=9222
 GONG_URL="https://app.gong.io"
@@ -87,15 +87,15 @@ if [[ -z "$COOKIE_HEADER" ]]; then
 fi
 
 # --- Save cookie header ---
-# Cookie header is too long for sed substitution in tsm_save, so handle directly.
+# Cookie header is too long for sed substitution in fe_save, so handle directly.
 
-mkdir -p "$(dirname "$TSM_ENV")" && chmod 700 "$(dirname "$TSM_ENV")"
-if grep -q "^GONG_COOKIE=" "$TSM_ENV" 2>/dev/null; then
-  grep -v "^GONG_COOKIE=" "$TSM_ENV" > "$TSM_ENV.tmp" && mv "$TSM_ENV.tmp" "$TSM_ENV"
+mkdir -p "$(dirname "$FE_ENV")" && chmod 700 "$(dirname "$FE_ENV")"
+if grep -q "^GONG_COOKIE=" "$FE_ENV" 2>/dev/null; then
+  grep -v "^GONG_COOKIE=" "$FE_ENV" > "$FE_ENV.tmp" && mv "$FE_ENV.tmp" "$FE_ENV"
 fi
-echo "GONG_COOKIE=$COOKIE_HEADER" >> "$TSM_ENV"
-chmod 600 "$TSM_ENV"
-echo "Saved GONG_COOKIE to $TSM_ENV ($(echo "$COOKIE_JSON" | jq 'length') cookies)"
+echo "GONG_COOKIE=$COOKIE_HEADER" >> "$FE_ENV"
+chmod 600 "$FE_ENV"
+echo "Saved GONG_COOKIE to $FE_ENV ($(echo "$COOKIE_JSON" | jq 'length') cookies)"
 
 # --- Verify by fetching Gong homepage ---
 

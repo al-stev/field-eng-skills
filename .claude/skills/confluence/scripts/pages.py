@@ -7,8 +7,8 @@ instance using the atlassian-python-api SDK.
 
 Usage:
     pages.py get --id 123456
-    pages.py search --title "Meeting Notes" [--space tsm]
-    pages.py cql --query 'space=TSM AND title~"weekly"'
+    pages.py search --title "Meeting Notes" [--space fe]
+    pages.py cql --query 'space=FE AND title~"weekly"'
     pages.py children --id 123456
     pages.py spaces
     pages.py create --title "New Page" --body "<p>Content</p>" --parent-id 123
@@ -396,7 +396,7 @@ def main():
     # search
     search_parser = subparsers.add_parser("search", help="Search pages by title", parents=[pretty_parser])
     search_parser.add_argument("--title", required=True, help="Page title to search for")
-    search_parser.add_argument("--space", help="Space: 'tsm' (default) or 'personal'")
+    search_parser.add_argument("--space", help="Space: 'fe' (default) or 'personal'")
 
     # cql
     cql_parser = subparsers.add_parser("cql", help="Search with CQL", parents=[pretty_parser])
@@ -418,14 +418,14 @@ def main():
     create_parser.add_argument("--title", required=True, help="Page title")
     create_parser.add_argument("--body", required=True, help="Page body (HTML storage format)")
     create_parser.add_argument("--parent-id", help="Parent page or folder ID")
-    create_parser.add_argument("--space", help="Space: 'tsm' (default) or 'personal'")
+    create_parser.add_argument("--space", help="Space: 'fe' (default) or 'personal'")
     create_parser.add_argument("--subtype", default="live", choices=["live", "page"], help="Page subtype: 'live' (default) for Live Doc, 'page' for traditional")
 
     # create-folder
     create_folder_parser = subparsers.add_parser("create-folder", help="Create a folder", parents=[pretty_parser])
     create_folder_parser.add_argument("--title", required=True, help="Folder title")
     create_folder_parser.add_argument("--parent-id", required=True, help="Parent folder ID")
-    create_folder_parser.add_argument("--space", help="Space: 'tsm' (default) or 'personal'")
+    create_folder_parser.add_argument("--space", help="Space: 'fe' (default) or 'personal'")
 
     # move-page
     move_parser = subparsers.add_parser("move-page", help="Move a page under a new parent", parents=[pretty_parser])

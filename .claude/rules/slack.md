@@ -8,8 +8,8 @@
 
 ## Conventions
 
-- Always use the TSM Slack skill scripts (uv run) for read operations
-- Never use MCP Slack tools -- use the TSM skill exclusively
+- Always use the Slack skill scripts (uv run) for read operations
+- Never use MCP Slack tools -- use the Slack skill exclusively
 - Write operations use curl fallbacks and require user approval
 - Do not hard-code channel IDs in committed files
 - Channel IDs belong in user-scoped rules at ~/.claude/projects/<project>/rules/slack-channels.md

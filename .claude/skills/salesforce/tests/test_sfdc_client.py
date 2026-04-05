@@ -18,7 +18,7 @@ class TestLoadCredential:
         """_load_credential reads SFDC_USERNAME from mock env file, returns value after '='."""
         from sfdc_client import _load_credential
 
-        with patch("sfdc_client.TSM_ENV", tmp_env_file):
+        with patch("sfdc_client.FE_ENV", tmp_env_file):
             result = _load_credential("SFDC_USERNAME")
         assert result == "test@example.com"
 
@@ -26,7 +26,7 @@ class TestLoadCredential:
         """_load_credential returns None when key not found."""
         from sfdc_client import _load_credential
 
-        with patch("sfdc_client.TSM_ENV", tmp_env_file):
+        with patch("sfdc_client.FE_ENV", tmp_env_file):
             result = _load_credential("NONEXISTENT_KEY")
         assert result is None
 
@@ -35,7 +35,7 @@ class TestLoadCredential:
         from sfdc_client import _load_credential
 
         missing = tmp_path / "nonexistent" / ".env"
-        with patch("sfdc_client.TSM_ENV", missing):
+        with patch("sfdc_client.FE_ENV", missing):
             result = _load_credential("SFDC_USERNAME")
         assert result is None
 
@@ -47,7 +47,7 @@ class TestGetClient:
         """get_client raises FileNotFoundError when credentials missing, message contains 'Run /salesforce-setup first'."""
         from sfdc_client import get_client
 
-        with patch("sfdc_client.TSM_ENV", tmp_env_file_missing_creds):
+        with patch("sfdc_client.FE_ENV", tmp_env_file_missing_creds):
             with pytest.raises(FileNotFoundError, match="Run /salesforce-setup first"):
                 get_client()
 
@@ -57,7 +57,7 @@ class TestGetClient:
 
         mock_sf = MagicMock()
         with (
-            patch("sfdc_client.TSM_ENV", tmp_env_file),
+            patch("sfdc_client.FE_ENV", tmp_env_file),
             patch("sfdc_client.Salesforce", return_value=mock_sf) as mock_cls,
         ):
             client = get_client()
@@ -76,7 +76,7 @@ class TestGetClient:
 
         mock_sf = MagicMock()
         with (
-            patch("sfdc_client.TSM_ENV", tmp_env_file_with_domain),
+            patch("sfdc_client.FE_ENV", tmp_env_file_with_domain),
             patch("sfdc_client.Salesforce", return_value=mock_sf) as mock_cls,
         ):
             client = get_client()
@@ -94,7 +94,7 @@ class TestGetClient:
         from sfdc_client import get_client
 
         with (
-            patch("sfdc_client.TSM_ENV", tmp_env_file),
+            patch("sfdc_client.FE_ENV", tmp_env_file),
             patch("sfdc_client.Salesforce") as mock_cls,
         ):
             get_client()

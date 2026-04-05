@@ -9,7 +9,7 @@ Usage:
     search.py --query "SEARCH_TERMS" [options]
 
 Examples:
-    search.py --query "error in:#tsm-team after:2026-01-01" --count 20
+    search.py --query "error in:#wandb-team after:2026-01-01" --count 20
     search.py --query "customer-name from:@dsilverio" --sort score
     search.py --query "deployment" --page 2
 """
@@ -40,7 +40,7 @@ Search modifiers (include in --query):
   has:reaction       Messages with emoji reactions
 
 Examples:
-  %(prog)s --query "error in:#tsm-team after:2026-01-01"
+  %(prog)s --query "error in:#wandb-team after:2026-01-01"
   %(prog)s --query "customer-name from:@dsilverio" --sort score
   %(prog)s --query "deployment has:reaction" --count 50
         """

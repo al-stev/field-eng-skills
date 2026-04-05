@@ -121,7 +121,7 @@ uv run --project .claude/skills/gcalendar python .claude/skills/gcalendar/script
 uv run --project .claude/skills/gcalendar python .claude/skills/gcalendar/scripts/events.py delete --id EVENT_ID
 ```
 
-## Common TSM Workflows
+## Common Workflows
 
 **Check today's schedule:**
 ```bash

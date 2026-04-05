@@ -17,7 +17,7 @@ import sys
 from pathlib import Path
 
 
-TSM_ENV = Path.home() / '.fe-skills' / '.env'
+FE_ENV = Path.home() / '.fe-skills' / '.env'
 
 # CDP fetch script path (relative to this file)
 CDP_FETCH_SCRIPT = Path(__file__).parent.parent.parent.parent.parent / 'scripts' / 'gmail-cdp-fetch.sh'
@@ -25,11 +25,11 @@ CDP_FETCH_SCRIPT = Path(__file__).parent.parent.parent.parent.parent / 'scripts'
 
 def _save_credential(key: str, value: str) -> None:
     """Upsert a key=value in ~/.fe-skills/.env."""
-    env_dir = TSM_ENV.parent
+    env_dir = FE_ENV.parent
     env_dir.mkdir(parents=True, exist_ok=True)
     os.chmod(str(env_dir), 0o700)
 
-    lines = TSM_ENV.read_text().splitlines() if TSM_ENV.exists() else []
+    lines = FE_ENV.read_text().splitlines() if FE_ENV.exists() else []
     found = False
     for i, line in enumerate(lines):
         if line.startswith(f'{key}='):
@@ -38,8 +38,8 @@ def _save_credential(key: str, value: str) -> None:
             break
     if not found:
         lines.append(f'{key}={value}')
-    TSM_ENV.write_text('\n'.join(lines) + '\n')
-    os.chmod(str(TSM_ENV), 0o600)
+    FE_ENV.write_text('\n'.join(lines) + '\n')
+    os.chmod(str(FE_ENV), 0o600)
 
 
 def main():
@@ -77,7 +77,7 @@ def main():
         print(json.dumps({
             "ok": True,
             "message": "Credentials saved (verification skipped — CDP fetch script not found)",
-            "env_path": str(TSM_ENV),
+            "env_path": str(FE_ENV),
         }, indent=2))
         sys.exit(0)
 
@@ -100,7 +100,7 @@ def main():
                     "ok": True,
                     "message": "Credentials saved. Verification skipped — Chrome debug instance not running. "
                                "Start it with: ./scripts/chrome-debug.sh start",
-                    "env_path": str(TSM_ENV),
+                    "env_path": str(FE_ENV),
                 }, indent=2))
                 sys.exit(0)
 
@@ -108,7 +108,7 @@ def main():
                 "ok": False,
                 "error": "verification_failed",
                 "message": f"Credentials saved but verification failed: {stderr}",
-                "env_path": str(TSM_ENV),
+                "env_path": str(FE_ENV),
             }), file=sys.stderr)
             sys.exit(1)
 
@@ -122,14 +122,14 @@ def main():
                 "ok": False,
                 "error": error,
                 "message": f"Apps Script returned error: {message}. Check your URL and API key.",
-                "env_path": str(TSM_ENV),
+                "env_path": str(FE_ENV),
             }), file=sys.stderr)
             sys.exit(1)
 
         print(json.dumps({
             "ok": True,
             "message": "Google Docs Apps Script setup successful",
-            "env_path": str(TSM_ENV),
+            "env_path": str(FE_ENV),
         }, indent=2))
 
         sys.exit(0)
@@ -140,7 +140,7 @@ def main():
             "error": "timeout",
             "message": "Credentials saved but verification timed out. "
                        "Ensure you are signed into Okta in the Chrome debug instance.",
-            "env_path": str(TSM_ENV),
+            "env_path": str(FE_ENV),
         }), file=sys.stderr)
         sys.exit(1)
 
@@ -149,7 +149,7 @@ def main():
             "ok": False,
             "error": "setup_failed",
             "message": f"Credentials saved but verification failed: {e}",
-            "env_path": str(TSM_ENV),
+            "env_path": str(FE_ENV),
         }), file=sys.stderr)
         sys.exit(1)
 

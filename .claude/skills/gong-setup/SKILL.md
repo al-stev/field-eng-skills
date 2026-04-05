@@ -56,9 +56,9 @@ The cookie refresh script discovers the base URL automatically, but the workspac
 
 ```bash
 # Add to ~/.fe-skills/.env (one-time)
-source scripts/tsm-env.sh
-tsm_save GONG_BASE_URL "https://us-39259.app.gong.io"
-tsm_save GONG_WORKSPACE_ID "315301294163453491"
+source scripts/fe-env.sh
+fe_save GONG_BASE_URL "https://us-39259.app.gong.io"
+fe_save GONG_WORKSPACE_ID "315301294163453491"
 ```
 
 **How these were discovered:** The base URL region (`us-39259`) comes from the `cell` JWT cookie. The workspace ID (`315301294163453491`) is found by opening DevTools Network tab in Gong and looking at the `workspace-id=` query parameter on any API request. Note: the `ajs_group_id` cookie (`4819131706209630954`) is the company ID, not the workspace ID.

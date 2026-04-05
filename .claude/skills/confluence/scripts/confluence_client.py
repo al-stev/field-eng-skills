@@ -22,8 +22,8 @@ logging.getLogger("atlassian").setLevel(logging.CRITICAL)
 
 # Constants
 CONFLUENCE_URL = "https://coreweave.atlassian.net/wiki"
-TSM_SPACE_KEY = "TSM"
-TSM_SPACE_ID = "282199076"
+FE_SPACE_KEY = "FE"
+FE_SPACE_ID = "282199076"
 PERSONAL_SPACE_KEY = "~712020cfd6bd1badc345a895e7bcf488706f05"
 PERSONAL_SPACE_ID = "658472966"
 
@@ -152,7 +152,7 @@ def create_page_v2(
 
     Args:
         client: Authenticated Confluence client (used for session/auth)
-        space_id: Numeric space ID (e.g. '282199076' for TSM)
+        space_id: Numeric space ID (e.g. '282199076' for FE)
         title: Page title
         body: HTML content in Confluence storage format
         parent_id: Optional parent page or folder ID
@@ -193,7 +193,7 @@ def create_folder(client: Confluence, space_id: str, title: str, parent_id: str 
 
     Args:
         client: Authenticated Confluence client (used for session/auth)
-        space_id: Numeric space ID (e.g. '282199076' for TSM)
+        space_id: Numeric space ID (e.g. '282199076' for FE)
         title: Folder title
         parent_id: Parent folder or page ID
 
@@ -285,14 +285,14 @@ def resolve_space(space: str | None) -> tuple[str, str]:
     Resolve a space argument to (space_key, space_id).
 
     Args:
-        space: "tsm", "personal", or None (defaults to TSM)
+        space: "fe", "personal", or None (defaults to FE)
 
     Returns:
         Tuple of (space_key, space_id)
     """
     if space and space.lower() == "personal":
         return PERSONAL_SPACE_KEY, PERSONAL_SPACE_ID
-    return TSM_SPACE_KEY, TSM_SPACE_ID
+    return FE_SPACE_KEY, FE_SPACE_ID
 
 
 def output_json(data: Any, pretty: bool = False) -> None:

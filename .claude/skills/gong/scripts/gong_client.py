@@ -20,14 +20,14 @@ from typing import Any, Callable
 import requests
 
 
-TSM_ENV = Path.home() / '.fe-skills' / '.env'
+FE_ENV = Path.home() / '.fe-skills' / '.env'
 
 
 def _load_credential(key: str) -> str | None:
     """Read a single value from ~/.fe-skills/.env."""
-    if not TSM_ENV.exists():
+    if not FE_ENV.exists():
         return None
-    for line in TSM_ENV.read_text().splitlines():
+    for line in FE_ENV.read_text().splitlines():
         if line.startswith(f'{key}='):
             return line.split('=', 1)[1]
     return None

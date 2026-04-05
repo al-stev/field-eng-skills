@@ -78,7 +78,7 @@ uv run --project .claude/skills/slack python .claude/skills/slack/scripts/search
 
 | Modifier | Example | Purpose |
 |---|---|---|
-| `in:#channel` | `in:#tsm-team` | Limit to a specific channel |
+| `in:#channel` | `in:#wandb-team` | Limit to a specific channel |
 | `from:@user` | `from:@flabat` | Messages from a specific user |
 | `before:YYYY-MM-DD` | `before:2026-01-01` | Messages before a date |
 | `after:YYYY-MM-DD` | `after:2025-12-01` | Messages after a date |
@@ -86,7 +86,7 @@ uv run --project .claude/skills/slack python .claude/skills/slack/scripts/search
 | `has:link` | `has:link` | Messages containing a URL |
 | `has:reaction` | `has:reaction` | Messages with emoji reactions |
 
-Combine modifiers: `customer-name in:#tsm-team after:2026-01-01`
+Combine modifiers: `customer-name in:#wandb-team after:2026-01-01`
 
 **Pagination**: Search uses page-based pagination. Use `--page N` (1-indexed):
 
@@ -164,7 +164,7 @@ Slack API methods require IDs, not names. Use these patterns to resolve them.
 Use `channels.py list` and search the results for the channel name, or parse the JSON output with `jq`:
 
 ```bash
-uv run --project .claude/skills/slack python .claude/skills/slack/scripts/channels.py list --limit 500 | jq -r '.channels[] | select(.name=="tsm-team") | .id'
+uv run --project .claude/skills/slack python .claude/skills/slack/scripts/channels.py list --limit 500 | jq -r '.channels[] | select(.name=="wandb-team") | .id'
 ```
 
 Once you find a channel ID, save it to `slack-channels.md` (see "Remembering Channels and DMs" below).
@@ -232,7 +232,7 @@ Slack uses Unix timestamps with microsecond precision as unique message IDs (e.g
 
 Write operations (posting, reactions, saved items) use curl fallbacks — see [`references/write-operations.md`](references/write-operations.md) for details.
 
-## Common TSM Workflows
+## Common Workflows
 
 ### Search for a customer across all channels
 

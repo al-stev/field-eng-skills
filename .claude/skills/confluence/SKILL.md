@@ -1,6 +1,6 @@
 ---
 name: confluence
-description: "Use when reading, creating, or updating Confluence wiki pages or blog posts. Activate for TSM space content, personal drafts, meeting notes, runbooks, TCD documents, or delivery tracking pages."
+description: "Use when reading, creating, or updating Confluence wiki pages or blog posts. Activate for FE space content, personal drafts, meeting notes, runbooks, TCD documents, or delivery tracking pages."
 argument-hint: "[get/create/update] [args...]"
 allowed-tools: Bash(uv run --project .claude/skills/confluence *)
 requires-credentials:
@@ -19,10 +19,10 @@ Refer to `.claude/rules/atlassian.md` for shared Atlassian constants.
 
 ## Choosing a Space
 
-- **TSM space** (default): Use for all team content — meeting notes, runbooks, project pages.
+- **FE space** (default): Use for all team content — meeting notes, runbooks, project pages.
 - **Personal space** (`flabat`): Use when the user asks for personal pages or blog posts.
 
-Default to TSM unless the user explicitly asks for personal content. Pass `--space personal` to target the personal space.
+Default to FE unless the user explicitly asks for personal content. Pass `--space personal` to target the personal space.
 
 ## Prerequisites
 
@@ -64,13 +64,13 @@ uv run --project .claude/skills/confluence python .claude/skills/confluence/scri
 #### Search with CQL (Confluence Query Language)
 
 ```bash
-uv run --project .claude/skills/confluence python .claude/skills/confluence/scripts/pages.py cql --query 'space=TSM AND title~"weekly"' --limit 10 --pretty
+uv run --project .claude/skills/confluence python .claude/skills/confluence/scripts/pages.py cql --query 'space=FE AND title~"weekly"' --limit 10 --pretty
 ```
 
 CQL is powerful for complex queries. Common patterns:
-- `space=TSM AND title~"search terms"` — title contains
-- `space=TSM AND type=page AND lastModified > now("-7d")` — recently modified
-- `space=TSM AND label="meeting-notes"` — by label
+- `space=FE AND title~"search terms"` — title contains
+- `space=FE AND type=page AND lastModified > now("-7d")` — recently modified
+- `space=FE AND label="meeting-notes"` — by label
 - `ancestor=PAGE_ID` — all descendants of a page
 
 #### List child pages
@@ -93,7 +93,7 @@ uv run --project .claude/skills/confluence python .claude/skills/confluence/scri
 
 #### Create a folder
 
-Create a Confluence folder (container for pages). Uses the v2 API. The TSM Customers folder ID is `942965130`.
+Create a Confluence folder (container for pages). Uses the v2 API. The FE Customers folder ID is `942965130`.
 
 ```bash
 uv run --project .claude/skills/confluence python .claude/skills/confluence/scripts/pages.py create-folder --title "Folder Name" --parent-id PARENT_FOLDER_ID --pretty
@@ -233,7 +233,7 @@ Common errors:
 
 ## Related Skills
 
-- `/jira` — Linked TSM issues, epics, and customer work items
+- `/jira` — Linked Jira issues, epics, and customer work items
 - `/slack` — Thread context and conversation references for wiki content
 - `/salesforce` — Account data and commercial details for customer pages
 

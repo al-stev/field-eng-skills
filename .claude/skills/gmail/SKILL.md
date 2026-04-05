@@ -144,7 +144,7 @@ uv run --project .claude/skills/gmail python .claude/skills/gmail/scripts/messag
 # Continue until "hasMore" is false or "nextStart" is absent
 ```
 
-## Common TSM Workflows
+## Common Workflows
 
 **Search for customer emails:**
 ```bash

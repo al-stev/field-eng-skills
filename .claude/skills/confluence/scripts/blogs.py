@@ -160,7 +160,7 @@ def main():
 
     # list
     list_parser = subparsers.add_parser("list", help="List blog posts", parents=[pretty_parser])
-    list_parser.add_argument("--space", help="Space: 'tsm' (default) or 'personal'")
+    list_parser.add_argument("--space", help="Space: 'fe' (default) or 'personal'")
     list_parser.add_argument("--limit", type=int, help="Max results (default: 10)")
 
     # get
@@ -173,7 +173,7 @@ def main():
     create_parser = subparsers.add_parser("create", help="Create a blog post", parents=[pretty_parser])
     create_parser.add_argument("--title", required=True, help="Blog post title")
     create_parser.add_argument("--body", required=True, help="Blog post body (HTML storage format)")
-    create_parser.add_argument("--space", help="Space: 'tsm' (default) or 'personal'")
+    create_parser.add_argument("--space", help="Space: 'fe' (default) or 'personal'")
     create_parser.add_argument("--labels", nargs="+", help="Labels to add after creation")
 
     # update
