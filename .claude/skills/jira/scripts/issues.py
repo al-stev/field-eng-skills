@@ -479,10 +479,14 @@ def cmd_assign(args):
     output_json(result, args.pretty)
 
 
+CLAUDE_ATTRIBUTION = "\n\n_This comment was drafted by Claude Code on behalf of the ticket author._"
+
+
 def cmd_comment(args):
     """Add a comment to an issue."""
     client = get_client()
-    comment = handle_api_call(client.add_comment, args.key, args.body)
+    body = args.body + CLAUDE_ATTRIBUTION
+    comment = handle_api_call(client.add_comment, args.key, body)
 
     result = {
         "key": args.key,
@@ -555,6 +559,7 @@ def cmd_fe_update(args):
     if args.notes:
         body += f"\n{args.notes}"
 
+    body += CLAUDE_ATTRIBUTION
     comment = handle_api_call(client.add_comment, args.key, body)
 
     result = {
