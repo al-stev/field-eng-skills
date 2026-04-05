@@ -279,6 +279,10 @@ def cmd_transitions(args):
     output_json(result, args.pretty)
 
 
+DEFAULT_ENG_TEAM = "🥷 Support Triage"
+DEFAULT_LABELS = ["jira_escalated", "fe-reported"]
+
+
 def cmd_create(args):
     """Create a new issue (Bug, Feature Request, etc.)."""
     client = get_client()
@@ -293,14 +297,19 @@ def cmd_create(args):
         fields["description"] = args.description
     if args.priority:
         fields["priority"] = {"name": args.priority}
-    if args.labels:
-        fields["labels"] = args.labels
+
+    # Labels: use provided labels, or default to jira_escalated + fe-reported
+    fields["labels"] = args.labels if args.labels else DEFAULT_LABELS
+
     if args.parent:
         fields["parent"] = {"key": args.parent}
     if args.customer:
-        fields[CUSTOMER_FIELD] = [args.customer]
-    if args.eng_team:
-        fields[ENG_TEAM_FIELD] = {"value": args.eng_team}
+        # Customer field is label-type: spaces not allowed, use hyphens
+        fields[CUSTOMER_FIELD] = [args.customer.replace(" ", "-")]
+
+    # Eng team: use provided value, or default to Support Triage
+    eng_team = args.eng_team if args.eng_team else DEFAULT_ENG_TEAM
+    fields[ENG_TEAM_FIELD] = {"value": eng_team}
 
     issue = handle_api_call(client.create_issue, fields=fields)
 

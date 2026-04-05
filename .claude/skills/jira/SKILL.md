@@ -65,15 +65,16 @@ uv run --project .claude/skills/jira python .claude/skills/jira/scripts/issues.p
 
 ## Creating Issues
 
-Only 3 required fields: Project (WB), Issue Type, Summary. Additional fields enhance triage.
+Only 3 required fields: Project (WB), Issue Type, Summary. Defaults are applied automatically:
+- **Labels:** `jira_escalated` and `fe-reported` (override with `--labels`)
+- **Eng Team:** `🥷 Support Triage` (override with `--eng-team`)
 
 ### Bug creation
 
 ```bash
 uv run --project .claude/skills/jira python .claude/skills/jira/scripts/issues.py create \
   --type Bug --summary "SDK crash on large artifact upload" \
-  --customer GResearch --priority P1 \
-  --eng-team "SDK Team" --pretty
+  --customer GResearch --priority P1 --pretty
 ```
 
 ### Feature Request creation
@@ -93,8 +94,8 @@ uv run --project .claude/skills/jira python .claude/skills/jira/scripts/issues.p
 | `--description` | Detailed description |
 | `--priority` | P0, P1, P2, P3, P4 |
 | `--customer` | Customer name (sets customfield_16678) |
-| `--eng-team` | Eng Team name (sets customfield_16680) |
-| `--labels` | Space-separated labels |
+| `--eng-team` | Eng Team value (default: `🥷 Support Triage`). Must match exact Jira value including emoji prefix. |
+| `--labels` | Labels (separate args, e.g. `--labels jira_escalated fe-reported`). Default: `jira_escalated fe-reported` |
 | `--parent` | Parent issue key |
 | `--project` | Project key (default: WB) |
 
