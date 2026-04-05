@@ -294,7 +294,7 @@ def cmd_create(args):
     }
 
     if args.description:
-        fields["description"] = args.description
+        fields["description"] = args.description + CLAUDE_ATTRIBUTION
     if args.priority:
         fields["priority"] = {"name": args.priority}
 
