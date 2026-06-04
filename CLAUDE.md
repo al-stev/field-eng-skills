@@ -53,6 +53,7 @@ Claude Code skills for W&B Solutions Engineers. Integrates with W&B Jira (corewe
     slack/                  -- CoreWeave Slack channel history, search, threads
     slack-setup/            -- One-time Slack credential setup
     usage-report/           -- Standalone usage visualization (external QBR-ready + internal SE prep reports with ECharts)
+    weave-forecast/         -- Weave ingestion forecast HTML — windowed-mean-rate scenarios, stale-spike toggle, contract/renewal markers
   rules/                    -- Auto-loaded project rules
     asana.md                -- Asana workspace conventions (sections, custom fields, RAID, portfolio, staleness rules)
     atlassian.md            -- Atlassian workspace conventions

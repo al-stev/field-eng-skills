@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weave Ingestion Forecast — {{CUSTOMER}}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<style>
+:root {
+  --bg-primary: #0c0f14;
+  --bg-elevated: #141820;
+  --bg-surface: #1a1f2b;
+  --bg-hover: #222838;
+  --border: #2a3040;
+  --border-subtle: #1e2430;
+  --text-primary: #e8eaed;
+  --text-secondary: #8b92a0;
+  --text-tertiary: #5c6370;
+  --accent: #d4a853;
+  --accent-dim: rgba(212, 168, 83, 0.12);
+  --accent-border: rgba(212, 168, 83, 0.25);
+  --green: #4ade80;
+  --green-dim: rgba(74, 222, 128, 0.10);
+  --blue: #60a5fa;
+  --blue-dim: rgba(96, 165, 250, 0.10);
+  --amber: #fbbf24;
+  --amber-dim: rgba(251, 191, 36, 0.10);
+  --red: #f87171;
+  --red-dim: rgba(248, 113, 113, 0.10);
+  --font-display: 'Instrument Serif', Georgia, serif;
+  --font-body: 'Outfit', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --radius: 6px;
+  --scheme: dark;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg-primary: #f6f4f0;
+    --bg-elevated: #ffffff;
+    --bg-surface: #eeece8;
+    --bg-hover: #e6e4e0;
+    --border: #d4d2ce;
+    --border-subtle: #e0ded9;
+    --text-primary: #1a1a1a;
+    --text-secondary: #5c5c5c;
+    --text-tertiary: #8c8c8c;
+    --accent: #b8922e;
+    --accent-dim: rgba(184, 146, 46, 0.10);
+    --accent-border: rgba(184, 146, 46, 0.25);
+    --green: #1a7a4c;
+    --green-dim: rgba(26, 122, 76, 0.08);
+    --blue: #1565a0;
+    --blue-dim: rgba(21, 101, 160, 0.08);
+    --amber: #9a6e08;
+    --amber-dim: rgba(154, 110, 8, 0.08);
+    --red: #dc2626;
+    --red-dim: rgba(220, 38, 38, 0.08);
+    --scheme: light;
+  }
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: var(--font-body);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-primary); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+.container { max-width: 1240px; margin: 0 auto; padding: 0 clamp(16px, 3vw, 32px); }
+
+/* HEADER */
+.header { padding: clamp(28px, 5vw, 48px) 0 clamp(18px, 3vw, 28px); }
+.header-subtitle {
+  font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 2px; color: var(--accent);
+  margin-bottom: 8px; display: flex; align-items: center; gap: 10px;
+}
+.internal-badge {
+  display: inline-flex; align-items: center; padding: 2px 8px;
+  border-radius: 3px; font-family: var(--font-mono); font-size: 10px;
+  font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px;
+  color: var(--red); background: var(--red-dim); border: 1px solid var(--red-border, var(--red));
+}
+.header h1 {
+  font-family: var(--font-display); font-size: clamp(28px, 4vw, 42px);
+  font-weight: 400; line-height: 1.1; letter-spacing: -0.01em;
+  margin-bottom: 8px;
+}
+.header-meta {
+  font-family: var(--font-mono); font-size: 12px; color: var(--text-secondary);
+  display: flex; flex-wrap: wrap; gap: 16px; padding-top: 12px;
+  border-top: 1px solid var(--border-subtle);
+}
+.header-meta span strong { color: var(--text-primary); font-weight: 500; }
+
+/* SECTIONS */
+.section { padding: clamp(20px, 3vw, 32px) 0; }
+.section-title {
+  font-family: var(--font-display); font-size: clamp(20px, 2.4vw, 28px);
+  font-weight: 400; margin-bottom: 6px;
+}
+.section-subtitle {
+  font-family: var(--font-mono); font-size: 11px; color: var(--text-secondary);
+  text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 20px;
+}
+
+/* KPI STRIP */
+.kpi-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px; margin-bottom: 16px;
+}
+.kpi-card {
+  background: var(--bg-elevated); border: 1px solid var(--border-subtle);
+  border-radius: var(--radius); padding: 16px 18px;
+}
+.kpi-label {
+  font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 1.5px;
+  color: var(--text-tertiary); margin-bottom: 8px;
+}
+.kpi-value {
+  font-family: var(--font-mono); font-size: 26px; font-weight: 600;
+  color: var(--text-primary); line-height: 1;
+}
+.kpi-value .unit { font-size: 14px; color: var(--text-secondary); font-weight: 400; margin-left: 2px; }
+.kpi-sub {
+  font-size: 12px; color: var(--text-secondary); margin-top: 6px;
+}
+.kpi-card.warn { border-color: var(--amber); background: var(--amber-dim); }
+.kpi-card.crit { border-color: var(--red); background: var(--red-dim); }
+.kpi-card.crit .kpi-value, .kpi-card.warn .kpi-value { color: var(--text-primary); }
+
+/* CHART CARDS */
+.chart-card {
+  background: var(--bg-elevated); border: 1px solid var(--border-subtle);
+  border-radius: var(--radius); padding: 20px; margin-bottom: 16px;
+}
+.chart-title {
+  font-family: var(--font-body); font-size: 16px; font-weight: 600;
+  margin-bottom: 4px;
+}
+.chart-caption {
+  font-size: 13px; color: var(--text-secondary); margin-bottom: 16px;
+}
+.chart-container { width: 100%; }
+
+/* SCENARIO TABLE */
+.scenario-table {
+  width: 100%; border-collapse: collapse;
+  font-size: 13px;
+}
+.scenario-table th, .scenario-table td {
+  text-align: left; padding: 10px 12px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.scenario-table th {
+  font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 1.5px;
+  color: var(--text-tertiary); background: var(--bg-surface);
+}
+.scenario-table td { vertical-align: top; }
+.scenario-table td.num { font-family: var(--font-mono); text-align: right; }
+.scenario-name { font-weight: 600; }
+.scenario-desc { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+.crossing.safe { color: var(--green); }
+.crossing.warn { color: var(--amber); }
+.crossing.crit { color: var(--red); }
+
+/* CALLOUT */
+.callout {
+  border-left: 3px solid var(--accent);
+  background: var(--accent-dim);
+  padding: 14px 18px;
+  border-radius: 0 var(--radius) var(--radius) 0;
+  margin-bottom: 16px;
+  font-size: 13px;
+}
+.callout strong { color: var(--accent); }
+.callout.warn { border-color: var(--amber); background: var(--amber-dim); }
+.callout.warn strong { color: var(--amber); }
+
+/* TOGGLE */
+.view-toggle {
+  display: inline-flex;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  padding: 3px;
+  margin-bottom: 16px;
+}
+.view-toggle button {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 7px 14px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.15s, color 0.15s;
+}
+.view-toggle button:hover { color: var(--text-primary); }
+.view-toggle button.active {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+.spike-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 12px;
+  padding: 6px 10px;
+  border-radius: var(--radius);
+  background: var(--amber-dim);
+  border: 1px solid var(--amber);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-primary);
+}
+.spike-chip .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--amber); }
+.toggle-bar { margin-bottom: 12px; display: flex; align-items: center; flex-wrap: wrap; }
+
+/* FOOTER */
+.footer {
+  padding: 24px 0 40px; margin-top: 24px;
+  border-top: 1px solid var(--border-subtle);
+  font-family: var(--font-mono); font-size: 11px; color: var(--text-tertiary);
+}
+.footer p { margin-bottom: 6px; }
+.footer a { color: var(--text-secondary); }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header class="header">
+    <div class="header-subtitle">
+      Weave Ingestion Forecast
+      <span class="internal-badge">Internal · SE only</span>
+    </div>
+    <h1 id="header-title">Loading…</h1>
+    <div class="header-meta" id="header-meta"></div>
+  </header>
+
+  <section class="section">
+    <div class="toggle-bar" id="toggle-bar" style="display:none;">
+      <div class="view-toggle" role="tablist">
+        <button id="view-with" class="active" data-view="with">Include all projects</button>
+        <button id="view-no-spike" data-view="no_spike">Exclude stale spikes</button>
+      </div>
+      <span id="spike-chip" class="spike-chip" style="display:none;"></span>
+    </div>
+    <div class="kpi-grid" id="kpi-grid"></div>
+    <div id="callout-area"></div>
+  </section>
+
+  <section class="section">
+    <div class="chart-card">
+      <div class="chart-title">Cumulative ingestion vs contracted limit</div>
+      <div class="chart-caption">Forward projection of cumulative GB under three constant-rate scenarios, anchored to ingestion since the start of the current contract period. The dashed horizontal line is the contracted annual limit. Where each scenario line crosses the limit is the earliest upsell-trigger date under that assumption.</div>
+      <div id="chart-cumulative" class="chart-container" style="height: 460px;"></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="chart-card">
+      <div class="chart-title">Daily ingestion — history and forecast</div>
+      <div class="chart-caption">Bars: actual daily GB ingested (last 180 days). Lines: projected daily rate under each scenario. Sparse early bars are warm-up; the curve grows as Weave adoption broadens.</div>
+      <div id="chart-daily" class="chart-container" style="height: 440px;"></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="chart-card">
+      <div class="chart-title">Monthly ingestion — last 12 months</div>
+      <div class="chart-caption">Aggregate monthly view from <code>fct_weave_project_storage</code>. Current month is partial.</div>
+      <div id="chart-monthly" class="chart-container" style="height: 320px;"></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="chart-card">
+      <div class="chart-title">Scenario summary</div>
+      <div class="chart-caption">Cumulative projected GB at each horizon, and the date each scenario crosses the contracted limit.</div>
+      <table class="scenario-table" id="scenario-table"></table>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <p><strong>Methodology.</strong> Daily ingestion pulled from <code>wandb-production.analytics.fct_weave_project_storage</code> filtered by <code>account_id</code>, excluding <code>feedback</code> and <code>call_exception</code> storage types. Each scenario is a least-squares linear fit on a different lookback window, projected daily for 365 days. No seasonality or saturation modeling — these are deliberately simple linear trajectories. Treat them as scenarios for conversation, not point predictions.</p>
+    <p><strong>Caveats.</strong> Forecasts are linear extrapolations of a non-stationary signal; real ingestion patterns are spiky. The contracted limit is read from <code>dim_opportunities.total_weave_data_ingestion_limit</code> for the current contract period — confirm against the live contract before any commercial conversation. Project-level breakdown is unavailable for dedicated-cloud Weave (project IDs are local to the customer's clickhouse instance and do not resolve via <code>dim_projects</code>).</p>
+    <p id="footer-meta"></p>
+  </footer>
+
+</div>
+
+<script>
+const FORECAST_DATA = /*__FORECAST_DATA__*/{};
+
+// View state: 'with' (default) or 'no_spike'
+let viewState = 'with';
+let chartCumulative = null, chartDaily = null, chartMonthly = null;
+
+function activeScenarios() {
+  return viewState === 'no_spike' && FORECAST_DATA.scenarios_no_spike
+    ? FORECAST_DATA.scenarios_no_spike
+    : (FORECAST_DATA.scenarios || []);
+}
+function activeDaily() {
+  return viewState === 'no_spike' && FORECAST_DATA.historical && FORECAST_DATA.historical.daily_no_spike
+    ? FORECAST_DATA.historical.daily_no_spike
+    : (FORECAST_DATA.historical && FORECAST_DATA.historical.daily) || [];
+}
+function activeStartingCum() {
+  return viewState === 'no_spike' && FORECAST_DATA.starting_cumulative_gb_no_spike != null
+    ? FORECAST_DATA.starting_cumulative_gb_no_spike
+    : FORECAST_DATA.starting_cumulative_gb;
+}
+function activeKPIs() {
+  const c = FORECAST_DATA.current_state || {};
+  if (viewState !== 'no_spike') return c;
+  return {
+    ...c,
+    last_30d_gb: c.last_30d_gb_no_spike,
+    last_30d_rate_gb_per_day: c.last_30d_rate_gb_per_day_no_spike,
+    annualized_30d_rate_gb: c.annualized_30d_rate_gb_no_spike,
+    utilization_pct: c.utilization_pct_no_spike,
+    cumulative_since_contract_start: c.cumulative_since_contract_start_no_spike
+  };
+}
+
+echarts.registerTheme('wandb', {
+  color: ['#d4a853', '#60a5fa', '#4ade80', '#fbbf24', '#f87171', '#a78bfa'],
+  backgroundColor: 'transparent',
+  textStyle: {
+    fontFamily: "'Outfit', sans-serif",
+    color: getComputedStyle(document.documentElement).getPropertyValue('--text-primary').trim()
+  },
+  title: { textStyle: { fontWeight: 600 } },
+  legend: { textStyle: { color: getComputedStyle(document.documentElement).getPropertyValue('--text-secondary').trim() } }
+});
+
+function fmtGB(v) {
+  if (v == null || isNaN(v)) return '—';
+  if (Math.abs(v) >= 1000) return (v/1000).toFixed(2) + ' TB';
+  return v.toFixed(v >= 10 ? 1 : 2) + ' GB';
+}
+function fmtPct(v) { return v == null || isNaN(v) ? '—' : (v.toFixed(1) + '%'); }
+function fmtDate(s) {
+  if (!s) return '—';
+  const d = new Date(s);
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function buildHeader(d) {
+  document.getElementById('header-title').textContent = d.customer + ' — Weave ingestion forecast';
+  const meta = [];
+  meta.push(`<span>Account: <strong>${d.account_id}</strong></span>`);
+  if (d.deployment_type) meta.push(`<span>Deployment: <strong>${d.deployment_type}</strong></span>`);
+  if (d.contract && d.contract.subscription) meta.push(`<span>Plan: <strong>${d.contract.subscription}</strong></span>`);
+  if (d.contract && d.contract.contract_start_date && d.contract.contract_end_date) {
+    meta.push(`<span>Contract period: <strong>${fmtDate(d.contract.contract_start_date)} → ${fmtDate(d.contract.contract_end_date)}</strong></span>`);
+  }
+  if (d.contract && d.contract.renewal_date) meta.push(`<span>Renewal: <strong>${fmtDate(d.contract.renewal_date)}</strong></span>`);
+  if (d.contract && d.contract.arr) meta.push(`<span>ARR: <strong>$${d.contract.arr.toLocaleString()}</strong></span>`);
+  if (d.starting_cumulative_gb != null && d.contract && d.contract.limit_gb) {
+    const remaining = d.contract.limit_gb - d.starting_cumulative_gb;
+    meta.push(`<span>Headroom: <strong>${remaining.toFixed(1)} GB</strong> of ${d.contract.limit_gb} GB</span>`);
+  }
+  meta.push(`<span>Generated: <strong>${fmtDate(d.generated_at)}</strong></span>`);
+  document.getElementById('header-meta').innerHTML = meta.join('');
+  document.getElementById('footer-meta').textContent =
+    'Source: BigQuery wandb-production.analytics · Generated by weave_forecast.py · ' + d.generated_at;
+}
+
+function buildKPIs() {
+  const c = activeKPIs();
+  const ct = FORECAST_DATA.contract || {};
+  const limit = ct.limit_gb;
+  const isNoSpike = viewState === 'no_spike';
+  const utilZone = c.utilization_pct == null ? '' :
+    (c.utilization_pct >= 100 ? 'crit' : c.utilization_pct >= 75 ? 'warn' : '');
+  // Headline cumulative depends on view
+  const cumThisYear = isNoSpike ? c.cumulative_since_contract_start : (FORECAST_DATA.current_state || {}).cumulative_since_contract_start;
+  const cards = [
+    { label: 'Used this contract year', value: fmtGB(cumThisYear), sub: limit ? `of ${fmtGB(limit)} contracted` : '', cls: utilZone },
+    { label: 'Utilization', value: fmtPct(c.utilization_pct), sub: 'this contract year', cls: utilZone },
+    { label: 'Recent 30-day rate', value: c.last_30d_rate_gb_per_day == null ? '—' : c.last_30d_rate_gb_per_day.toFixed(2) + ' GB/day', sub: isNoSpike ? 'avg, excl. stale spikes' : 'avg of last 30 days' },
+    { label: 'Annualized recent rate', value: fmtGB(c.annualized_30d_rate_gb), sub: 'recent 30d × 365', cls: c.annualized_30d_rate_gb && limit && c.annualized_30d_rate_gb > limit ? 'crit' : '' },
+  ];
+  document.getElementById('kpi-grid').innerHTML = cards.map(k =>
+    `<div class="kpi-card ${k.cls || ''}">
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-value">${k.value}</div>
+      <div class="kpi-sub">${k.sub}</div>
+    </div>`
+  ).join('');
+}
+
+function buildCallout() {
+  const c = activeKPIs();
+  const ct = FORECAST_DATA.contract || {};
+  const out = [];
+  if (ct.limit_gb && c.annualized_30d_rate_gb && c.annualized_30d_rate_gb > ct.limit_gb) {
+    const multiple = (c.annualized_30d_rate_gb / ct.limit_gb).toFixed(1);
+    out.push(`<div class="callout warn"><strong>Recent rate above annual limit.</strong> At the last-30-day rate (${fmtGB(c.annualized_30d_rate_gb)} annualized), this account is on track to consume ${multiple}× their ${fmtGB(ct.limit_gb)} contracted annual allowance. This is the headline upsell trigger.</div>`);
+  }
+  const earliest = activeScenarios().map(s => s.hits_limit_at).filter(Boolean).sort()[0];
+  if (earliest && ct.renewal_date && earliest < ct.renewal_date) {
+    out.push(`<div class="callout"><strong>Earliest limit-crossing: ${fmtDate(earliest)}.</strong> Earlier than the renewal date (${fmtDate(ct.renewal_date)}) — there may be a mid-term expansion conversation, not just a renewal one.</div>`);
+  }
+  document.getElementById('callout-area').innerHTML = out.join('');
+}
+
+function buildCumulativeChart() {
+  const d = FORECAST_DATA;
+  chartCumulative = chartCumulative || echarts.init(document.getElementById('chart-cumulative'), 'wandb');
+  const palette = ['#60a5fa', '#fbbf24', '#f87171'];
+  const limit = d.contract && d.contract.limit_gb;
+  const daily = activeDaily();
+  const scenarios = activeScenarios();
+
+  // Historical cumulative — sum daily history
+  let cum = 0;
+  const hist = daily.map(r => {
+    cum += (r.gb || 0);
+    return [r.day, cum];
+  });
+  // Anchor each scenario's projected cumulative at the last historical cumulative
+  const histEnd = hist.length ? hist[hist.length - 1][1] : 0;
+
+  const series = [];
+  series.push({
+    name: 'Historical (cumulative)',
+    type: 'line',
+    data: hist,
+    showSymbol: false,
+    lineStyle: { width: 2.5, color: getComputedStyle(document.documentElement).getPropertyValue('--text-primary').trim() },
+    areaStyle: { color: 'rgba(212, 168, 83, 0.08)' },
+    z: 5
+  });
+
+  scenarios.forEach((s, i) => {
+    let c = histEnd;
+    const projData = (s.projected_daily || []).map(r => {
+      c += (r.gb || 0);
+      return [r.day, c];
+    });
+    series.push({
+      name: s.label,
+      type: 'line',
+      data: projData,
+      showSymbol: false,
+      lineStyle: { width: 2, color: palette[i % palette.length], type: 'dashed' },
+      z: 4
+    });
+    if (s.hits_limit_at) {
+      series[series.length - 1].markPoint = {
+        symbol: 'pin', symbolSize: 36,
+        itemStyle: { color: palette[i % palette.length] },
+        label: { fontSize: 10, color: '#0c0f14' },
+        data: [{ name: 'limit', coord: [s.hits_limit_at, limit], value: 'X' }]
+      };
+    }
+  });
+
+  if (limit) {
+    series.push({
+      name: `Contracted limit (${limit} GB)`,
+      type: 'line',
+      data: [[hist[0] ? hist[0][0] : null, limit], [(scenarios[0] && scenarios[0].projected_daily && scenarios[0].projected_daily.slice(-1)[0] && scenarios[0].projected_daily.slice(-1)[0].day) || null, limit]],
+      showSymbol: false,
+      lineStyle: { width: 1.5, color: getComputedStyle(document.documentElement).getPropertyValue('--amber').trim(), type: 'dashed' },
+      z: 3
+    });
+  }
+
+  // Vertical renewal-date marker
+  if (d.contract && d.contract.renewal_date) {
+    const renewalColor = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+    series.push({
+      name: 'Renewal',
+      type: 'line',
+      data: [],
+      markLine: {
+        silent: false,
+        symbol: 'none',
+        lineStyle: { color: renewalColor, type: 'dotted', width: 2 },
+        label: {
+          formatter: 'Renewal ' + d.contract.renewal_date,
+          position: 'insideEndTop',
+          color: renewalColor,
+          fontFamily: "'JetBrains Mono', monospace",
+          fontSize: 10
+        },
+        data: [{ xAxis: d.contract.renewal_date }]
+      },
+      z: 2
+    });
+  }
+  // Vertical contract-end marker (if different from renewal)
+  if (d.contract && d.contract.contract_end_date && d.contract.contract_end_date !== d.contract.renewal_date) {
+    const endColor = getComputedStyle(document.documentElement).getPropertyValue('--text-tertiary').trim();
+    series.push({
+      name: 'Contract end',
+      type: 'line',
+      data: [],
+      markLine: {
+        silent: false,
+        symbol: 'none',
+        lineStyle: { color: endColor, type: 'dotted', width: 1 },
+        label: {
+          formatter: 'Contract end',
+          position: 'insideEndBottom',
+          color: endColor,
+          fontFamily: "'JetBrains Mono', monospace",
+          fontSize: 10
+        },
+        data: [{ xAxis: d.contract.contract_end_date }]
+      },
+      z: 2
+    });
+  }
+
+  chartCumulative.setOption({
+    tooltip: { trigger: 'axis', valueFormatter: v => fmtGB(v) },
+    legend: { top: 0, type: 'scroll' },
+    grid: { top: 50, right: 20, bottom: 40, left: 60 },
+    xAxis: { type: 'time', axisLine: { lineStyle: { color: getComputedStyle(document.documentElement).getPropertyValue('--border').trim() } } },
+    yAxis: { type: 'value', name: 'GB (cumulative)', nameTextStyle: { color: getComputedStyle(document.documentElement).getPropertyValue('--text-secondary').trim() }, splitLine: { lineStyle: { color: getComputedStyle(document.documentElement).getPropertyValue('--border-subtle').trim() } } },
+    series
+  }, true);  // notMerge=true to replace old series on re-render
+  return chartCumulative;
+}
+
+function buildDailyChart() {
+  const d = FORECAST_DATA;
+  chartDaily = chartDaily || echarts.init(document.getElementById('chart-daily'), 'wandb');
+  const palette = ['#60a5fa', '#fbbf24', '#f87171'];
+  const daily = activeDaily();
+  const scenarios = activeScenarios();
+
+  const series = [];
+  series.push({
+    name: 'Daily ingestion',
+    type: 'bar',
+    data: daily.map(r => [r.day, r.gb]),
+    itemStyle: { color: 'rgba(212, 168, 83, 0.75)' },
+    z: 3
+  });
+
+  scenarios.forEach((s, i) => {
+    series.push({
+      name: s.label + ' (projection)',
+      type: 'line',
+      data: (s.projected_daily || []).map(r => [r.day, r.gb]),
+      showSymbol: false,
+      lineStyle: { width: 2, color: palette[i % palette.length], type: 'dashed' },
+      z: 4
+    });
+  });
+
+  chartDaily.setOption({
+    tooltip: { trigger: 'axis', valueFormatter: v => fmtGB(v) },
+    legend: { top: 0, type: 'scroll' },
+    grid: { top: 50, right: 20, bottom: 50, left: 60 },
+    xAxis: { type: 'time', axisLine: { lineStyle: { color: getComputedStyle(document.documentElement).getPropertyValue('--border').trim() } } },
+    yAxis: { type: 'value', name: 'GB / day', nameTextStyle: { color: getComputedStyle(document.documentElement).getPropertyValue('--text-secondary').trim() }, splitLine: { lineStyle: { color: getComputedStyle(document.documentElement).getPropertyValue('--border-subtle').trim() } } },
+    dataZoom: [{ type: 'inside' }, { type: 'slider', height: 16, bottom: 10 }],
+    series
+  }, true);
+  return chartDaily;
+}
+
+function buildMonthlyChart() {
+  const d = FORECAST_DATA;
+  chartMonthly = chartMonthly || echarts.init(document.getElementById('chart-monthly'), 'wandb');
+  const monthly = (d.historical && d.historical.monthly) || [];
+  const data = monthly.map(r => [r.month, r.gb]);
+  chartMonthly.setOption({
+    tooltip: { trigger: 'axis', valueFormatter: v => fmtGB(v),
+      formatter: params => {
+        const p = params[0];
+        const m = monthly.find(x => x.month === p.axisValue);
+        return `<div style="font-family:var(--font-mono);font-size:11px">${p.axisValue}</div>
+                <div style="margin-top:4px"><strong>${fmtGB(p.value[1])}</strong> ingested${m && m.users != null ? ` · ${m.users} users` : ''}</div>`;
+      }
+    },
+    grid: { top: 20, right: 20, bottom: 30, left: 60 },
+    xAxis: { type: 'category', data: data.map(r => r[0]), axisLine: { lineStyle: { color: getComputedStyle(document.documentElement).getPropertyValue('--border').trim() } } },
+    yAxis: { type: 'value', name: 'GB / month', nameTextStyle: { color: getComputedStyle(document.documentElement).getPropertyValue('--text-secondary').trim() }, splitLine: { lineStyle: { color: getComputedStyle(document.documentElement).getPropertyValue('--border-subtle').trim() } } },
+    series: [{
+      name: 'GB',
+      type: 'bar',
+      data: data.map(r => r[1]),
+      itemStyle: { color: '#d4a853' }
+    }]
+  }, true);
+  return chartMonthly;
+}
+
+function buildScenarioTable() {
+  const d = FORECAST_DATA;
+  const ct = d.contract || {};
+  const limit = ct.limit_gb;
+  const rows = activeScenarios().map(s => {
+    const crossClass = !s.hits_limit_at ? 'safe' :
+      (ct.renewal_date && s.hits_limit_at < ct.renewal_date ? 'crit' : 'warn');
+    return `<tr>
+      <td>
+        <div class="scenario-name" style="color:${s.color || 'inherit'}">${s.label}</div>
+        <div class="scenario-desc">${s.window_description || ''}</div>
+      </td>
+      <td class="num">${s.rate_gb_per_day == null ? '—' : s.rate_gb_per_day.toFixed(3)}</td>
+      <td class="num">${s.monthly_rate_gb == null ? '—' : s.monthly_rate_gb.toFixed(1) + ' GB'}</td>
+      <td class="num">${fmtGB(s.total_at_3mo_gb)}</td>
+      <td class="num">${fmtGB(s.total_at_6mo_gb)}</td>
+      <td class="num">${fmtGB(s.total_at_9mo_gb)}</td>
+      <td class="num">${fmtGB(s.total_at_12mo_gb)}</td>
+      <td class="num crossing ${crossClass}">${s.hits_limit_at ? fmtDate(s.hits_limit_at) : 'beyond 12mo'}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('scenario-table').innerHTML = `
+    <thead>
+      <tr>
+        <th>Scenario</th>
+        <th style="text-align:right">GB/day rate</th>
+        <th style="text-align:right">GB/month</th>
+        <th style="text-align:right">+3 months</th>
+        <th style="text-align:right">+6 months</th>
+        <th style="text-align:right">+9 months</th>
+        <th style="text-align:right">+12 months</th>
+        <th style="text-align:right">Limit crossed</th>
+      </tr>
+    </thead>
+    <tbody>${rows}</tbody>`;
+}
+
+function renderAll() {
+  buildKPIs();
+  buildCallout();
+  buildCumulativeChart();
+  buildDailyChart();
+  buildMonthlyChart();
+  buildScenarioTable();
+}
+
+function setupToggle() {
+  const sa = FORECAST_DATA.spike_analysis || {};
+  const bar = document.getElementById('toggle-bar');
+  const chip = document.getElementById('spike-chip');
+  if (!sa.enabled || !sa.projects || sa.projects.length === 0) {
+    // Hide toggle if there are no stale spike projects
+    if (bar) bar.style.display = 'none';
+    return;
+  }
+  bar.style.display = 'flex';
+
+  const updateChip = () => {
+    if (viewState !== 'no_spike') { chip.style.display = 'none'; return; }
+    chip.style.display = 'inline-flex';
+    const proj = sa.projects.map(p => `project ${p.project_id} (${p.total_gb} GB, silent ${p.days_silent}d)`).join(' · ');
+    chip.innerHTML = `<span class="dot"></span> Excluding ${sa.projects.length} stale spike project${sa.projects.length > 1 ? 's' : ''}: ${proj}`;
+  };
+
+  document.querySelectorAll('.view-toggle button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const v = btn.dataset.view;
+      if (v === 'no_spike') viewState = 'no_spike';
+      else viewState = 'with';
+      document.querySelectorAll('.view-toggle button').forEach(b => b.classList.toggle('active', b === btn));
+      updateChip();
+      renderAll();
+    });
+  });
+  updateChip();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  buildHeader(FORECAST_DATA);
+  setupToggle();
+  renderAll();
+  window.addEventListener('resize', () => {
+    if (chartCumulative) chartCumulative.resize();
+    if (chartDaily) chartDaily.resize();
+    if (chartMonthly) chartMonthly.resize();
+  });
+});
+</script>
+</body>
+</html>

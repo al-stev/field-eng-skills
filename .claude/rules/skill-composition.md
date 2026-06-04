@@ -95,6 +95,15 @@ Generate a standalone usage visualization for a customer from BigQuery data. Two
    - With `--internal`: full SE prep report (power users with real names, churn risk, candid AI narrative)
 3. Output saved to `customers/<name>/usage/YYYY-MM-DD-usage-report.html` (external) or `customers/<name>/usage/YYYY-MM-DD-usage-report-internal.html` (internal).
 
+## Weave Forecast
+
+Project a customer's Weave ingestion forward against their contracted limit. Use when a customer's Weave usage is approaching the limit and you need to gauge whether a mid-term upsell is justified.
+
+1. **bigquery** — Source layer. Provides `weave_daily_by_project_query`, `weave_monthly_query`, `weave_limit_query`, and `account_health_query` (the four queries the forecast script runs).
+2. **salesforce** — Optional cross-check. Use to verify the contract end date, find in-flight Weave upsell opportunities, and surface the renewal opportunity for the year-after dialogue.
+3. **weave-forecast** — Run `/weave-forecast <CustomerName>` (or `weave forecast for <CustomerName>`). Pulls daily Weave ingestion from `fct_weave_project_storage`, fits 3 mean-rate scenarios (180d / 90d / 30d windows), auto-detects stale-spike projects (≥5 GB lifetime, ≥7 days silent), computes limit-crossing dates per scenario, renders a self-contained ECharts HTML page with a "include all / exclude stale spikes" toggle.
+4. Output saved to `customers/<name>/weave/YYYY-MM-DD-weave-forecast.html`. Internal-only — has an "INTERNAL · SE only" badge.
+
 ## Customer Onboarding
 
 Set up a new customer's full structure across Asana, Confluence, and the customer registry.

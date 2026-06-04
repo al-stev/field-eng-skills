@@ -193,3 +193,21 @@ customers:
       day: Wednesday
       time: "4:00 PM GMT"
     contacts: PLACEHOLDER
+
+  - name: GSK
+    jira_customer: GSK
+    jira_customer_variants: []
+    sfdc_account_id: "0012E000022lqZNQAY"
+    slack_channels: PLACEHOLDER
+    action_tracker: PLACEHOLDER
+    action_tracker_id: PLACEHOLDER
+    raid_tracker: PLACEHOLDER
+    raid_tracker_id: PLACEHOLDER
+    portfolio_id: PLACEHOLDER
+    confluence_pages: PLACEHOLDER
+    deployment_type: dedicated-cloud
+    cadence:
+      type: PLACEHOLDER
+      day: PLACEHOLDER
+      time: PLACEHOLDER
+    contacts: PLACEHOLDER

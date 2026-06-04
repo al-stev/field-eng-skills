@@ -202,6 +202,157 @@ def weave_ingestion_query() -> str:
     """
 
 
+def weave_monthly_query(months: int = 12) -> str:
+    """
+    Cheap monthly Weave ingestion history.
+
+    Direct account_id filter on fct_weave_project_storage (no JOIN through
+    dim_organizations). Returns one row per month with total storage_gb and
+    distinct active users.
+
+    For the forecast tool this replaces the more expensive weave_ingestion_query
+    when only history + limit is needed (limit comes from a separate query).
+
+    Args:
+        months: lookback window in months. Default 12.
+    """
+    weave_storage = _ref("fct_weave_project_storage")
+    daily_usage = _ref("ext_daily_user_event_usage")
+    return f"""
+    WITH storage_agg AS (
+        SELECT
+            DATE_TRUNC(DATE(created_at), MONTH) AS month,
+            SUM(storage_gb) AS total_storage_gb
+        FROM {weave_storage}
+        WHERE account_id = @account_id
+            AND DATE(created_at) >= DATE_SUB(CURRENT_DATE(), INTERVAL {int(months)} MONTH)
+            AND storage_type NOT IN ('feedback', 'call_exception')
+        GROUP BY month
+    ),
+    users_agg AS (
+        SELECT
+            DATE_TRUNC(date_day, MONTH) AS month,
+            COUNT(DISTINCT universal_user_id) AS unique_users
+        FROM {daily_usage}
+        WHERE account_id = @account_id
+            AND product_type = 'weave'
+            AND date_day >= DATE_SUB(CURRENT_DATE(), INTERVAL {int(months)} MONTH)
+        GROUP BY month
+    )
+    SELECT
+        s.month AS created_date,
+        s.total_storage_gb,
+        COALESCE(u.unique_users, 0) AS unique_users
+    FROM storage_agg s
+    LEFT JOIN users_agg u USING (month)
+    ORDER BY s.month
+    """
+
+
+def weave_limit_query() -> str:
+    """
+    Current contracted Weave ingestion limit (GB) for the customer.
+
+    Reads from dim_opportunities, filtering to the current contract period.
+    Handles unit normalization (MB / GB / TB -> GB).
+
+    Returns one row with weave_data_ingestion_limit_gb, contract_start_date,
+    contract_end_date. May return zero rows if no active contract has a limit.
+
+    Cheap (dim_opportunities is small).
+    """
+    dim_opportunities = _ref("dim_opportunities")
+    return f"""
+    -- A customer can have multiple won opportunities active today (e.g. an
+    -- original renewal plus a mid-term MSA co-term that extends the end
+    -- date). Order by contract_end_date DESC to pick the latest-effective
+    -- contract — that's the real "this is what we're operating under" record.
+    SELECT
+        CASE
+            WHEN weave_data_ingestion_uoms[OFFSET(0)] = 'MB'
+                THEN total_weave_data_ingestion_limit / 1000
+            WHEN weave_data_ingestion_uoms[OFFSET(0)] = 'TB'
+                THEN total_weave_data_ingestion_limit * 1000
+            ELSE total_weave_data_ingestion_limit
+        END AS weave_data_ingestion_limit_gb,
+        DATE(contract_start_date) AS contract_start_date,
+        DATE(contract_end_date) AS contract_end_date,
+        name AS source_opportunity_name
+    FROM {dim_opportunities}
+    WHERE account_id = @account_id
+        AND total_weave_data_ingestion_limit IS NOT NULL
+        AND is_won IS TRUE
+        AND service_type = 'Touch'
+        AND CURRENT_DATE() BETWEEN DATE(contract_start_date) AND DATE(contract_end_date)
+    ORDER BY contract_end_date DESC
+    LIMIT 1
+    """
+
+
+def weave_daily_query(days: int = 180) -> str:
+    """
+    Daily-grain Weave ingestion query for forecasting.
+
+    Returns daily storage_gb (and billable_gb) for the customer over the given
+    window. Filters directly on fct_weave_project_storage.account_id (no JOIN
+    through dim_organizations — the table already has account_id as a column,
+    which roughly halves bytes scanned vs the monthly query.
+
+    Cost note: scans ~50-100 GB depending on window. Use 90-180 day windows
+    rather than 365 to keep cost down; the forecast doesn't need a full year
+    of daily data.
+
+    Args:
+        days: lookback window in days. Default 180.
+
+    Returns:
+        SQL string with @account_id parameter. Returns one row per day.
+    """
+    weave_storage = _ref("fct_weave_project_storage")
+    return f"""
+    SELECT
+        DATE(created_at) AS day,
+        SUM(storage_gb) AS day_gb,
+        SUM(billable_storage_gb) AS billable_gb
+    FROM {weave_storage}
+    WHERE account_id = @account_id
+        AND DATE(created_at) >= DATE_SUB(CURRENT_DATE(), INTERVAL {int(days)} DAY)
+        AND storage_type NOT IN ('feedback', 'call_exception')
+    GROUP BY day
+    ORDER BY day
+    """
+
+
+def weave_daily_by_project_query(days: int = 180) -> str:
+    """
+    Daily Weave ingestion broken down by project_id.
+
+    Same source as weave_daily_query but with project_id added to GROUP BY.
+    Used by the forecast tool to (a) identify "stale spike projects" — projects
+    that contributed a large burst and have since gone silent — and (b) recompute
+    daily totals with those projects excluded for an alternate forecast.
+
+    Note: project_id is local to the customer's instance (dedicated cloud) or
+    global (SaaS). For dedicated cloud, the integer ID is not resolvable to a
+    project name from BQ alone — see project_dedicated_cloud_weave memory.
+
+    Same scan cost as weave_daily_query (~85 GB for 180 days on a large account).
+    """
+    weave_storage = _ref("fct_weave_project_storage")
+    return f"""
+    SELECT
+        DATE(created_at) AS day,
+        project_id,
+        SUM(storage_gb) AS day_gb
+    FROM {weave_storage}
+    WHERE account_id = @account_id
+        AND DATE(created_at) >= DATE_SUB(CURRENT_DATE(), INTERVAL {int(days)} DAY)
+        AND storage_type NOT IN ('feedback', 'call_exception')
+    GROUP BY day, project_id
+    ORDER BY day, project_id
+    """
+
+
 def tracked_hours_query() -> str:
     """
     Daily tracked hours and run count query.
