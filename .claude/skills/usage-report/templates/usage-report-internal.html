@@ -657,6 +657,22 @@ body::before {
     <div id="radarChart" class="echart-container radar-chart"></div>
   </section>
 
+  <!-- Product-Area Adoption Over Time (ECharts) -->
+  <section class="usage-section animate-in" style="animation-delay: 175ms" id="paTrendSection">
+    <div class="section-header">PRODUCT-AREA ADOPTION OVER TIME</div>
+    <div id="paTrendChart" class="echart-container" style="height: 360px;"></div>
+  </section>
+
+  <!-- Weave Activity (active-but-unpaid; ECharts + table, rendered by JS) -->
+  <section class="usage-section animate-in" style="animation-delay: 185ms" id="weaveActivitySection">
+    <div class="section-header">WEAVE ACTIVITY</div>
+    <div id="weaveActivityHeadline"></div>
+    <div id="weaveActivityKpis" class="kpi-row" style="border-bottom:none"></div>
+    <div id="weaveActivityChart" class="echart-container" style="height: 320px;"></div>
+    <div id="weaveActivityUsers"></div>
+    <div id="weaveActivityCallout"></div>
+  </section>
+
   <!-- Weave Ingestion Chart (ECharts) -->
   <section class="usage-section animate-in" style="animation-delay: 200ms" id="weaveSection">
     <div class="section-header">WEAVE INGESTION</div>
@@ -839,20 +855,67 @@ const USAGE_DATA = {
     ]
   },
   product_areas: [
-    { area: "Experiments", event_count: 42500, user_count: 32, trend_pct: 5.2 },
-    { area: "Artifacts", event_count: 18200, user_count: 24, trend_pct: -2.1 },
-    { area: "Model Registry", event_count: 3100, user_count: 3, trend_pct: 12.0 },
-    { area: "Sweeps", event_count: 2800, user_count: 8, trend_pct: -8.5 },
-    { area: "Reports", event_count: 5600, user_count: 18, trend_pct: 3.4 },
-    { area: "Weave", event_count: 28900, user_count: 12, trend_pct: 34.2 },
-    { area: "Launch", event_count: 1200, user_count: 4, trend_pct: 22.0 },
-    { area: "Automations", event_count: 450, user_count: 2, trend_pct: 0 }
+    { area: "Experiments", event_count: 42500, user_count: 32, trend_pct: 5.2,
+      monthly_events: [
+        { month: "2024-01", count: 2800 }, { month: "2024-06", count: 3100 }, { month: "2024-12", count: 3400 },
+        { month: "2025-01", count: 3300 }, { month: "2025-06", count: 3600 }, { month: "2025-12", count: 3800 },
+        { month: "2026-01", count: 3900 }, { month: "2026-03", count: 4200 }, { month: "2026-06", count: 4100 }
+      ] },
+    { area: "Artifacts", event_count: 18200, user_count: 24, trend_pct: -2.1,
+      monthly_events: [
+        { month: "2024-01", count: 2100 }, { month: "2024-06", count: 1900 }, { month: "2024-12", count: 1400 },
+        { month: "2025-01", count: 1200 }, { month: "2025-06", count: 700 }, { month: "2025-12", count: 300 },
+        { month: "2026-01", count: 120 }, { month: "2026-06", count: 40 }
+      ] },
+    { area: "Model Registry", event_count: 0, user_count: 0, trend_pct: 0,
+      monthly_events: [] },
+    { area: "Sweeps", event_count: 2800, user_count: 8, trend_pct: -8.5,
+      monthly_events: [
+        { month: "2024-06", count: 900 }, { month: "2025-06", count: 1100 }, { month: "2026-03", count: 800 }
+      ] },
+    { area: "Reports", event_count: 5600, user_count: 18, trend_pct: 3.4,
+      monthly_events: [
+        { month: "2024-06", count: 1600 }, { month: "2025-06", count: 2000 }, { month: "2026-03", count: 2000 }
+      ] },
+    { area: "Weave Tracing", event_count: 22000, user_count: 6, trend_pct: 34.2,
+      monthly_events: [
+        { month: "2025-08", count: 4000 }, { month: "2026-06", count: 7000 }
+      ] },
+    { area: "Weave Evaluation", event_count: 3000, user_count: 4, trend_pct: 20.0,
+      monthly_events: [
+        { month: "2025-08", count: 900 }, { month: "2026-06", count: 1200 }
+      ] },
+    { area: "Collaboration", event_count: 4100, user_count: 20, trend_pct: 1.0,
+      monthly_events: [
+        { month: "2025-06", count: 2000 }, { month: "2026-06", count: 2100 }
+      ] },
+    { area: "Tables", event_count: 9200, user_count: 10, trend_pct: 5.0,
+      monthly_events: [
+        { month: "2024-06", count: 2800 }, { month: "2025-06", count: 3200 }, { month: "2026-03", count: 3200 }
+      ] }
+  ],
+  weave_activity: [
+    { month: "2025-08", area: "Tracing", events: 3200, users: 3 },
+    { month: "2025-08", area: "Evaluation", events: 700, users: 2 },
+    { month: "2025-08", area: "Data", events: 150, users: 1 },
+    { month: "2026-06", area: "Tracing", events: 6800, users: 5 },
+    { month: "2026-06", area: "Evaluation", events: 1900, users: 3 },
+    { month: "2026-06", area: "Data", events: 220, users: 2 },
+    { month: "2026-06", area: "Other weave", events: 60, users: 1 }
+  ],
+  weave_users: [
+    { username: "reuben_thomas", email: "reuben.thomas@example.com", events: 6350, first_day: "2025-07-23", last_day: "2026-06-30" },
+    { username: "winston_ho", email: "winston.ho@example.com", events: 4661, first_day: "2025-03-03", last_day: "2026-06-30" },
+    { username: "de136f1b9c", email: "", events: 2296, first_day: "2026-05-27", last_day: "2026-06-30" },
+    { username: "james_beer", email: "james.beer@example.com", events: 733, first_day: "2025-01-31", last_day: "2026-06-30" },
+    { username: "17985682aa", email: "", events: 423, first_day: "2025-08-08", last_day: "2026-06-30" },
+    { username: "martin_galpin", email: "martin.galpin@example.com", events: 14, first_day: "2025-05-29", last_day: "2025-09-01" }
   ],
   account_health: {
     renewal_date: "2026-09-15", arr: 250000.0, cs_tier: "Strategic",
     customer_health: "Green", churn_probability_3mo: 0.05,
     churn_probability_5mo: 0.08, subscription_plan: "Enterprise",
-    deployment_type: "dedicated-cloud"
+    deployment_type: "dedicated-cloud", weave_customer: false
   },
   trends: {
     seat_utilization_change: 12.5, weave_ingestion_change: -3.2,
@@ -862,14 +925,14 @@ const USAGE_DATA = {
     { username: "alice_ml", email: "alice.smith@gresearch.com", name: "Alice Smith", total_events: 12500, product_areas: ["Experiments", "Artifacts", "Weave"], last_activity: "2026-03-23" },
     { username: "bob_research", email: "bob.jones@gresearch.com", name: "Bob Jones", total_events: 9800, product_areas: ["Experiments", "Weave"], last_activity: "2026-03-22" },
     { username: "carol_eng", email: "carol.wu@gresearch.com", name: "Carol Wu", total_events: 8200, product_areas: ["Experiments", "Artifacts", "Model Registry"], last_activity: "2026-03-21" },
-    { username: "david_ops", email: "david.chen@gresearch.com", name: "David Chen", total_events: 7100, product_areas: ["Launch", "Automations", "Experiments"], last_activity: "2026-03-20" },
+    { username: "david_ops", email: "david.chen@gresearch.com", name: "David Chen", total_events: 7100, product_areas: ["Model Registry", "Artifacts", "Experiments"], last_activity: "2026-03-20" },
     { username: "eva_data", email: "eva.martinez@gresearch.com", name: "Eva Martinez", total_events: 6500, product_areas: ["Experiments", "Reports"], last_activity: "2026-03-18" },
     { username: "frank_ml", email: "frank.lee@gresearch.com", name: "Frank Lee", total_events: 5800, product_areas: ["Experiments", "Sweeps"], last_activity: "2026-03-15" },
     { username: "grace_ai", email: "grace.patel@gresearch.com", name: "Grace Patel", total_events: 5200, product_areas: ["Weave", "Experiments"], last_activity: "2026-03-10" },
     { username: "henry_sci", email: "henry.wang@gresearch.com", name: "Henry Wang", total_events: 4800, product_areas: ["Experiments", "Artifacts"], last_activity: "2026-03-05" },
     { username: "iris_quant", email: "iris.garcia@gresearch.com", name: "Iris Garcia", total_events: 4200, product_areas: ["Experiments"], last_activity: "2026-02-28" },
     { username: "jack_dev", email: "jack.taylor@gresearch.com", name: "Jack Taylor", total_events: 3800, product_areas: ["Experiments", "Reports", "Artifacts"], last_activity: "2026-02-20" },
-    { username: "kate_infra", email: "kate.brown@gresearch.com", name: "Kate Brown", total_events: 3500, product_areas: ["Launch", "Experiments"], last_activity: "2026-02-15" },
+    { username: "kate_infra", email: "kate.brown@gresearch.com", name: "Kate Brown", total_events: 3500, product_areas: ["Sweeps", "Experiments"], last_activity: "2026-02-15" },
     { username: "leo_ml", email: "leo.kim@gresearch.com", name: "Leo Kim", total_events: 3100, product_areas: ["Experiments", "Weave"], last_activity: "2026-03-22" },
     { username: "mia_ops", email: "mia.johnson@gresearch.com", name: "Mia Johnson", total_events: 2800, product_areas: ["Artifacts", "Model Registry"], last_activity: "2026-03-19" },
     { username: "noah_sci", email: "noah.davis@gresearch.com", name: "Noah Davis", total_events: 2500, product_areas: ["Experiments"], last_activity: "2026-03-17" },
@@ -883,13 +946,13 @@ const AI_NARRATIVE = {
   highlights: [
     "Weave adoption surging: +34% MoM, 12 active users, approaching critical mass",
     "Experiment tracking is deeply embedded -- 32 active users, stable baseline",
-    "Launch + Automations emerging: 4 users piloting production ML workflows"
+    "Tables adoption steady: 10 users building evaluation views alongside experiments"
   ],
   recommendations: [
     "Schedule a Model Registry workshop -- only 3 users despite 50 seats. The gap between Artifacts (24 users) and Registry (3) suggests a workflow adoption barrier.",
     "Push Weave evaluation features in next call -- 12 users are tracing but only 2 have tried evaluations.",
     "Investigate the December usage dip (seats dropped from 39 to 28) -- holiday effect or team departure?",
-    "Prepare renewal deck with adoption growth narrative: Weave +34%, Launch +22%, 70% seat utilization."
+    "Prepare renewal deck with adoption growth narrative: Weave +34%, Tables +5%, 70% seat utilization."
   ],
   risk_signals: [
     "4 power users inactive 14+ days (Henry Wang, Iris Garcia, Jack Taylor, Kate Brown) -- potential champion loss",
@@ -1269,6 +1332,246 @@ function renderProductRadar(data) {
   window.addEventListener('resize', function() { chart.resize(); });
 }
 
+/* ── RENDER: PRODUCT-AREA ADOPTION OVER TIME (ECharts heatmap) ──
+   Area x year heatmap. Each row is row-normalised (colour = share of that area's
+   own peak year) so trajectory/drop-off reads regardless of absolute scale; the
+   row label carries the all-time total so scale is not lost. Linear, no text on
+   cells (exact values in tooltip) -- avoids the log-scale + low-contrast pitfalls
+   of a stacked/overlapping bar. Reveals multi-year shifts (an area heavily used
+   years ago that has dropped off). Reads product_areas[].monthly_events; window
+   controlled by usage.py --months (pass 0 for full history). */
+function renderProductAreaTrend(data) {
+  var areas = (data.product_areas || []).filter(function(a) {
+    return a.monthly_events && a.monthly_events.length > 0;
+  });
+  if (areas.length === 0) {
+    var s = document.getElementById('paTrendSection');
+    if (s) s.style.display = 'none';
+    return;
+  }
+  var colors = getComputedThemeColors();
+  // Models-capability heatmap: exclude the Weave sub-areas (Weave is a distinct
+  // product, shown separately below) and Collaboration (profile views, low signal).
+  // Rename "Model Registry" -> "Registry".
+  function normName(n) {
+    if (n === 'Model Registry') return 'Registry';
+    if (n === 'Sweeps Created' || n === 'Sweeps Viewed') return 'Sweeps';
+    return n;
+  }
+  function excluded(n) { return n === 'Collaboration' || String(n).indexOf('Weave') === 0; }
+  // aggregate events per area per year
+  var yearSet = {};
+  var agg = {}; // area -> {year: events}
+  areas.forEach(function(a) {
+    if (excluded(a.area)) return;
+    var nm = normName(a.area);
+    if (!agg[nm]) agg[nm] = {};
+    a.monthly_events.forEach(function(m) {
+      var y = String(m.month).slice(0, 4);
+      yearSet[y] = true;
+      agg[nm][y] = (agg[nm][y] || 0) + m.count;
+    });
+  });
+  // Always show Registry, even at zero -- the empty (dark) row makes the
+  // governance gap visible rather than silently omitting it.
+  if (!agg['Registry']) agg['Registry'] = {};
+  // If the warehouse returned no year at all (e.g. only Registry, which is empty),
+  // seed the current year so the heatmap still has a column to render.
+  if (Object.keys(yearSet).length === 0) yearSet[String(new Date().getFullYear())] = true;
+  var years = Object.keys(yearSet).sort();
+  var totals = {};
+  Object.keys(agg).forEach(function(nm) {
+    totals[nm] = Object.keys(agg[nm]).reduce(function(s, y) { return s + agg[nm][y]; }, 0);
+  });
+  // The most recent year is usually partial (data through mid-year). Annualize it by
+  // months-of-data present so its colour is comparable to full years; keep actual YTD
+  // for the label/tooltip. Self-adjusting -- no hardcoded date.
+  var latest = years[years.length - 1];
+  var moSet = {};
+  areas.forEach(function(a) {
+    if (excluded(a.area)) return;
+    a.monthly_events.forEach(function(m) { if (String(m.month).slice(0, 4) === latest) moSet[m.month] = true; });
+  });
+  var monthsPresent = Object.keys(moSet).length || 12;
+  var partial = monthsPresent < 12;
+  var factor = partial ? 12 / monthsPresent : 1;
+  function adj(a, y) { var ev = agg[a][y] || 0; return y === latest ? ev * factor : ev; }
+  // biggest area on top: sort desc, then reverse for y-index (0 = bottom).
+  // Registry (total 0) sorts to the bottom and renders as the darkest row.
+  var areasDesc = Object.keys(agg).sort(function(x, y) { return totals[y] - totals[x]; });
+  var areasY = areasDesc.slice().reverse();
+  var rows = areasY.map(function(a) { return a + '  ·  ' + totals[a].toLocaleString(); });
+  var yearsLbl = years.map(function(y) { return (partial && y === latest) ? y + ' *' : y; });
+  var cells = [];
+  areasY.forEach(function(a, yi) {
+    var rowmax = Math.max.apply(null, years.map(function(y) { return adj(a, y); })) || 1;
+    years.forEach(function(y, xi) {
+      var ev = agg[a][y] || 0;
+      var cell = { value: [xi, yi, Math.round(adj(a, y) / rowmax * 1000) / 1000], abs: ev };
+      if (partial && y === latest) cell.ann = Math.round(ev * factor);
+      cells.push(cell);
+    });
+  });
+  var chart = echarts.init(document.getElementById('paTrendChart'), 'wandb');
+  chart.setOption({
+    tooltip: { position: 'top', backgroundColor: colors.bgElevated, borderColor: colors.border,
+      textStyle: { color: colors.textPrimary, fontSize: 12 },
+      formatter: function(p) { var nm = p.name.split('  ·')[0], yr = yearsLbl[p.value[0]], ab = (p.data.abs || 0).toLocaleString();
+        if (p.data.ann != null) return nm + ' — ' + yr.replace(' *', '') + ' YTD: <b>' + ab + '</b> events (~' + p.data.ann.toLocaleString() + ' annualized)';
+        return nm + ' — ' + yr + ': <b>' + ab + '</b> events'; } },
+    grid: { left: 178, right: 24, top: 16, bottom: 64 },
+    xAxis: { type: 'category', data: yearsLbl, splitArea: { show: true }, axisLine: { show: false }, axisTick: { show: false },
+      axisLabel: { color: colors.textSecondary, fontFamily: "'JetBrains Mono', monospace" } },
+    yAxis: { type: 'category', data: rows, splitArea: { show: true }, axisLine: { show: false }, axisTick: { show: false },
+      axisLabel: { color: colors.textSecondary, fontFamily: "'JetBrains Mono', monospace", fontSize: 11 } },
+    visualMap: { min: 0, max: 1, calculable: false, show: true, orient: 'horizontal', left: 'center', bottom: 8,
+      text: ['peak year', 'none'], textStyle: { color: colors.textTertiary, fontFamily: "'JetBrains Mono', monospace", fontSize: 10 },
+      inRange: { color: ['#101722', '#1d3350', '#2b5891', '#4a86d8', '#a8cdf0'] } },
+    series: [{ type: 'heatmap', data: cells,
+      itemStyle: { borderColor: colors.bgElevated, borderWidth: 3 },
+      emphasis: { itemStyle: { shadowBlur: 8, shadowColor: 'rgba(0,0,0,.5)' } } }]
+  });
+  window.addEventListener('resize', function() { chart.resize(); });
+}
+
+/* ── RENDER: WEAVE ACTIVITY (active-but-unpaid; ECharts stacked bar + table) ──
+   Consumes data.weave_activity ([{month, area, events, users}]) and
+   data.weave_users ([{username, email, events, first_day, last_day}]). Mirrors the
+   bespoke "Weave — active but unpaid" section: KPI row, monthly stacked bar by area
+   (Tracing / Evaluation / Data / Other weave), and a real-identity "who's logging
+   Weave traces" table. Hides the whole section gracefully if weave_activity is
+   missing or empty. Internal report -- shows real emails / usernames. */
+function escapeHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function renderWeaveActivity(data) {
+  var section = document.getElementById('weaveActivitySection');
+  var activity = data.weave_activity || [];
+  if (!section) return;
+  if (!activity.length) {
+    section.style.display = 'none';
+    return;
+  }
+  var colors = getComputedThemeColors();
+
+  var WV_AREAS = ['Tracing', 'Evaluation', 'Data', 'Other weave'];
+  var WV_COL = { 'Tracing': colors.blue, 'Evaluation': colors.accent, 'Data': '#a78bfa', 'Other weave': colors.textTertiary };
+
+  // pivot activity -> months x area
+  var monthSet = {};
+  activity.forEach(function(r) { monthSet[r.month] = true; });
+  var months = Object.keys(monthSet).sort();
+  var moIdx = {};
+  months.forEach(function(m, i) { moIdx[m] = i; });
+  var pivot = {};
+  WV_AREAS.forEach(function(a) { pivot[a] = months.map(function() { return 0; }); });
+  var totalEvents = 0, tracingEvents = 0, evalEvents = 0;
+  activity.forEach(function(r) {
+    var ev = r.events || 0;
+    totalEvents += ev;
+    if (r.area === 'Tracing') tracingEvents += ev;
+    if (r.area === 'Evaluation') evalEvents += ev;
+    var a = (WV_AREAS.indexOf(r.area) >= 0) ? r.area : 'Other weave';
+    pivot[a][moIdx[r.month]] += ev;
+  });
+
+  // users -- prefer explicit weave_users; fall back to unique users in activity
+  var users = data.weave_users || [];
+  var userCount = users.length;
+  if (!userCount) {
+    var uset = {};
+    activity.forEach(function(r) { if (r.users != null) uset[r.month] = Math.max(uset[r.month] || 0, r.users); });
+    // best-effort distinct-user estimate: peak monthly users
+    userCount = Object.keys(uset).reduce(function(mx, k) { return Math.max(mx, uset[k]); }, 0);
+  }
+
+  var weaveCustomer = data.account_health && data.account_health.weave_customer;
+
+  /* Intro line */
+  var intro = 'Active Weave usage';
+  if (!weaveCustomer) {
+    intro = 'Sold Models-Only (<b>$0 Weave ARR</b>), yet a pocket of the team actively traces and evaluates LLM / agent apps on Weave — <b>' +
+      formatNumber(totalEvents) + '</b> events from <b>' + userCount + '</b> users. Live expansion whitespace.';
+  } else {
+    intro = 'The team is tracing and evaluating LLM / agent apps on Weave — <b>' +
+      formatNumber(totalEvents) + '</b> events from <b>' + userCount + '</b> users.';
+  }
+  document.getElementById('weaveActivityHeadline').innerHTML =
+    '<p class="supplementary-stat" style="color:var(--text-secondary);margin-top:0;margin-bottom:16px">' + intro + '</p>';
+
+  /* KPI row */
+  function kpi(value, label) {
+    return '<div class="kpi-item"><span class="kpi-value">' + value + ' ' + label + '</span></div>';
+  }
+  var kpiHtml =
+    kpi(formatNumber(totalEvents), 'Weave events') +
+    kpi(formatNumber(tracingEvents), 'traced') +
+    kpi(formatNumber(evalEvents), 'evaluation events') +
+    kpi(formatNumber(userCount), 'Weave users');
+  if (!weaveCustomer) {
+    kpiHtml += '<div class="kpi-item"><span class="kpi-value" style="color:var(--red)">$0 Weave ARR</span></div>';
+  }
+  document.getElementById('weaveActivityKpis').innerHTML = kpiHtml;
+
+  /* Stacked bar chart */
+  var chart = echarts.init(document.getElementById('weaveActivityChart'), 'wandb');
+  chart.setOption({
+    tooltip: { trigger: 'axis', backgroundColor: colors.bgElevated, borderColor: colors.border,
+      textStyle: { color: colors.textPrimary, fontSize: 12, fontFamily: "'Outfit', sans-serif" } },
+    legend: { data: WV_AREAS, textStyle: { color: colors.textSecondary }, top: 0 },
+    grid: { left: 52, right: 20, top: 34, bottom: 30 },
+    xAxis: { type: 'category', data: months.map(formatMonthLabel) },
+    yAxis: { type: 'value', name: 'events', splitLine: { lineStyle: { color: colors.borderSubtle, type: 'dashed' } } },
+    series: WV_AREAS.map(function(a) {
+      return { name: a, type: 'bar', stack: 'weave', data: pivot[a], itemStyle: { color: WV_COL[a] } };
+    })
+  });
+  window.addEventListener('resize', function() { chart.resize(); });
+
+  /* "Who's logging Weave traces" table (real identities) */
+  var sortedUsers = users.slice().sort(function(a, b) { return (b.events || 0) - (a.events || 0); });
+  var tableHtml = '<div class="section-header" style="margin-top:20px">WHO’S LOGGING WEAVE TRACES</div>';
+  tableHtml += '<div style="overflow-x:auto"><table class="power-user-table">';
+  tableHtml += '<thead><tr><th>User</th><th style="text-align:right">Weave events</th><th>First seen</th><th>Last seen</th><th>Status</th></tr></thead><tbody>';
+  sortedUsers.forEach(function(u) {
+    var email = (u.email || '').trim();
+    var nameCell;
+    if (email && email.indexOf('@') >= 0) {
+      nameCell = '<span class="power-user-name">' + escapeHtml(email) + '</span>';
+    } else {
+      var uname = String(u.username || '').slice(0, 8);
+      nameCell = '<span style="color:var(--text-tertiary)">service / anon (' + escapeHtml(uname) + '…)</span>';
+    }
+    var last = u.last_day || '';
+    var active = String(last) >= '2026-06-01';
+    var statusDot = active ? 'active' : 'stale';
+    var statusLabel = active ? 'active' : 'past';
+    tableHtml += '<tr>' +
+      '<td>' + nameCell + '</td>' +
+      '<td style="text-align:right"><span class="power-user-events">' + formatNumber(u.events || 0) + '</span></td>' +
+      '<td><span style="font-family:var(--font-mono);font-size:12px;color:var(--text-secondary)">' + escapeHtml(u.first_day || '—') + '</span></td>' +
+      '<td><span style="font-family:var(--font-mono);font-size:12px;color:var(--text-secondary)">' + escapeHtml(last || '—') + '</span></td>' +
+      '<td><span class="activity-dot ' + statusDot + '"></span>' + statusLabel + '</td>' +
+    '</tr>';
+  });
+  tableHtml += '</tbody></table></div>';
+  document.getElementById('weaveActivityUsers').innerHTML = sortedUsers.length ? tableHtml : '';
+
+  /* Expansion callout naming the top-2 email champions */
+  var named = sortedUsers.filter(function(u) { return u.email && u.email.indexOf('@') >= 0; });
+  var champs = named.slice(0, 2).map(function(u) {
+    return u.email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, function(c) { return c.toUpperCase(); });
+  }).join(' & ') || 'their Weave users';
+  var calloutHtml = '<div class="risk-signals-list" style="border-left-color:var(--green);background:var(--green-dim);margin-top:16px">' +
+    '<li style="color:var(--text-primary)">Champions <b>' + escapeHtml(champs) + '</b> are actively logging Weave' +
+    (weaveCustomer ? '.' : ' — a live expansion signal ahead of renewal. Land paid Weave on seats/platform.') +
+    '</li></div>';
+  document.getElementById('weaveActivityCallout').innerHTML = calloutHtml;
+}
+
 /* ── RENDER: WEAVE INGESTION (ECharts) ── */
 function renderWeaveIngestionChart(data) {
   var weave = data.weave;
@@ -1585,7 +1888,7 @@ function renderEmptyState(data) {
   renderHeader(document.getElementById('reportHeader'), data);
 
   /* Hide all data sections */
-  ['kpiRow', 'seatSection', 'radarSection', 'weaveSection', 'hoursSection', 'aiSummarySection', 'powerUserSection', 'healthSection', 'riskActionsSection'].forEach(function(id) {
+  ['kpiRow', 'seatSection', 'radarSection', 'paTrendSection', 'weaveActivitySection', 'weaveSection', 'hoursSection', 'aiSummarySection', 'powerUserSection', 'healthSection', 'riskActionsSection'].forEach(function(id) {
     document.getElementById(id).style.display = 'none';
   });
 
@@ -1635,6 +1938,8 @@ function render() {
   /* ECharts sections -- each independently omits when data is absent */
   renderSeatUtilizationChart(data);
   renderProductRadar(data);
+  renderProductAreaTrend(data);
+  renderWeaveActivity(data);
   renderWeaveIngestionChart(data);
   renderTrackedHoursChart(data);
 

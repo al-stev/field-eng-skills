@@ -63,7 +63,24 @@ uv run --project .claude/skills/bigquery python .claude/skills/bigquery/scripts/
 # Internal report (includes real names/emails in power_users)
 uv run --project .claude/skills/bigquery python .claude/skills/bigquery/scripts/usage.py \
   --customer "<CustomerName>" --format json --internal
+
+# Full product-area history (--months 0) -- reveals multi-year adoption shifts,
+# e.g. an area heavily used years ago that has since dropped off. Powers the
+# "Product-area adoption over time" chart. Keep headline windows consistent:
+# if you quote all-time run/experiment totals, use full-history product areas too.
+uv run --project .claude/skills/bigquery python .claude/skills/bigquery/scripts/usage.py \
+  --customer "<CustomerName>" --format json --internal --months 0
 ```
+
+**Consistency rule:** never mix windows in one report (e.g. all-time run totals next to a 12-month product-area count) -- it makes areas like Artifacts look collapsed when it's just the window. Pick one window per metric and label it.
+
+**Discontinued products:** do NOT reference **Launch** anywhere -- it has not been a sellable product for ~2 years. It is not in the BigQuery product-area mapping. (Its successor is ARIA, a separate agent product.)
+
+**External report = lean & positive; keep interpretive/internal detail out.** The customer-facing report should show only the customer's own, unambiguous data. Specifically, in the EXTERNAL report:
+- OMIT the tracked-hours/compute chart -- it's a proxy for run activity and adds redundancy.
+- OMIT any inferred "workload themes / breadth of work" derived from keyword-matching the customer's run/group/sweep names -- it's our interpretation and risks mislabelling their work. Keep it INTERNAL only.
+- OMIT the per-user activity table -- anonymised it is weak, and it exposes dormant users / seat gaps. Replace with a single positive stat (e.g. "N engineers, active every month since <year>"). Keep the named table INTERNAL only.
+- Partial (current) year in any year-bucketed chart must be annualised (factor = 12 / months-of-data-present) for colour/normalisation, labelled `YYYY *`, with actual YTD in the tooltip + a footnote.
 
 Parse the JSON output. Handle the response:
 - If `available: true`: proceed to Step 4

@@ -31,6 +31,8 @@ from queries import (
     product_areas_query,
     power_users_query,
     support_tickets_query,
+    weave_activity_query,
+    weave_users_query,
     aggregate_weekly,
 )
 
@@ -294,6 +296,42 @@ def _build_power_users(pu_df: pd.DataFrame, internal: bool = False) -> Optional[
     return users
 
 
+def _build_weave_activity(activity_df: pd.DataFrame) -> Optional[list]:
+    """Build weave_activity list (monthly events by sub-area) from raw event data."""
+    if _is_empty(activity_df):
+        return None
+
+    result = []
+    for _, row in activity_df.iterrows():
+        result.append({
+            "month": str(row["month"]),
+            "area": str(row["area"]),
+            "events": int(row["events"]) if pd.notna(row.get("events")) else 0,
+            "users": int(row["users"]) if pd.notna(row.get("users")) else 0,
+        })
+    return result
+
+
+def _build_weave_users(users_df: pd.DataFrame, internal: bool = False) -> Optional[list]:
+    """Build weave_users list (per-user Weave totals) from resolved-name data.
+
+    Keeps email in both internal and external output -- the template decides
+    whether to display or anonymise it.
+    """
+    if _is_empty(users_df):
+        return None
+
+    result = []
+    for _, row in users_df.iterrows():
+        result.append({
+            "username": str(row["uname"]) if pd.notna(row.get("uname")) else "",
+            "email": str(row["email"]) if pd.notna(row.get("email")) else "",
+            "events": int(row["events"]) if pd.notna(row.get("events")) else 0,
+            "first_day": str(row["first_day"])[:10] if pd.notna(row.get("first_day")) else None,
+            "last_day": str(row["last_day"])[:10] if pd.notna(row.get("last_day")) else None,
+        })
+    return result
+
 
 def _build_support_tickets(tickets_df: pd.DataFrame) -> Optional[dict]:
     """Build support_tickets sub-section from per-ticket helpdesk data."""
@@ -422,6 +460,8 @@ def build_usage_json(
     product_areas_df: pd.DataFrame = None,
     power_users_df: pd.DataFrame = None,
     support_tickets_df: pd.DataFrame = None,
+    weave_activity_df: pd.DataFrame = None,
+    weave_users_df: pd.DataFrame = None,
     internal: bool = False,
     include_queries: bool = False,
 ) -> dict:
@@ -447,6 +487,10 @@ def build_usage_json(
     product_areas = _build_product_areas(product_areas_df)
     power_users = _build_power_users(power_users_df, internal=internal)
     support_tickets = _build_support_tickets(support_tickets_df)
+    # Weave activity/users are computed independently of the weave_customer
+    # suppression below -- trial/unpaid Weave customers (e.g. RBR) still get these.
+    weave_activity = _build_weave_activity(weave_activity_df)
+    weave_users = _build_weave_users(weave_users_df, internal=internal)
 
     # Enrich with SFDC entitlement data if available
     if health:
@@ -504,6 +548,8 @@ def build_usage_json(
         },
         "seat_utilization": seat_util,
         "weave": weave,
+        "weave_activity": weave_activity,
+        "weave_users": weave_users,
         "tracked_hours": tracked,
         "account_health": health,
         "product_areas": product_areas,
@@ -547,13 +593,19 @@ def main():
         weave_df = run_query(client, weave_ingestion_query(), account_id=account_id)
         hours_df = run_query(client, tracked_hours_query(), account_id=account_id)
         account_df = run_query(client, account_health_query(), account_id=account_id)
-        pa_df = run_query(client, product_areas_query(), account_id=account_id)
+        # months=0 (or negative) -> full history; reveals multi-year adoption shifts
+        pa_months = args.months if args.months and args.months > 0 else None
+        pa_df = run_query(client, product_areas_query(months=pa_months), account_id=account_id)
         pu_df = run_query(client, power_users_query(), account_id=account_id)
         tickets_df = run_query(client, support_tickets_query(), account_id=account_id)
+        weave_activity_df = run_query(client, weave_activity_query(), account_id=account_id)
+        weave_users_df = run_query(client, weave_users_query(), account_id=account_id)
 
         # Build JSON output
         result = build_usage_json(
             seat_df, weave_df, hours_df, account_df, pa_df, pu_df, tickets_df,
+            weave_activity_df=weave_activity_df,
+            weave_users_df=weave_users_df,
             internal=getattr(args, 'internal', False),
             include_queries=True,
         )

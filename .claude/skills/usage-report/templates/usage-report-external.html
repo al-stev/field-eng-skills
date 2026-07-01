@@ -661,50 +661,47 @@ const USAGE_DATA = {
       unique_users: 7
     },
     {
-      area: "Launch",
+      area: "Tables",
       monthly_events: [
-        { month: "2025-04", count: 0, users: 0 },
-        { month: "2025-05", count: 0, users: 0 },
-        { month: "2025-06", count: 0, users: 0 },
-        { month: "2025-07", count: 5, users: 1 },
-        { month: "2025-08", count: 8, users: 1 },
-        { month: "2025-09", count: 12, users: 2 },
-        { month: "2025-10", count: 15, users: 2 },
-        { month: "2025-11", count: 18, users: 2 },
-        { month: "2025-12", count: 22, users: 3 },
-        { month: "2026-01", count: 25, users: 3 },
-        { month: "2026-02", count: 28, users: 3 },
-        { month: "2026-03", count: 30, users: 3 }
+        { month: "2025-04", count: 120, users: 4 },
+        { month: "2025-05", count: 140, users: 5 },
+        { month: "2025-06", count: 160, users: 5 },
+        { month: "2025-07", count: 180, users: 6 },
+        { month: "2025-08", count: 175, users: 6 },
+        { month: "2025-09", count: 190, users: 6 },
+        { month: "2025-10", count: 210, users: 7 },
+        { month: "2025-11", count: 205, users: 7 },
+        { month: "2025-12", count: 150, users: 5 },
+        { month: "2026-01", count: 230, users: 7 },
+        { month: "2026-02", count: 245, users: 8 },
+        { month: "2026-03", count: 260, users: 8 }
       ],
-      total_events: 163,
-      unique_users: 3
-    },
-    {
-      area: "Automations",
-      monthly_events: [
-        { month: "2025-04", count: 0, users: 0 },
-        { month: "2025-05", count: 0, users: 0 },
-        { month: "2025-06", count: 0, users: 0 },
-        { month: "2025-07", count: 0, users: 0 },
-        { month: "2025-08", count: 0, users: 0 },
-        { month: "2025-09", count: 0, users: 0 },
-        { month: "2025-10", count: 5, users: 1 },
-        { month: "2025-11", count: 8, users: 1 },
-        { month: "2025-12", count: 12, users: 2 },
-        { month: "2026-01", count: 15, users: 2 },
-        { month: "2026-02", count: 18, users: 2 },
-        { month: "2026-03", count: 20, users: 2 }
-      ],
-      total_events: 78,
-      unique_users: 2
+      total_events: 2465,
+      unique_users: 8
     }
   ],
   power_users: [
     { username: "alice_ml", total_events: 5200, product_areas: ["Experiments", "Artifacts", "Weave Tracing"], last_activity: "2026-03-23" },
     { username: "bob_research", total_events: 4800, product_areas: ["Experiments", "Sweeps", "Reports"], last_activity: "2026-03-24" },
-    { username: "carol_eng", total_events: 3900, product_areas: ["Experiments", "Artifacts", "Model Registry", "Launch"], last_activity: "2026-03-22" },
-    { username: "dan_data", total_events: 3200, product_areas: ["Experiments", "Weave Tracing", "Weave Tracing"], last_activity: "2026-03-21" },
-    { username: "eve_ops", total_events: 2800, product_areas: ["Experiments", "Launch", "Automations"], last_activity: "2026-03-20" }
+    { username: "carol_eng", total_events: 3900, product_areas: ["Experiments", "Artifacts", "Model Registry", "Tables"], last_activity: "2026-03-22" },
+    { username: "dan_data", total_events: 3200, product_areas: ["Experiments", "Weave Tracing", "Weave Evaluation"], last_activity: "2026-03-21" },
+    { username: "eve_ops", total_events: 2800, product_areas: ["Experiments", "Reports", "Tables"], last_activity: "2026-03-20" }
+  ],
+  // Weave activity for the customer-safe Weave section: aggregate monthly events by
+  // area (no per-user identities). Empty/absent -> section hidden.
+  weave_activity: [
+    { month: "2025-10", area: "Tracing", events: 720, users: 8 },
+    { month: "2025-10", area: "Evaluation", events: 180, users: 4 },
+    { month: "2025-11", area: "Tracing", events: 780, users: 9 },
+    { month: "2025-11", area: "Evaluation", events: 210, users: 5 },
+    { month: "2025-12", area: "Tracing", events: 850, users: 9 },
+    { month: "2025-12", area: "Evaluation", events: 240, users: 5 },
+    { month: "2026-01", area: "Tracing", events: 920, users: 10 },
+    { month: "2026-01", area: "Evaluation", events: 260, users: 6 },
+    { month: "2026-02", area: "Tracing", events: 980, users: 11 },
+    { month: "2026-02", area: "Evaluation", events: 290, users: 6 },
+    { month: "2026-03", area: "Tracing", events: 1050, users: 12 },
+    { month: "2026-03", area: "Evaluation", events: 310, users: 7 }
   ]
 };
 
@@ -712,7 +709,7 @@ const AI_NARRATIVE = {
   executive_summary: "GResearch's W&B platform adoption continues to strengthen across the organization, with 35 active seats out of 50 contracted representing 70% utilization. The most significant growth trend is in Weave Tracing, which has seen a 228% increase in monthly events over the past 12 months, reflecting the team's expanding investment in AI observability and LLM application monitoring.\n\nExperiment tracking remains the foundation of GResearch's W&B usage with 30 unique users generating over 21,000 events in the past year. The recent uptick in Artifact usage (18 unique users, up from 10 a year ago) suggests maturing ML pipelines with better reproducibility practices. Compute hours have grown steadily, reaching 295 hours per week in March 2026, an 8.7% increase over the prior period.\n\nWeave ingestion is at 31% of the contracted limit, with healthy room for growth. The 12 unique Weave users represent a growing cohort that could become a key driver of expanded platform value as LLM workloads scale.",
   recommendations: [
     "Schedule a Model Registry workshop to accelerate adoption beyond the current 5 users -- the team's growing Artifact usage creates a natural pathway to model versioning and promotion workflows.",
-    "Explore Launch and Automations enablement sessions with the 3 users already experimenting in this space -- early adoption signals suggest appetite for production ML workflows.",
+    "Explore a Model Registry enablement session -- the team's growing Artifact usage is a natural pathway to governed model versioning and promotion.",
     "Consider expanding Weave ingestion capacity planning given the consistent month-over-month growth trajectory, which if continued would approach 50% utilization within 6 months.",
     "Facilitate cross-team knowledge sharing between the 15 Weave Tracing users and the broader Experiments user base to drive observability adoption across more ML workflows."
   ],
@@ -721,7 +718,7 @@ const AI_NARRATIVE = {
     "5 power users are actively spanning 3+ product areas, indicating deep platform integration into daily workflows.",
     "Artifact usage nearly doubled in unique users (10 to 18), reflecting improved ML pipeline maturity and reproducibility practices.",
     "Compute tracked hours increased 8.7% period-over-period, reaching nearly 296 hours per week -- demonstrating sustained and growing workload activity.",
-    "New product area adoption: Launch and Automations usage emerged in the second half of the year, with 3 and 2 users respectively exploring production ML capabilities."
+    "Tables adoption grew steadily through the year, reaching 8 users -- richer evaluation and comparison views alongside experiment tracking."
   ]
 };
 
@@ -1016,71 +1013,187 @@ function initSeatChart() {
   return chart;
 }
 
-function renderRadarChart() {
+/* Capability adoption over time — area x year heatmap. Each row is row-normalised
+   (colour = share of that area's own peak year) so each capability's trajectory reads
+   regardless of absolute scale; the row label carries the all-time total. Models-only:
+   Weave and Collaboration areas are excluded (Weave shown separately below). "Model
+   Registry" is renamed to "Registry" and always shown (dark empty row) so the
+   governance gap is visible rather than silently omitted. The latest partial year is
+   annualised (factor = 12 / months-present) so its colour is comparable to full years;
+   the tooltip shows actual YTD. */
+function renderProductAreaHeatmap() {
   const data = USAGE_DATA;
-  if (!data.product_areas || data.product_areas.length === 0) return '';
+  const areas = (data.product_areas || []).filter(a =>
+    a.monthly_events && a.monthly_events.length > 0 &&
+    !a.area.startsWith('Weave') && !a.area.startsWith('Collaboration'));
+  if (areas.length === 0) return '';
 
   return `
     <div class="section">
-      <div class="section-label">Product Adoption</div>
-      <div class="chart-container" id="chart-radar" style="height: 350px;"></div>
-      <div class="chart-supplementary">
-        ${data.product_areas.length} product areas tracked &middot; Values normalized to relative scale (highest area = 100)
-      </div>
+      <div class="section-label">Capability Adoption Over Time</div>
+      <div class="chart-container" id="chart-pa-heatmap" style="height: 360px;"></div>
+      <div class="chart-supplementary" id="pa-heatmap-note"></div>
     </div>
   `;
 }
 
-function initRadarChart() {
-  const el = document.getElementById('chart-radar');
+function initProductAreaHeatmap() {
+  const el = document.getElementById('chart-pa-heatmap');
   if (!el) return;
 
-  const areas = USAGE_DATA.product_areas;
+  const RENAME = { 'Model Registry': 'Registry', 'Sweeps Created': 'Sweeps', 'Sweeps Viewed': 'Sweeps' };
+  const areasRaw = (USAGE_DATA.product_areas || []).filter(a =>
+    a.monthly_events && a.monthly_events.length > 0 &&
+    !a.area.startsWith('Weave') && !a.area.startsWith('Collaboration'));
   const c = getThemeColors();
   const chart = echarts.init(el, 'wandb');
 
-  const normalized = areas.map(a => Math.round(a.radar_value));
+  // aggregate events per (renamed) area per year
+  const yearSet = {};
+  const agg = {}; // area -> {year: events}
+  areasRaw.forEach(function(a) {
+    const name = RENAME[a.area] || a.area;
+    agg[name] = agg[name] || {};
+    a.monthly_events.forEach(function(m) {
+      const y = String(m.month).slice(0, 4);
+      yearSet[y] = true;
+      agg[name][y] = (agg[name][y] || 0) + m.count;
+    });
+  });
+  // Always show a Registry row, even at zero — the empty (dark) row makes the
+  // governance gap visible rather than silently omitting it.
+  agg['Registry'] = agg['Registry'] || {};
+
+  const years = Object.keys(yearSet).sort();
+  if (years.length === 0) return;
+
+  const areaNames = Object.keys(agg);
+  const totals = {};
+  areaNames.forEach(function(a) {
+    totals[a] = years.reduce(function(s, y) { return s + (agg[a][y] || 0); }, 0);
+  });
+
+  // The most recent year is usually partial (data through mid-year). Annualize it by
+  // months-of-data present so its colour is comparable to full years; keep actual YTD
+  // for the label/tooltip. Self-adjusting — no hardcoded date.
+  const latest = years[years.length - 1];
+  const moSet = {};
+  areasRaw.forEach(function(a) {
+    a.monthly_events.forEach(function(m) { if (String(m.month).slice(0, 4) === latest) moSet[m.month] = true; });
+  });
+  const monthsPresent = Object.keys(moSet).length || 12;
+  const partial = monthsPresent < 12;
+  const factor = partial ? 12 / monthsPresent : 1;
+  function adj(a, y) { const ev = agg[a][y] || 0; return y === latest ? ev * factor : ev; }
+
+  // biggest area on top: sort desc, then reverse for y-index (0 = bottom). Registry at
+  // zero total naturally sorts to the bottom (top of the desc list is biggest).
+  const areasDesc = areaNames.slice().sort(function(x, y) { return totals[y] - totals[x]; });
+  const areasY = areasDesc.slice().reverse();
+  const rows = areasY.map(function(a) { return a + '  ·  ' + numberWithCommas(totals[a]); });
+  const yearsLbl = years.map(function(y) { return (partial && y === latest) ? y + ' *' : y; });
+  const cells = [];
+  areasY.forEach(function(a, yi) {
+    const rowmax = Math.max.apply(null, years.map(function(y) { return adj(a, y); })) || 1;
+    years.forEach(function(y, xi) {
+      const ev = agg[a][y] || 0;
+      const cell = { value: [xi, yi, Math.round(adj(a, y) / rowmax * 1000) / 1000], abs: ev };
+      if (partial && y === latest) cell.ann = Math.round(ev * factor);
+      cells.push(cell);
+    });
+  });
 
   chart.setOption({
-    radar: {
-      indicator: areas.map(a => ({ name: a.area, max: 100 })),
-      shape: 'polygon',
-      splitNumber: 4,
-      axisName: {
-        color: c.textSecondary,
-        fontFamily: "'JetBrains Mono', monospace",
-        fontSize: 11
-      },
-      splitLine: { lineStyle: { color: c.borderSubtle } },
-      splitArea: { show: false },
-      axisLine: { lineStyle: { color: c.borderSubtle } }
-    },
-    tooltip: {
-      trigger: 'item',
-      formatter: function(params) {
-        let result = '<div style="font-weight: 600; margin-bottom: 8px;">Product Adoption</div>';
-        areas.forEach(function(a, i) {
-          result += '<div style="margin: 2px 0;">' + a.area + ': ' + numberWithCommas(a.total_events) + ' events (' + a.unique_users + ' users)</div>';
-        });
-        return result;
-      }
-    },
-    series: [{
-      type: 'radar',
-      data: [{
-        value: normalized,
-        name: 'Usage',
-        symbol: 'circle',
-        symbolSize: 6,
-        lineStyle: { width: 2, color: c.blue },
-        areaStyle: { color: c.blue + '22' },
-        itemStyle: { color: c.blue, borderColor: c.blue, borderWidth: 2 }
-      }],
-      emphasis: {
-        lineStyle: { width: 3 },
-        areaStyle: { color: c.blue + '33' }
-      }
-    }]
+    tooltip: { position: 'top', backgroundColor: c.bgElevated, borderColor: c.borderSubtle,
+      textStyle: { color: c.textPrimary, fontSize: 12 },
+      formatter: function(p) {
+        const nm = p.name.split('  ·')[0], yr = yearsLbl[p.value[0]], ab = numberWithCommas(p.data.abs || 0);
+        if (p.data.ann != null) return nm + ' — ' + yr.replace(' *', '') + ' YTD: <b>' + ab + '</b> events (~' + numberWithCommas(p.data.ann) + ' annualized)';
+        return nm + ' — ' + yr + ': <b>' + ab + '</b> events';
+      } },
+    grid: { left: 178, right: 24, top: 16, bottom: 64 },
+    xAxis: { type: 'category', data: yearsLbl, splitArea: { show: true }, axisLine: { show: false }, axisTick: { show: false },
+      axisLabel: { color: c.textSecondary, fontFamily: "'JetBrains Mono', monospace" } },
+    yAxis: { type: 'category', data: rows, splitArea: { show: true }, axisLine: { show: false }, axisTick: { show: false },
+      axisLabel: { color: c.textSecondary, fontFamily: "'JetBrains Mono', monospace", fontSize: 11 } },
+    visualMap: { min: 0, max: 1, calculable: false, show: true, orient: 'horizontal', left: 'center', bottom: 8, itemWidth: 12, itemHeight: 120,
+      text: ['peak year', 'none'], textStyle: { color: c.textTertiary, fontFamily: "'JetBrains Mono', monospace", fontSize: 10 },
+      inRange: { color: ['#101722', '#1d3350', '#2b5891', '#4a86d8', '#a8cdf0'] } },
+    series: [{ type: 'heatmap', data: cells,
+      itemStyle: { borderColor: c.bgElevated, borderWidth: 3, borderRadius: 3 },
+      emphasis: { itemStyle: { shadowBlur: 8, shadowColor: 'rgba(0,0,0,.5)' } } }]
+  });
+
+  const note = document.getElementById('pa-heatmap-note');
+  if (note) {
+    note.innerHTML = partial
+      ? '<strong>Each row is shaded against its own peak year</strong>, so you can see each capability\'s trajectory; the number after each label is the all-time total. * ' + latest + ' is partial (' + monthsPresent + ' months) — its shade is annualised (&times;' + factor.toFixed(1) + ') so it\'s comparable to full years; tooltips show actual year-to-date.'
+      : '<strong>Each row is shaded against its own peak year</strong>, so you can see each capability\'s trajectory; the number after each label is the all-time total.';
+  }
+
+  window.addEventListener('resize', function() { chart.resize(); });
+  return chart;
+}
+
+/* Weave — tracing & evaluating AI applications. Customer-safe: KPI row + monthly
+   stacked-bar by area. NO per-user table (internal-only). Consumes data.weave_activity:
+   an array of { month, area, events, users }. Section hidden if empty/absent. */
+function renderWeaveActivity() {
+  const rows = USAGE_DATA.weave_activity;
+  if (!rows || rows.length === 0) return '';
+
+  const totalEvents = rows.reduce((s, r) => s + (r.events || 0), 0);
+  const tracing = rows.filter(r => r.area === 'Tracing').reduce((s, r) => s + (r.events || 0), 0);
+  const evalEvents = rows.filter(r => r.area === 'Evaluation').reduce((s, r) => s + (r.events || 0), 0);
+  const users = new Set();
+  // distinct-user count is approximated as the max monthly distinct-user figure
+  // (per-user identities are not carried here — external report stays aggregate).
+  const members = Math.max.apply(null, rows.map(r => r.users || 0).concat([0]));
+
+  return `
+    <div class="section">
+      <div class="section-label">Weave &mdash; Tracing &amp; Evaluating AI Applications</div>
+      <div class="chart-supplementary" style="margin-top:0;margin-bottom:16px;">
+        Alongside Models, your team has been using W&amp;B Weave to trace and evaluate LLM / agent applications &mdash; <strong>${numberWithCommas(totalEvents)}</strong> events to date.
+      </div>
+      <div class="kpi-row" style="margin-bottom:20px;">
+        <div class="kpi-item"><div class="kpi-value">${numberWithCommas(totalEvents)}</div><div class="kpi-unit">Weave Events</div></div>
+        <div class="kpi-item"><div class="kpi-value">${numberWithCommas(tracing)}</div><div class="kpi-unit">AI Calls Traced</div></div>
+        <div class="kpi-item"><div class="kpi-value">${numberWithCommas(evalEvents)}</div><div class="kpi-unit">Evaluation Events</div></div>
+        <div class="kpi-item"><div class="kpi-value">${numberWithCommas(members)}</div><div class="kpi-unit">Team Members</div></div>
+      </div>
+      <div class="chart-container" id="chart-weave-activity" style="height: 320px;"></div>
+    </div>
+  `;
+}
+
+function initWeaveActivity() {
+  const el = document.getElementById('chart-weave-activity');
+  if (!el) return;
+  const rows = USAGE_DATA.weave_activity || [];
+  if (rows.length === 0) return;
+
+  const c = getThemeColors();
+  const chart = echarts.init(el, 'wandb');
+
+  // pivot to month x area
+  const AREA_COL = { 'Tracing': c.blue, 'Evaluation': c.accent, 'Data': '#a78bfa', 'Other weave': c.textTertiary };
+  const months = Array.from(new Set(rows.map(r => r.month))).sort();
+  const areaSet = Array.from(new Set(rows.map(r => r.area)));
+  const mIdx = {}; months.forEach((m, i) => { mIdx[m] = i; });
+  const pivot = {}; areaSet.forEach(a => { pivot[a] = months.map(() => 0); });
+  rows.forEach(r => { if (pivot[r.area]) pivot[r.area][mIdx[r.month]] += (r.events || 0); });
+
+  chart.setOption({
+    tooltip: { trigger: 'axis' },
+    legend: { data: areaSet, top: 0, textStyle: { color: c.textSecondary } },
+    grid: { left: 52, right: 20, top: 34, bottom: 30 },
+    xAxis: { type: 'category', data: months.map(formatMonthLabel) },
+    yAxis: { type: 'value', name: 'events' },
+    series: areaSet.map(a => ({
+      name: a, type: 'bar', stack: 'w', data: pivot[a],
+      itemStyle: { color: AREA_COL[a] || c.green }
+    }))
   });
 
   window.addEventListener('resize', function() { chart.resize(); });
@@ -1326,9 +1439,10 @@ function render() {
   } else {
     html += renderKPIRow();
     html += renderSeatChart();
-    html += renderRadarChart();
-    html += renderWeaveChart();
-    html += renderTrackedHoursChart();
+    html += renderProductAreaHeatmap();
+    html += renderWeaveActivity();
+    // Tracked-hours (compute) chart intentionally omitted from the EXTERNAL report:
+    // it's largely a proxy for run activity and adds redundancy customer-side. Keep internal.
     html += renderNarrative();
   }
 
@@ -1339,9 +1453,8 @@ function render() {
   if (USAGE_DATA.available) {
     requestAnimationFrame(function() {
       initSeatChart();
-      initRadarChart();
-      initWeaveChart();
-      initTrackedHoursChart();
+      initProductAreaHeatmap();
+      initWeaveActivity();
     });
   }
 }

@@ -379,13 +379,23 @@ def tracked_hours_query() -> str:
     """
 
 
-def product_areas_query() -> str:
+def product_areas_query(months: int | None = 12) -> str:
     """
     Product area usage breakdown -- maps event types to W&B marketecture areas.
 
     Returns monthly event counts and unique users per product area.
+
+    Args:
+        months: Lookback window in months. Pass None (or 0) for full history --
+            useful for revealing multi-year adoption shifts (e.g. an area that
+            was heavily used years ago and has since dropped off). Defaults to 12
+            for backwards compatibility with existing consumers.
     """
     daily_usage = _ref("ext_daily_user_event_usage")
+    window = (
+        f"AND date_day >= DATE_SUB(CURRENT_DATE(), INTERVAL {int(months)} MONTH)"
+        if months else ""
+    )
     return f"""
     WITH mapped AS (
         SELECT
@@ -395,7 +405,7 @@ def product_areas_query() -> str:
             {PRODUCT_AREA_CASE} AS product_area
         FROM {daily_usage}
         WHERE account_id = @account_id
-            AND date_day >= DATE_SUB(CURRENT_DATE(), INTERVAL 12 MONTH)
+            {window}
             AND event_count > 0
     )
     SELECT
@@ -407,6 +417,73 @@ def product_areas_query() -> str:
     WHERE product_area != 'Other'
     GROUP BY product_area, month
     ORDER BY product_area, month
+    """
+
+
+WEAVE_AREA_CASE = """CASE
+        WHEN event IN ('weave_call_created', 'weave_model_created', 'weave_op_created') THEN 'Tracing'
+        WHEN event IN ('weave_feedback_created', 'weave_evaluation_created', 'weave_scorer_created') THEN 'Evaluation'
+        WHEN event LIKE 'weave_backend%' OR event IN ('weave_object_created', 'weave_file_created', 'weave_dataset_created') THEN 'Data'
+        ELSE 'Other weave'
+    END"""
+
+
+def weave_activity_query() -> str:
+    """
+    Monthly Weave *activity* (tracing/eval/data events) grouped by sub-area.
+
+    Filtered to product_type = 'weave'. Groups the raw weave_* events into four
+    sub-areas (Tracing / Evaluation / Data / Other weave) so the report can show
+    what kind of Weave work a customer is doing, not just the ingestion volume.
+
+    No date lower bound -- returns full history so multi-year adoption shifts show.
+
+    Returns:
+        SQL string with @account_id parameter. One row per (month, area).
+    """
+    daily_usage = _ref("ext_daily_user_event_usage")
+    return f"""
+    SELECT
+        FORMAT_DATE('%Y-%m', date_day) AS month,
+        {WEAVE_AREA_CASE} AS area,
+        SUM(event_count) AS events,
+        COUNT(DISTINCT universal_user_id) AS users
+    FROM {daily_usage}
+    WHERE account_id = @account_id
+        AND product_type = 'weave'
+    GROUP BY month, area
+    ORDER BY month
+    """
+
+
+def weave_users_query() -> str:
+    """
+    Per-user Weave activity totals with resolved names.
+
+    LEFT JOINs dim_users on universal_user_id (and account_id) to resolve the
+    username/email that are often NULL in ext_daily_user_event_usage. Returns one
+    row per user with their total Weave event count and active date range.
+
+    Returns:
+        SQL string with @account_id parameter. One row per user, ordered by events.
+    """
+    daily_usage = _ref("ext_daily_user_event_usage")
+    dim_users = _ref("dim_users")
+    return f"""
+    SELECT
+        COALESCE(NULLIF(e.username, ''), du.local_username, CAST(e.universal_user_id AS STRING)) AS uname,
+        COALESCE(NULLIF(e.email, ''), du.local_user_email, '') AS email,
+        SUM(e.event_count) AS events,
+        MIN(e.date_day) AS first_day,
+        MAX(e.date_day) AS last_day
+    FROM {daily_usage} e
+    LEFT JOIN {dim_users} du
+        ON e.universal_user_id = du.universal_user_id
+        AND du.account_id = @account_id
+    WHERE e.account_id = @account_id
+        AND e.product_type = 'weave'
+    GROUP BY uname, email
+    ORDER BY events DESC
     """
 
 
