@@ -71,7 +71,7 @@ uv run --project .claude/skills/bigquery python .claude/skills/bigquery/scripts/
 
 Maps 40+ BigQuery event types to ~12 W&B marketecture product areas. Also provides per-user activity queries for power user identification.
 
-**Product Areas:** Experiments, Artifacts, Model Registry, Sweeps, Reports, Launch, Automations, Weave Tracing, Weave Evaluation, Weave Data, Tables, Collaboration
+**Product Areas** (as mapped from event types in `PRODUCT_AREA_CASE`): Experiments, Artifacts, Model Registry, Sweeps Created, Sweeps Viewed, Reports, Tables, Collaboration, Weave Tracing, Weave Evaluation, Weave Data. (Note: Launch is NOT tracked -- it is a discontinued product; do not reference it. Automations is not currently mapped.)
 
 Usage (product areas and power users are included in the standard usage.py output):
 ```bash
